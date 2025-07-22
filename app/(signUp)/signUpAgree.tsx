@@ -46,7 +46,7 @@ export default function SignUpAgreeScreen() {
 
   const handleSubmit = () => {
     if (isSubmitEnabled()) {
-      router.push("/signUpAgree"); 
+      router.push("/(login)");
     }
   };
 
