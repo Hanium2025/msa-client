@@ -10,7 +10,7 @@ interface PhoneInputProps {
   onChangePhone: (text: string) => void;
   onPressSendCode: () => void;
 }
-
+//
 const PhoneInput: React.FC<PhoneInputProps> = ({
   phone,
   onChangePhone,
