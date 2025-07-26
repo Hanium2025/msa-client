@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import CheckButton from "../../atoms/CheckButton";
+import Button from "../../atoms/Button";
 import { Ionicons } from "@expo/vector-icons";
 import style from "./TermRow.style";
 
@@ -21,7 +21,7 @@ export default function TermRow({
 }: TermRowProps) {
   return (
     <TouchableOpacity style={style.termRow} onPress={onPress}>
-      <CheckButton checked={checked} />
+      <Button variant="check" checked={checked} text=" " onPress={onPress} />
       <Text style={[style.termText, bold && style.boldText]}>{label}</Text>
       <View style={style.flexSpacer} />
       {showSeeAll && (

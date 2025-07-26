@@ -3,7 +3,7 @@ import RowLabelWithInput from "../molecules/RowLabelWithInput";
 import RowWithButton from "../molecules/RowWithButton";
 import Label from "../atoms/Label";
 import UnderlineInput from "../atoms/UnderlineInput";
-import ActionButton from "../atoms/ActionButton";
+import Button from "../atoms/Button";
 
 interface PhoneInputProps {
   phone: string;
@@ -29,7 +29,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
               onChangeText={onChangePhone}
             />
           }
-          button={<ActionButton text="인증" onPress={onPressSendCode} />}
+          button={<Button text="인증" onPress={onPressSendCode} />}
         />
       }
     />

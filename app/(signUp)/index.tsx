@@ -6,7 +6,7 @@ import ConfirmPasswordInput from "../components/organisms/ConfirmPasswordInput";
 import PhoneInput from "../components/organisms/PhoneInput";
 import CodeVerificationInput from "../components/organisms/PhoneVerification";
 import NicknameInput from "../components/organisms/NicknameInput";
-import SubmitButton from "../components/atoms/SubmitButton";
+import Button from "../components/atoms/Button";
 import { router } from "expo-router";
 
 export default function SignUpScreen() {
@@ -74,10 +74,11 @@ export default function SignUpScreen() {
           <NicknameInput nickname={nickname} onChangeNickname={setNickname} />
         </View>
 
-        <SubmitButton
+        <Button
           text="다음으로"
           onPress={() => router.push("/signUpAgree")}
           isPressed={isPressed}
+          variant="submit"
           onPressIn={() => setIsPressed(true)}
           onPressOut={() => setIsPressed(false)}
         />
