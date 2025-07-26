@@ -3,7 +3,7 @@ import RowLabelWithInput from "../molecules/RowLabelWithInput";
 import RowWithButton from "../molecules/RowWithButton";
 import Label from "../atoms/Label";
 import UnderlineInput from "../atoms/UnderlineInput";
-import ActionButton from "../atoms/ActionButton";
+import Button from "../atoms/Button";
 
 interface CodeVerificationInputProps {
   code: string;
@@ -29,7 +29,7 @@ const CodeVerificationInput: React.FC<CodeVerificationInputProps> = ({
               onChangeText={onChangeCode}
             />
           }
-          button={<ActionButton text="확인" onPress={onPressVerify} />}
+          button={<Button text="확인" onPress={onPressVerify} />}
         />
       }
     />

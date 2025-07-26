@@ -6,9 +6,9 @@ import {
   Text,
   StyleSheet,
 } from "react-native";
+import Button from "../components/atoms/Button";
 import TermRow from "../components/molecules/TermRow";
 import TermRowAgree from "../components/organisms/AgreementForm";
-import SubmitButton2 from "../components/atoms/SubmitButton2";
 import { router } from "expo-router";
 
 export default function SignUpAgreeScreen() {
@@ -68,11 +68,12 @@ export default function SignUpAgreeScreen() {
 
         <TermRowAgree checked={agreeAll} onPress={toggleAll} />
 
-        <SubmitButton2
+        <Button
           text="회원가입 완료"
           onPress={handleSubmit}
           onPressIn={() => setIsPressed(true)}
           onPressOut={() => setIsPressed(false)}
+          variant="signUpComplete"
           isPressed={isPressed}
           disabled={!isSubmitEnabled()}
         />
