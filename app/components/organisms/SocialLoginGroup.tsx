@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TouchableOpacity, Text, Image, StyleSheet } from "react-native";
 import Button from "../atoms/Button";
-
+//
 export default function SocialLoginGroup() {
   return (
     <View style={styles.socialLoginWrapper}>
