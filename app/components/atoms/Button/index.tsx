@@ -1,5 +1,11 @@
 import React from "react";
-import { TouchableOpacity, Text, View } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  View,
+  StyleProp,
+  TextStyle,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "./Button.style";
 
@@ -9,9 +15,18 @@ interface ButtonProps {
   onPressOut?: () => void;
   isPressed?: boolean;
   text: string;
-  variant?: "action" | "submit" | "signUpComplete" | "check";
+  variant?:
+    | "action"
+    | "submit"
+    | "signUpComplete"
+    | "check"
+    | "login"
+    | "socialLogin";
   checked?: boolean;
   disabled?: boolean;
+  icon?: React.ReactNode;
+  backgroundColor?: string;
+  textColor?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -23,37 +38,53 @@ const Button: React.FC<ButtonProps> = ({
   variant = "action",
   checked = false,
   disabled = false,
+  icon,
+  backgroundColor,
+  textColor,
 }) => {
   const getContainerStyle = () => {
-    if (variant === "submit") {
-      return [
-        styles.baseButton,
-        styles.submitButton,
-        isPressed && styles.submitButtonPressed,
-      ];
-    }
+    switch (variant) {
+      case "submit":
+        return [
+          styles.baseButton,
+          styles.submitButton,
+          isPressed && styles.submitButtonPressed,
+        ];
+      case "signUpComplete":
+        return [
+          styles.signUpCompleteButton,
+          disabled && styles.signUpCompleteButtonDisabled,
+        ];
+      case "check":
+        return [styles.checkButton];
+      case "login":
+        return [styles.loginButton, isPressed && styles.loginButtonPressed];
+      case "socialLogin":
+        return [
+          styles.socialButton,
+          { backgroundColor: backgroundColor ?? "eee" },
+        ];
 
-    if (variant === "signUpComplete") {
-      return [
-        styles.signUpCompleteButton,
-        disabled && styles.signUpCompleteButtonDisabled,
-      ];
-    }
-
-    if (variant === "check") {
-      return [styles.checkButton];
-    }
-
-    if (variant === "action") {
-      return [styles.baseButton, styles.actionButton];
+      default:
+        return [styles.baseButton, styles.actionButton];
     }
   };
 
   const getTextStyle = () => {
-    if (variant === "signUpComplete") return styles.signUpCompleteText;
-    if (variant === "submit") return styles.submitText;
-    if (variant === "check") return styles.checkText;
-    if (variant === "action") return styles.actionText;
+    switch (variant) {
+      case "signUpComplete":
+        return styles.signUpCompleteText;
+      case "submit":
+        return styles.submitText;
+      case "check":
+        return styles.checkText;
+      case "login":
+        return styles.loginText;
+      case "socialLogin":
+        return [styles.socialText, { color: textColor ?? "#000" }];
+      default:
+        return styles.actionText;
+    }
   };
 
   return (
@@ -64,7 +95,17 @@ const Button: React.FC<ButtonProps> = ({
       onPressOut={onPressOut}
       disabled={disabled}
     >
-      {variant === "check" ? (
+      {/* 아이콘: 왼쪽 정렬 */}
+      {variant === "socialLogin" && icon && (
+        <View style={styles.socialIcon}>{icon}</View>
+      )}
+
+      {/* 텍스트: 버튼 중앙에 절대 배치 */}
+      {variant === "socialLogin" ? (
+        <View style={styles.socialTextWrapper}>
+          <Text style={getTextStyle()}>{text}</Text>
+        </View>
+      ) : variant === "check" ? (
         <View style={styles.row}>
           <Ionicons
             name={checked ? "checkmark-circle" : "ellipse-outline"}

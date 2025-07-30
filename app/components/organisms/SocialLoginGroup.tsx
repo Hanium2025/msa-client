@@ -1,34 +1,41 @@
 import React from "react";
 import { View, TouchableOpacity, Text, Image, StyleSheet } from "react-native";
-
+import Button from "../atoms/Button";
+//
 export default function SocialLoginGroup() {
   return (
     <View style={styles.socialLoginWrapper}>
       {/* 카카오 로그인 */}
-      <TouchableOpacity
-        style={[styles.socialLoginButton, { backgroundColor: "#FEE500" }]}
-      >
-        <Image
-          style={styles.socialLoginLogo}
-          source={require("../../../assets/images/kakao_logo.png")}
-          resizeMode="cover"
-        />
-        <Text style={styles.socialLoginText}>카카오 로그인</Text>
-      </TouchableOpacity>
+      <Button
+        text="카카오 로그인"
+        variant="socialLogin"
+        backgroundColor="#FEE500"
+        textColor="#000"
+        icon={
+          <Image
+            source={require("../../../assets/images/kakao_logo.png")}
+            style={styles.socialLoginLogo}
+            resizeMode="cover"
+          />
+        }
+        onPress={() => console.log("카카오 로그인")}
+      />
 
       {/* 네이버 로그인 */}
-      <TouchableOpacity
-        style={[styles.socialLoginButton, { backgroundColor: "#03C75A" }]}
-      >
-        <Image
-          style={styles.socialLoginLogo}
-          source={require("../../../assets/images/naver_logo.png")}
-          resizeMode="cover"
-        />
-        <Text style={[styles.socialLoginText, { color: "#fff" }]}>
-          네이버 로그인
-        </Text>
-      </TouchableOpacity>
+      <Button
+        text="네이버 로그인"
+        variant="socialLogin"
+        backgroundColor="#03C75A"
+        textColor="#fff"
+        icon={
+          <Image
+            source={require("../../../assets/images/naver_logo.png")}
+            style={styles.socialLoginLogo}
+            resizeMode="cover"
+          />
+        }
+        onPress={() => console.log("네이버 로그인")}
+      />
     </View>
   );
 }
@@ -37,33 +44,14 @@ const styles = StyleSheet.create({
   socialLoginWrapper: {
     width: 313,
     height: 102,
-    display: "flex",
     flexDirection: "column",
     alignItems: "center",
     gap: 8,
-  },
-  socialLoginButton: {
-    display: "flex",
-    flexDirection: "row",
-    width: 313,
-    height: 47,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(217, 217, 217, 0.80)",
-    paddingVertical: 12,
-    alignItems: "center",
   },
   socialLoginLogo: {
     width: 23,
     height: 23,
     marginRight: 74,
     marginLeft: 14,
-  },
-  socialLoginText: {
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 23,
-    letterSpacing: -0.32,
   },
 });
