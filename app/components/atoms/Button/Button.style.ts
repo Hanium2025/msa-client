@@ -106,6 +106,63 @@ export const styles = StyleSheet.create({
     marginRight: 12,
   },
 
+  // login (로그인 버튼)
+  loginButton: {
+    backgroundColor: "#fff",
+    width: 313,
+    height: 50,
+    borderRadius: 20,
+    borderColor: "rgba(217, 217, 217, 0.80)",
+    borderWidth: 1,
+    paddingHorizontal: 130,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  loginButtonPressed: {
+    backgroundColor: "#084C63",
+  },
+  loginText: {
+    color: "#000",
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 21,
+    letterSpacing: -0.32,
+  },
+
+  // socialLogin (소셜로그인 버튼)
+  socialButton: {
+    width: 313,
+    height: 47,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(217, 217, 217, 0.80)",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  socialTextWrapper: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  socialText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 23,
+    letterSpacing: -0.32,
+  },
+  socialIcon: {
+    marginRight: 74,
+  },
+
   // 공통 row
   row: {
     flexDirection: "row",

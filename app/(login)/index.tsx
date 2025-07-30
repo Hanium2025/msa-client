@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { SafeAreaView, StatusBar, View, Text } from "react-native";
 import LogoCircle from "../components/atoms/LogoCircle";
 import LoginForm from "../components/molecules/LoginForm";
-import LoginButton from "../components/molecules/LoginButton";
+import Button from "../components/atoms/Button";
 import SignUpPrompt from "../components/molecules/SignUpPrompt";
 import SocialLoginGroup from "../components/organisms/SocialLoginGroup";
 import { router } from "expo-router";
@@ -29,9 +29,12 @@ export default function LoginScreen() {
             setEmail={setEmail}
             setPassword={setPassword}
           />
-          <LoginButton
+          <Button
+            text="로그인"
+            variant="login"
             isPressed={isPressed}
-            setIsPressed={setIsPressed}
+            onPressIn={() => setIsPressed(true)}
+            onPressOut={() => setIsPressed(false)}
             onPress={() => router.push("/(home)")}
           />
         </View>
