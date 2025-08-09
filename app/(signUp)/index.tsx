@@ -1,18 +1,35 @@
 import React, { useState } from "react";
 import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   View,
   Text,
-  TextInput,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  StatusBar,
-  ScrollView,
+  Alert,
+  Platform,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import EmailInput from "../components/organisms/EmailInput";
+import PasswordInput from "../components/organisms/PasswordInput";
+import ConfirmPasswordInput from "../components/organisms/ConfirmPasswordInput";
+import PhoneInput from "../components/organisms/PhoneInput";
+import CodeVerificationInput from "../components/organisms/PhoneVerification";
+import NicknameInput from "../components/organisms/NicknameInput";
+import Button from "../components/atoms/Button";
 import { router } from "expo-router";
+import { useSignUp } from "../hooks/useSignUp";
+import type { AxiosError } from "axios";
 
-export default function SignupScreen() {
+const showAlert = (title: string, message?: string) => {
+  const text = [title, message].filter(Boolean).join("\n");
+  if (Platform.OS === "web") {
+    // 브라우저 기본 alert 사용
+    window.alert(text);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
+export default function SignUpScreen() {
   const [email, setEmail] = useState("");
   const [emailDomain, setEmailDomain] = useState("");
   const [password, setPassword] = useState("");
@@ -22,237 +39,129 @@ export default function SignupScreen() {
   const [nickname, setNickname] = useState("");
   const [isPressed, setIsPressed] = useState(false);
 
+  // 연동 코드
+  const { submit, loading, error } = useSignUp();
+
+  const handleSignUp = async () => {
+    if (
+      !email ||
+      !emailDomain ||
+      !password ||
+      !confirmPassword ||
+      !phone ||
+      !nickname
+    ) {
+      showAlert("필수 입력이 비었습니다.");
+      console.log("필수 입력이 비었습니다.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      showAlert("비밀번호가 일치하지 않습니다.");
+      console.log("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    const fullEmail = `${email}@${emailDomain}`;
+
+    try {
+      await submit({
+        email: fullEmail,
+        password,
+        confirmPassword,
+        phoneNumber: phone,
+        nickname,
+        agreeMarketing: true,
+        agreeThirdParty: false,
+      });
+
+      showAlert("회원가입 성공", "이제 로그인해주세요!");
+      console.log("회원가입 성공");
+      router.push("/signUpAgree");
+    } catch (e: any) {
+      if (e.response) {
+        const code = e.response?.data?.code as number | undefined;
+        const message = e.response?.data?.message as string | undefined;
+
+        if (code === 400 && message) {
+          if (message.includes("이미 존재하는 이메일")) {
+            showAlert("이미 존재하는 이메일입니다.");
+            console.log("이미 존재하는 이메일입니다.");
+          } else if (message.includes("재확인 비밀번호")) {
+            showAlert("비밀번호가 일치하지 않습니다.");
+            console.log("비밀번호가 일치하지 않습니다.");
+          } else if (message.includes("이미 존재하는 전화번호")) {
+            showAlert("이미 존재하는 전화번호입니다.");
+            console.log("이미 존재하는 전화번호입니다.");
+          }
+        }
+      }
+    }
+  };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>회원가입</Text>
+      <ScrollView contentContainerStyle={{ padding: 24 }}>
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "bold",
+            marginBottom: 32,
+            textAlign: "center",
+          }}
+        >
+          회원가입
+        </Text>
 
-        <View style={styles.inputGroup}>
-          <View style={styles.rowLabelWithInput}>
-            <Text style={styles.label}>이메일</Text>
-            <View style={styles.inlineInputWrapper}>
-              <TextInput
-                style={[styles.inlineInput, { flex: 2 }]}
-                placeholder="이메일 입력"
-                value={email}
-                onChangeText={setEmail}
-                placeholderTextColor="#ccc"
-              />
-              <Text style={styles.atSymbol}>@</Text>
-              <TextInput
-                style={[styles.inlineInput, { flex: 1 }]}
-                placeholder="선택"
-                value={emailDomain}
-                onChangeText={setEmailDomain}
-                placeholderTextColor="#ccc"
-              />
-              <Ionicons
-                name="chevron-down"
-                size={16}
-                color="#aaa"
-                style={{ marginLeft: 4 }}
-              />
-            </View>
-          </View>
+        <View style={{ marginBottom: 20 }}>
+          <EmailInput
+            email={email}
+            emailDomain={emailDomain}
+            onChangeEmail={setEmail}
+            onChangeEmailDomain={setEmailDomain}
+          />
         </View>
 
-        <View style={styles.inputGroup}>
-          <View style={styles.rowLabelWithInput}>
-            <Text style={styles.label}>비밀번호</Text>
-            <TextInput
-              style={[styles.underlineInput, { flex: 1 }]}
-              placeholder="비밀번호 입력 (8~16자의 영문 대/소문자, 숫자, 특수문자)"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              placeholderTextColor="#ccc"
-            />
-          </View>
+        <View style={{ marginBottom: 20 }}>
+          <PasswordInput password={password} onChangePassword={setPassword} />
         </View>
 
-        <View style={styles.inputGroup}>
-          <View style={styles.rowLabelWithInput}>
-            <Text style={styles.label}>비밀번호 확인</Text>
-            <TextInput
-              style={[styles.underlineInput, { flex: 1 }]}
-              placeholder="비밀번호 재입력"
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholderTextColor="#ccc"
-            />
-          </View>
+        <View style={{ marginBottom: 20 }}>
+          <ConfirmPasswordInput
+            confirmPassword={confirmPassword}
+            onChangeConfirmPassword={setConfirmPassword}
+          />
         </View>
 
-        <View style={styles.inputGroup}>
-          <View style={styles.rowLabelWithInput}>
-            <Text style={styles.label}>전화번호</Text>
-            <View style={styles.rowWithButton}>
-              <TextInput
-                style={[styles.underlineInput, { flex: 1 }]}
-                placeholder="전화번호 입력"
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-                placeholderTextColor="#ccc"
-              />
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.buttonText}>인증</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+        <View style={{ marginBottom: 20 }}>
+          <PhoneInput
+            phone={phone}
+            onChangePhone={setPhone}
+            onPressSendCode={() => {}}
+          />
         </View>
 
-        <View style={styles.inputGroup}>
-          <View style={styles.rowLabelWithInput}>
-            <Text style={styles.label}>인증번호</Text>
-            <View style={styles.rowWithButton}>
-              <TextInput
-                style={[styles.underlineInput, { flex: 1 }]}
-                placeholder="인증번호 입력"
-                keyboardType="number-pad"
-                value={code}
-                onChangeText={setCode}
-                placeholderTextColor="#ccc"
-              />
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.buttonText}>확인</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+        <View style={{ marginBottom: 20 }}>
+          <CodeVerificationInput
+            code={code}
+            onChangeCode={setCode}
+            onPressVerify={() => {}}
+          />
         </View>
 
-        <View style={styles.inputGroup}>
-          <View style={styles.rowLabelWithInput}>
-            <Text style={styles.label}>닉네임</Text>
-            <TextInput
-              style={[styles.underlineInput, { flex: 1 }]}
-              placeholder="닉네임 입력"
-              value={nickname}
-              onChangeText={setNickname}
-              placeholderTextColor="#ccc"
-            />
-          </View>
+        <View style={{ marginBottom: 20 }}>
+          <NicknameInput nickname={nickname} onChangeNickname={setNickname} />
         </View>
 
-        <TouchableOpacity
-          style={[styles.submitButton, isPressed && styles.submitButtonPressed]}
+        <Button
+          text="다음으로"
+          onPress={handleSignUp}
+          isPressed={isPressed}
+          variant="submit"
           onPressIn={() => setIsPressed(true)}
           onPressOut={() => setIsPressed(false)}
-          onPress={() => router.push("/signUpAgree")}
-        >
-          <Text style={styles.submitText}>다음으로</Text>
-        </TouchableOpacity>
+          disabled={loading}
+        />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    padding: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 32,
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#000",
-    width: 100,
-  },
-  rowLabelWithInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  underlineInput: {
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  inlineInputWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  inlineInput: {
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  atSymbol: {
-    marginHorizontal: 4,
-    fontSize: 16,
-    color: "#000",
-  },
-  rowWithButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  actionButton: {
-    backgroundColor: "#fff",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginLeft: 8,
-    borderColor: "#084C63", // 테두리 색
-    borderWidth: 1, // 테두리 두께 추가
-    shadowColor: "#000", // 그림자
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  buttonText: {
-    color: "#084C63",
-    fontSize: 14,
-  },
-  submitButton: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    marginTop: 24,
-    width: 313,
-    height: 57,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginLeft: 8,
-    borderColor: "rgba(217, 217, 217, 0.80)", // 테두리 색
-    borderWidth: 1, // 테두리 두께 추가
-    shadowColor: "rgba(0, 0, 0, 0.08)", // 그림자
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  submitText: {
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "bold",
-    elevation: 3,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    textAlign: "center",
-  },
-  submitButtonPressed: {
-    backgroundColor: "084C63",
-  },
-});
