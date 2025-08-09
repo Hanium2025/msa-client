@@ -10,11 +10,13 @@
     "web": "expo start --web",
     "lint": "expo lint"
   },
+  "proxy": "http://localhost:8081",
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
+    "axios": "^1.11.0",
     "expo": "~53.0.13",
     "expo-blur": "~14.1.5",
     "expo-constants": "~17.1.6",
