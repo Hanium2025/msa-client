@@ -15,3 +15,4 @@ export default function Label({ text, required = false }: LabelProps) {
     </Text>
   );
 }
+
