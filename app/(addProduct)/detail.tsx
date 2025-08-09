@@ -4,39 +4,70 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
+  Text,
 } from 'react-native';
+import { useProductDetail } from '../hook/useProductDetail';
 import ProductCard from '../components/organisms/ProductCard';
 import BottomButtonGroup from '../components/molecules/BottomButtonGroup';
+import { useLocalSearchParams } from 'expo-router';
 
 export default function DetailScreen() {
-  const product = {
-    id: '1234',
-    title: '상품명',
-    price: 99000,
-    category: 'IT/가전',
-    description:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-    user: {
-      nickname: '홍길동',
-      postedAt: '10분 전',
-    },
-    status: 'ON_SALE', // 'IN_PROGRESS' | 'SOLD_OUT'
-    likeCount: 222,
-    images: ['', '', ''],
-  };
+  console.log('DetailScreen mounted!');
+  const { productId } = useLocalSearchParams();
+  console.log('productId from URL:', productId);
+
+  const token =
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBY2Nlc3NUb2tlbiIsImlkIjoxLCJleHAiOjE3NTQ2NjU4NzYsImVtYWlsIjoiaGVsbG9AZW1haWwuY29tIn0.pZ5nPlK5y8ZTQCaKZfKYgzt7nbI6MmPWpFEaok4cvXWesEXoX-GL_yx1tYuXQikCBjCMJiESMklcnuqDqP7GKw';
+
+  const { data, isLoading, error } = useProductDetail(
+    Number(productId),
+    token
+  );
 
   const handleChat = () => {
     console.log('채팅하기 클릭');
   };
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#666" />
+      </View>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={{ color: 'red' }}>상품 정보를 불러올 수 없습니다.</Text>
+      </View>
+    );
+  }
+  const product = {
+  title: data.title,
+  price: data.price,
+  category: data.category,
+  description: data.content,
+  images: data.images.map((img: any) => img.imageUrl),
+  user: {
+    nickname: '판매자',
+    postedAt: '방금 전',
+  },
+  status: (data.status === 'SELLING'
+    ? 'ON_SALE'
+    : data.status === 'IN_PROGRESS'
+    ? 'IN_PROGRESS'
+    : 'SOLD_OUT') as 'ON_SALE' | 'IN_PROGRESS' | 'SOLD_OUT',
+  likeCount: 0,
+};
+
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ProductCard product={product} />
-        <BottomButtonGroup
-          status={product.status}
-          onChat={handleChat}
-        />
+        <BottomButtonGroup status={product.status} onChat={handleChat} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -49,5 +80,15 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingBottom: 32,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -5,52 +5,54 @@ import ImageCarousel from '../molecules/ImageCarousel';
 import PriceText from '../atoms/PriceText';
 import Tag from '../atoms/Tag';
 
+// ✅ 백엔드 응답 형태에 맞게 타입 정의
 interface Product {
-    title: string;
-    price: number;
-    category: string;
-    description: string;
-    user: {
-        nickname: string;
-        postedAt: string;
-    };
-    status: 'ON_SALE' | 'IN_PROGRESS' | 'SOLD_OUT';
-    likeCount: number;
-    images: string[];
+  title: string;
+  price: number;
+  category: string;
+  description: string;
+  user?: {
+    nickname: string;
+    postedAt: string;
+  };
+  status: 'ON_SALE' | 'IN_PROGRESS' | 'SOLD_OUT';
+  likeCount?: number;
+  images: { imageUrl: string }[]; // ✅ imageUrl 객체 배열
 }
 
 interface Props {
-    product: Product;
+  product: Product;
 }
 
 export default function ProductCard({ product }: Props) {
-    return (
-        <View style={styles.card}>
-            {/* 제목 + 가격 우측 정렬 */}
-            <View style={styles.titleRow}>
-                <Text style={styles.title}>{product.title}</Text>
-                <PriceText price={product.price} />
-            </View>
+  return (
+    <View style={styles.card}>
+      {/* 제목 + 가격 */}
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>{product.title}</Text>
+        <PriceText price={product.price} />
+      </View>
 
-            <View style={styles.userRow}>
-                <UserInfo
-                    nickname={product.user.nickname}
-                    postedAt={product.user.postedAt}
-                />
-                <Tag label={product.category} />
-            </View>
+      <View style={styles.userRow}>
+        <UserInfo
+          nickname={product.user?.nickname ?? '알 수 없음'}
+          postedAt={product.user?.postedAt ?? '방금 전'}
+        />
+        <Tag label={product.category} />
+      </View>
 
-            {/* 이미지 */}
-            <ImageCarousel images={product.images} />
+      {/* 이미지 슬라이더 */}
+      <ImageCarousel images={product.images.map((img) => img.imageUrl)} />
 
-            {/* 설명 */}
-            <Text style={styles.description}>{product.description}</Text>
+      {/* 설명 */}
+      <Text style={styles.description}>{product.description}</Text>
 
-            {/* 좋아요 수 */}
-            <Text style={styles.likes}>⭐ {product.likeCount}</Text>
-        </View>
-    );
+      {/* 좋아요 수 */}
+      <Text style={styles.likes}>⭐ {product.likeCount ?? 0}</Text>
+    </View>
+  );
 }
+
 
 const styles = StyleSheet.create({
     card: {
