@@ -1,12 +1,7 @@
 import React from "react";
-import {
-  TouchableOpacity,
-  Text,
-  View,
-  StyleProp,
-  TextStyle,
-} from "react-native";
+import { TouchableOpacity, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "./Button.style";
 
 interface ButtonProps {
@@ -21,7 +16,8 @@ interface ButtonProps {
     | "signUpComplete"
     | "check"
     | "login"
-    | "socialLogin";
+    | "socialLogin"
+    | "registerItem"; // ✅ 추가
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -62,9 +58,9 @@ const Button: React.FC<ButtonProps> = ({
       case "socialLogin":
         return [
           styles.socialButton,
-          { backgroundColor: backgroundColor ?? "eee" },
+          { backgroundColor: backgroundColor ?? "#eee" },
         ];
-
+      // registerItem은 그라데이션 래퍼로 별도 렌더링
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -87,6 +83,32 @@ const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  // ✅ 상품등록 버튼 전용 렌더링 (그라데이션 테두리)
+  if (variant === "registerItem") {
+    return (
+      <View style={styles.registerWrapper}>
+        <LinearGradient
+          colors={["#023047", "limegreen"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.registerGradient}
+        >
+          <TouchableOpacity
+            style={styles.registerInner}
+            onPress={onPress}
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}
+            disabled={disabled}
+          >
+            <Ionicons name="add-circle" size={20} color="#333" />
+            <Text style={styles.registerText}>{text}</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // 기존 버튼들
   return (
     <TouchableOpacity
       style={getContainerStyle()}
@@ -95,12 +117,10 @@ const Button: React.FC<ButtonProps> = ({
       onPressOut={onPressOut}
       disabled={disabled}
     >
-      {/* 아이콘: 왼쪽 정렬 */}
       {variant === "socialLogin" && icon && (
         <View style={styles.socialIcon}>{icon}</View>
       )}
 
-      {/* 텍스트: 버튼 중앙에 절대 배치 */}
       {variant === "socialLogin" ? (
         <View style={styles.socialTextWrapper}>
           <Text style={getTextStyle()}>{text}</Text>
