@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, View, StyleSheet } from 'react-native';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
-import { Label } from '../atoms/Label';
+import { RegisterLabel } from '../atoms/Label';
 import { CategoryDropdown } from '../molecules/CategoryDropdown';
 import { ImageUploader } from '../molecules/ImageUploader';
 import { PriceInput } from '../molecules/PriceInput';
@@ -73,7 +73,7 @@ export const AddProductForm = () => {
         <ImageUploader images={images} setImages={setImages} />
 
         <View style={{ marginTop: 24 }}>
-          <Label required text="상품명" />
+          <RegisterLabel required text="상품명" />
           <Input
             placeholder="상품명을 입력하세요"
             value={title}
@@ -85,7 +85,7 @@ export const AddProductForm = () => {
         <CategoryDropdown selected={category} onSelect={setCategory} />
 
         <View style={{ marginTop: 24 }}>
-          <Label text="상세설명" />
+          <RegisterLabel text="상세설명" />
           <Input
             value={content}
             onChangeText={setContent}

@@ -43,9 +43,15 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0c4e5e1f-9469-4765-9bc1-f78c1ef65ae1"
+        "projectId": "82ab0c96-4b9b-4e1f-8ef0-e4b3110a0cec"
       }
     },
-    "owner": "jiyeoneee"
+    "owner": "sunjio",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/82ab0c96-4b9b-4e1f-8ef0-e4b3110a0cec"
+    }
   }
 }
