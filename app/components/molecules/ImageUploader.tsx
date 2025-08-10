@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Alert,
   Image,
@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   View,
   Platform,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ImageUploaderProps {
   images: (File | any)[];
@@ -19,37 +19,38 @@ interface ImageUploaderProps {
 export const ImageUploader = ({ images, setImages }: ImageUploaderProps) => {
   const handleUpload = async () => {
     if (images.length >= 5) {
-      Alert.alert('최대 5장까지 업로드할 수 있습니다.');
+      Alert.alert("최대 5장까지 업로드할 수 있습니다.");
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       quality: 0.7,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       base64: false,
     });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
+    if (!result.canceled && result.assets?.length) {
       const asset = result.assets[0];
 
-      if (Platform.OS === 'web') {
-        // ✅ 웹에서는 File 객체로 변환해야 함
+      if (Platform.OS === "web") {
         const response = await fetch(asset.uri);
         const blob = await response.blob();
-        const file = new File([blob], asset.fileName || `image_${Date.now()}.jpg`, {
-          type: blob.type,
-        });
-        console.log("✅ 생성된 웹 File 객체:", file); // 이거 추가
-        setImages([...images, file]);
+        const file = new File(
+          [blob],
+          asset.fileName || `image_${Date.now()}.jpg`,
+          { type: blob.type || "image/jpeg" }
+        );
+        setImages([...images, file]); // 웹은 File을 그대로 보관
       } else {
-        // ✅ 모바일에서는 기존 객체 사용
-        const file = {
-          uri: asset.uri,
-          name: asset.fileName || `image_${Date.now()}.jpg`,
-          type: asset.type || 'image/jpeg',
-        };
-        setImages([...images, file]);
+        setImages([
+          ...images,
+          {
+            uri: asset.uri,
+            name: asset.fileName || `image_${Date.now()}.jpg`,
+            type: asset.type || "image/jpeg",
+          },
+        ]); // RN은 {uri,name,type}
       }
     }
   };
@@ -60,7 +61,9 @@ export const ImageUploader = ({ images, setImages }: ImageUploaderProps) => {
         {images.map((img: any, index: number) => (
           <Image
             key={index}
-            source={{ uri: Platform.OS === 'web' ? URL.createObjectURL(img) : img.uri }}
+            source={{
+              uri: Platform.OS === "web" ? URL.createObjectURL(img) : img.uri,
+            }}
             style={styles.imagePreview}
           />
         ))}
@@ -85,10 +88,10 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fafafa',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fafafa",
   },
 });

@@ -17,7 +17,7 @@ interface ButtonProps {
     | "check"
     | "login"
     | "socialLogin"
-    | "registerItem"; // ✅ 추가
+    | "registerItem";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;

@@ -1,39 +1,36 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
-  container: {
-    marginTop: 24,
-  },
   label: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
     marginBottom: 8,
   },
   required: {
-    color: '#ff4444',
+    color: "#ff4444",
   },
   dropdownBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 14,
   },
   dropdownText: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   list: {
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     borderRadius: 8,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
+    backgroundColor: "#fff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -43,10 +40,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   itemText: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
 });

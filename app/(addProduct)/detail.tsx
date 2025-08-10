@@ -17,7 +17,8 @@ export default function DetailScreen() {
   const { productId } = useLocalSearchParams();
   console.log("productId from URL:", productId);
 
-  const token = "";
+  const token =
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBY2Nlc3NUb2tlbiIsImlkIjoxLCJleHAiOjE3NTQ4MzE4MzcsImVtYWlsIjoiaGVsbG9AZW1haWwuY29tIn0.6LWSjwgdyu7aqF8kEBcMjW88k_kYyth3zrSpt2K-I3kOX6iXbP9QO-_Lrcc5fHsehaPuDEL4-3JFSKYVzYRw1w";
 
   const { data, isLoading, error } = useProductDetail(Number(productId), token);
 
@@ -34,18 +35,36 @@ export default function DetailScreen() {
   }
 
   if (error || !data) {
+    const message = error?.message;
     return (
       <View style={styles.errorContainer}>
-        <Text style={{ color: "red" }}>상품 정보를 불러올 수 없습니다.</Text>
+        <Text style={{ color: "red" }}>{message}</Text>
       </View>
     );
   }
+
+  // 형식 변환
+  type ProductImage = { imageUrl: string };
+  type ApiImage = {
+    productImageId: number;
+    imageUrl: string;
+  };
+  const images: ProductImage[] = Array.isArray(data?.images)
+    ? data.images
+        .map((img: Partial<ApiImage>) => ({ imageUrl: img?.imageUrl ?? "" }))
+        .filter((i: ProductImage) => i.imageUrl)
+    : [];
+  const priceNum =
+    typeof data?.price === "number"
+      ? data.price
+      : Number(String(data?.price ?? "0").replace(/[^\d]/g, ""));
+
   const product = {
     title: data.title,
-    price: data.price,
+    price: priceNum,
     category: data.category,
     description: data.content,
-    images: data.images.map((img: any) => img.imageUrl),
+    images: images,
     user: {
       nickname: "판매자",
       postedAt: "방금 전",

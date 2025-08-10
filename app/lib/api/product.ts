@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export const registerProduct = async (
   formData: FormData,
@@ -10,7 +10,7 @@ export const registerProduct = async (
     {
       headers: {
         Authorization: `Bearer ${token}`, // 여기서 Bearer 붙이기
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     }
   );
