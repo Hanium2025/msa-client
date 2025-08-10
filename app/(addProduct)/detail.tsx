@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   SafeAreaView,
@@ -6,27 +6,23 @@ import {
   StyleSheet,
   ActivityIndicator,
   Text,
-} from 'react-native';
-import { useProductDetail } from '../hook/useProductDetail';
-import ProductCard from '../components/organisms/ProductCard';
-import BottomButtonGroup from '../components/molecules/BottomButtonGroup';
-import { useLocalSearchParams } from 'expo-router';
+} from "react-native";
+import { useProductDetail } from "../hooks/useProductDetail";
+import ProductCard from "../components/organisms/ProductCard";
+import BottomButtonGroup from "../components/molecules/BottomButtonGroup";
+import { useLocalSearchParams } from "expo-router";
 
 export default function DetailScreen() {
-  console.log('DetailScreen mounted!');
+  console.log("DetailScreen mounted!");
   const { productId } = useLocalSearchParams();
-  console.log('productId from URL:', productId);
+  console.log("productId from URL:", productId);
 
-  const token =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBY2Nlc3NUb2tlbiIsImlkIjoxLCJleHAiOjE3NTQ2NjU4NzYsImVtYWlsIjoiaGVsbG9AZW1haWwuY29tIn0.pZ5nPlK5y8ZTQCaKZfKYgzt7nbI6MmPWpFEaok4cvXWesEXoX-GL_yx1tYuXQikCBjCMJiESMklcnuqDqP7GKw';
+  const token = "";
 
-  const { data, isLoading, error } = useProductDetail(
-    Number(productId),
-    token
-  );
+  const { data, isLoading, error } = useProductDetail(Number(productId), token);
 
   const handleChat = () => {
-    console.log('채팅하기 클릭');
+    console.log("채팅하기 클릭");
   };
 
   if (isLoading) {
@@ -40,28 +36,27 @@ export default function DetailScreen() {
   if (error || !data) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={{ color: 'red' }}>상품 정보를 불러올 수 없습니다.</Text>
+        <Text style={{ color: "red" }}>상품 정보를 불러올 수 없습니다.</Text>
       </View>
     );
   }
   const product = {
-  title: data.title,
-  price: data.price,
-  category: data.category,
-  description: data.content,
-  images: data.images.map((img: any) => img.imageUrl),
-  user: {
-    nickname: '판매자',
-    postedAt: '방금 전',
-  },
-  status: (data.status === 'SELLING'
-    ? 'ON_SALE'
-    : data.status === 'IN_PROGRESS'
-    ? 'IN_PROGRESS'
-    : 'SOLD_OUT') as 'ON_SALE' | 'IN_PROGRESS' | 'SOLD_OUT',
-  likeCount: 0,
-};
-
+    title: data.title,
+    price: data.price,
+    category: data.category,
+    description: data.content,
+    images: data.images.map((img: any) => img.imageUrl),
+    user: {
+      nickname: "판매자",
+      postedAt: "방금 전",
+    },
+    status: (data.status === "SELLING"
+      ? "ON_SALE"
+      : data.status === "IN_PROGRESS"
+      ? "IN_PROGRESS"
+      : "SOLD_OUT") as "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT",
+    likeCount: 0,
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -76,19 +71,19 @@ export default function DetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: "#F9F9F9",
   },
   scrollContainer: {
     paddingBottom: 32,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
