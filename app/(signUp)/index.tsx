@@ -61,6 +61,21 @@ export default function SignUpScreen() {
       return;
     }
 
+    // 비밀번호 형식 유효성 검사
+    const passwordFormat =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,16}$/;
+
+    if (!passwordFormat.test(password)) {
+      showAlert(
+        "비밀번호 형식 오류",
+        "비밀번호는 8~16자의 영문 대/소문자, 숫자, 특수문자를 모두 포함해야 합니다."
+      );
+      console.log(
+        "비밀번호는 8~16자의 영문 대/소문자, 숫자, 특수문자를 모두 포함해야 합니다."
+      );
+      return;
+    }
+
     const fullEmail = `${email}@${emailDomain}`;
 
     try {
@@ -73,9 +88,6 @@ export default function SignUpScreen() {
         agreeMarketing: true,
         agreeThirdParty: false,
       });
-
-      showAlert("회원가입 성공", "이제 로그인해주세요!");
-      console.log("회원가입 성공");
       router.push("/signUpAgree");
     } catch (e: any) {
       if (e.response) {
