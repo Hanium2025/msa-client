@@ -17,7 +17,7 @@ interface ButtonProps {
     | "check"
     | "login"
     | "socialLogin"
-    | "registerItem"; // ✅ 추가
+    | "registerItem";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -38,6 +38,12 @@ const Button: React.FC<ButtonProps> = ({
   backgroundColor,
   textColor,
 }) => {
+  const handlePress = async () => {
+    if (onPress) {
+      await onPress(); // 비동기 함수로 변경
+    }
+  };
+
   const getContainerStyle = () => {
     switch (variant) {
       case "submit":
@@ -60,7 +66,6 @@ const Button: React.FC<ButtonProps> = ({
           styles.socialButton,
           { backgroundColor: backgroundColor ?? "#eee" },
         ];
-      // registerItem은 그라데이션 래퍼로 별도 렌더링
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -83,36 +88,10 @@ const Button: React.FC<ButtonProps> = ({
     }
   };
 
-  // ✅ 상품등록 버튼 전용 렌더링 (그라데이션 테두리)
-  if (variant === "registerItem") {
-    return (
-      <View style={styles.registerWrapper}>
-        <LinearGradient
-          colors={["#023047", "limegreen"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.registerGradient}
-        >
-          <TouchableOpacity
-            style={styles.registerInner}
-            onPress={onPress}
-            onPressIn={onPressIn}
-            onPressOut={onPressOut}
-            disabled={disabled}
-          >
-            <Ionicons name="add-circle" size={20} color="#333" />
-            <Text style={styles.registerText}>{text}</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
-    );
-  }
-
-  // 기존 버튼들
   return (
     <TouchableOpacity
       style={getContainerStyle()}
-      onPress={onPress}
+      onPress={handlePress} // 비동기 함수 호출
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       disabled={disabled}

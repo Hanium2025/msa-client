@@ -29,12 +29,12 @@ const CategorySection = ({ categories }: Props) => (
 
 const styles = StyleSheet.create({
   row: {
-    width: SCREEN_WIDTH, // ✅ 스크롤뷰 가로 사이즈를 고정
+    width: SCREEN_WIDTH, // 스크롤뷰 가로 사이즈를 고정
     justifyContent: 'center',
   },
   innerRow: {
     flexDirection: 'row',
-    justifyContent: 'center', // ✅ 실제 카테고리 정렬
+    justifyContent: 'center', // 실제 카테고리 정렬
     alignItems: 'center',
   },
 });

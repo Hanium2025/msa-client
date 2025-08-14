@@ -10,7 +10,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // ✅ 판매 상태 버튼 스타일
+  // 판매 상태 버튼 스타일
   statusBox: {
     width: 113,
     height: 40,
@@ -26,7 +26,7 @@ export default StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // ✅ 채팅 버튼
+  // 채팅 버튼
   buttonDark: {
     width: 219,
     height: 40,

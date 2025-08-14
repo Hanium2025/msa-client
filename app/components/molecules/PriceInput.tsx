@@ -1,6 +1,6 @@
-import React from 'react';
-import { View } from 'react-native';
-import { Input } from '../atoms/Input';
+import React from "react";
+import { View } from "react-native";
+import { Input } from "../atoms/Input";
 
 export const PriceInput = ({
   price,
@@ -10,12 +10,12 @@ export const PriceInput = ({
   onChangePrice: (value: string) => void;
 }) => {
   const formatPrice = (text: string) => {
-    const numeric = text.replace(/[^0-9]/g, '');
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const numeric = text.replace(/[^0-9]/g, "");
+    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   return (
-    <View style={{ marginTop: 24 }}>
+    <View>
       <Input
         value={price}
         onChangeText={(text) => onChangePrice(formatPrice(text))}
