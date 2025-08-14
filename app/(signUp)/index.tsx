@@ -7,7 +7,7 @@ import PhoneInput from "../components/organisms/PhoneInput";
 import CodeVerificationInput from "../components/organisms/PhoneVerification";
 import NicknameInput from "../components/organisms/NicknameInput";
 import Button from "../components/atoms/Button";
-import { router } from "expo-router";
+import { router } from "expo-router"; //
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
