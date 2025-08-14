@@ -1,12 +1,7 @@
 import React from "react";
-import {
-  TouchableOpacity,
-  Text,
-  View,
-  StyleProp,
-  TextStyle,
-} from "react-native";
+import { TouchableOpacity, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "./Button.style";
 
 interface ButtonProps {
@@ -21,7 +16,8 @@ interface ButtonProps {
     | "signUpComplete"
     | "check"
     | "login"
-    | "socialLogin";
+    | "socialLogin"
+    | "registerItem";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -42,6 +38,12 @@ const Button: React.FC<ButtonProps> = ({
   backgroundColor,
   textColor,
 }) => {
+  const handlePress = async () => {
+    if (onPress) {
+      await onPress(); // 비동기 함수로 변경
+    }
+  };
+
   const getContainerStyle = () => {
     switch (variant) {
       case "submit":
@@ -62,9 +64,8 @@ const Button: React.FC<ButtonProps> = ({
       case "socialLogin":
         return [
           styles.socialButton,
-          { backgroundColor: backgroundColor ?? "eee" },
+          { backgroundColor: backgroundColor ?? "#eee" },
         ];
-
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -90,17 +91,15 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <TouchableOpacity
       style={getContainerStyle()}
-      onPress={onPress}
+      onPress={handlePress} // 비동기 함수 호출
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       disabled={disabled}
     >
-      {/* 아이콘: 왼쪽 정렬 */}
       {variant === "socialLogin" && icon && (
         <View style={styles.socialIcon}>{icon}</View>
       )}
 
-      {/* 텍스트: 버튼 중앙에 절대 배치 */}
       {variant === "socialLogin" ? (
         <View style={styles.socialTextWrapper}>
           <Text style={getTextStyle()}>{text}</Text>
