@@ -59,7 +59,7 @@ export default function LoginScreen() {
       // 4) 이동
       router.replace("/(home)");
     } catch (e: any) {
-      // 서버 명세의 401 처리
+      // api 명세서의 401 처리
       const status = e?.response?.status;
       const message =
         status === 401
@@ -96,7 +96,8 @@ export default function LoginScreen() {
             isPressed={isPressed}
             onPressIn={() => setIsPressed(true)}
             onPressOut={() => setIsPressed(false)}
-            onPress={() => router.push("/(home)")}
+            onPress={onSubmit}
+            disabled={loading}
           />
         </View>
         <SignUpPrompt />
