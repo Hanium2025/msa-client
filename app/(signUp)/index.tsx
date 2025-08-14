@@ -7,7 +7,7 @@ import {
   Text,
   Alert,
   Platform,
-} from "react-native"; //
+} from "react-native";
 import EmailInput from "../components/organisms/EmailInput";
 import PasswordInput from "../components/organisms/PasswordInput";
 import ConfirmPasswordInput from "../components/organisms/ConfirmPasswordInput";
