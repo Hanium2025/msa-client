@@ -15,6 +15,7 @@ import SocialLoginGroup from "../components/organisms/SocialLoginGroup";
 import { router } from "expo-router";
 import { login } from "../lib/api/user";
 import { setAccessToken } from "../lib/api";
+import { tokenStore } from "../auth/tokenStore"; // 이거 추가
 //import * as SecureStore from "expo-secure-store"; Expo에서 사용 가능
 
 export default function LoginScreen() {
@@ -44,13 +45,16 @@ export default function LoginScreen() {
       const { accessToken } = await login({ email, password });
 
       // 2) 토큰 저장 (네이티브는 SecureStore, 웹은 localStorage)
-      try {
+      await tokenStore.set(accessToken); 
+
+      // 2) 토큰 저장 (네이티브는 SecureStore, 웹은 localStorage)
+      /*try {
         await localStorage.setItemAsync("accessToken", accessToken);
       } catch {
         if (typeof window !== "undefined") {
           window.localStorage.setItem("accessToken", accessToken);
         }
-      }
+      }*/
 
       // 3) 이후 요청에 Authorization 자동 첨부
       setAccessToken(accessToken);
