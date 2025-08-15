@@ -1,17 +1,15 @@
+// app/_layout.tsx
 import React from 'react';
+import './auth/setupApiAuth';
 import { Slot } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const queryClient = new QueryClient();
-
-export const unstable_settings = {
-  initialRouteName: "(signUp)/index", // 수정된 경로
-};
-
 export default function RootLayout() {
+  const [queryClient] = React.useState(() => new QueryClient());
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Slot /> {/* 여기는 그대로 두세요! */}
+      <Slot />
     </QueryClientProvider>
   );
 }

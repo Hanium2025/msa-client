@@ -1,13 +1,7 @@
+// AddProductForm.tsx
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import {
-  Alert,
-  ScrollView,
-  View,
-  StyleSheet,
-  Platform,
-  ToastAndroid,
-} from "react-native";
+import { Alert, ScrollView, View, StyleSheet, Platform, ToastAndroid } from "react-native";
 import Button from "../atoms/Button";
 import { Input } from "../atoms/Input";
 import RegisterLabel from "../atoms/Label";
@@ -16,32 +10,48 @@ import { ImageUploader } from "../molecules/ImageUploader";
 import { PriceInput } from "../molecules/PriceInput";
 import { useAddProduct } from "../../hooks/useAddProduct";
 import axios from "axios";
+import { tokenStore } from "../../auth/tokenStore";
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
-  if (Platform.OS === "web") {
-    // 브라우저 기본 alert 사용
-    window.alert(text);
-  } else {
-    Alert.alert(title, message);
-  }
+  if (Platform.OS === "web") window.alert(text);
+  else Alert.alert(title, message);
 };
 
+// 재사용 가능한 한 줄 필드 래퍼
+const FieldRow = ({
+  label,
+  required,
+  children,
+  style,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  style?: any;
+}) => (
+  <View style={[styles.row, style]}>
+    <RegisterLabel required={required} text={label} style={styles.rowLabel} />
+    <View style={styles.rowControl}>{children}</View>
+  </View>
+);
+
 export const AddProductForm = () => {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("선택");
-  const [images, setImages] = useState<File[]>([]); // ImageUploader로부터 파일 배열 받기
-
+  const [images, setImages] = useState<File[]>([]);
   const { mutate } = useAddProduct();
 
   const handleRegister = async () => {
-    console.log(`업로드할 이미지 개수: ${images.length}`);
+    if (images.length === 0) return showAlert("대표 이미지 1장은 필수입니다.");
 
-    if (images.length == 0) {
-      showAlert("대표 이미지 1장은 필수입니다.");
-      console.log("대표 이미지 1장은 필수입니다");
+    const token = await tokenStore.get();
+    if (!token) {
+      showAlert("로그인이 필요합니다.");
+      router.replace("/(beforeLogin)/login");
       return;
     }
 
@@ -52,77 +62,48 @@ export const AddProductForm = () => {
       category,
     };
 
-    const token =
-      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBY2Nlc3NUb2tlbiIsImlkIjoxLCJleHAiOjE3NTUxNjE2NjQsImVtYWlsIjoiaGVsbG9AZW1haWwuY29tIn0.IV8dJm8J6bxqT8MkqrZyfJ9xR9NyZBcpt92ycJ4WOcgmPBbMmOihy9a44TP5S9dqEeV5NVdNCKl-SWhdQOz3tw";
-
     const formData = new FormData();
-
-    // JSON 파트
     formData.append("json", JSON.stringify(productData));
+    images.forEach((img: any, idx: number) => {
+      if (Platform.OS === "web") {
+        formData.append("images", img as File, (img as File).name);
+      } else {
+        formData.append("images", {
+          uri: img.uri,
+          name: img.name ?? `image_${idx}.jpg`,
+          type: img.type ?? "image/jpeg",
+        } as any);
+      }
+    });
 
-    // 이미지 파트
-    if (images.length > 0) {
-      images.forEach((img: any, idx: number) => {
-        if (Platform.OS === "web") {
-          formData.append("images", img as File, (img as File).name);
-        } else {
-          formData.append("images", {
-            uri: img.uri,
-            name: img.name ?? `image_${idx}.jpg`,
-            type: img.type ?? "image/jpeg",
-          } as any);
-        }
-      });
-    }
-
-    const router = useRouter();
-
-    // 서버로 전송
     mutate(
       { formData, token },
       {
         onSuccess: (res) => {
-          const message = res.message;
-          const productId = res.data.productId;
+          const message = res.message ?? "등록 성공";
+          const productId = res?.data?.productId;
+          if (!productId) return showAlert("등록 성공", "id를 가져오지 못했습니다.");
 
-          if (!productId) {
-            showAlert("등록에 성공했으나 id를 가져오는 데에 실패했습니다.");
-            console.log("등록에 성공했으나 id를 가져오는 데에 실패했습니다");
-            return;
-          }
-
-          const goDetail = () =>
+          const goOwner = () =>
             router.replace({
-              pathname: "/(addProduct)/detail",
+              pathname: "/(addProduct)/owner/[productId]",
               params: { productId: String(productId) },
             });
 
           if (Platform.OS === "web") {
-            // 웹
-            if (typeof window !== "undefined") window.alert(message);
-            goDetail();
+            window.alert(message);
+            goOwner();
           } else if (Platform.OS === "android") {
-            // 안드로이드
             ToastAndroid.show(message, ToastAndroid.SHORT);
-            goDetail();
+            goOwner();
           } else {
-            // iOS 등
-            Alert.alert("등록 성공", message, [
-              { text: "확인", onPress: goDetail },
-            ]);
+            Alert.alert("등록 성공", message, [{ text: "확인", onPress: goOwner }]);
           }
         },
         onError: (err: unknown) => {
           let msg = "상품 등록 실패";
-          if (axios.isAxiosError(err)) {
-            msg = err.message;
-            console.error("등록 에러:", msg);
-          } else if (err instanceof Error) {
-            msg = err.message;
-            console.error("등록 에러:", err.message);
-          } else {
-            console.error("등록 에러:", err);
-          }
+          if (axios.isAxiosError(err)) msg = err.response?.data?.message || err.message;
+          else if (err instanceof Error) msg = err.message;
           Alert.alert("오류", msg);
         },
       }
@@ -130,48 +111,51 @@ export const AddProductForm = () => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.formWrapper}>
+        <RegisterLabel required text="대표사진" />
         <ImageUploader images={images} setImages={setImages} />
 
-        <View style={{ marginTop: 24 }}>
-          <RegisterLabel required text="상품명" />
+        {/* 한 줄: 라벨 + 입력 */}
+        <FieldRow label="상품명" required style={{ marginTop: 20 }}>
           <Input
-            placeholder="상품명을 입력하세요"
+            placeholder="Value"
             value={title}
             onChangeText={setTitle}
+            style={styles.input}        // ← 오른쪽 컨트롤 폭/높이
           />
-        </View>
+        </FieldRow>
 
-        <View style={{ marginTop: 24 }}>
-          <RegisterLabel required text="가격" />
-          <PriceInput price={price} onChangePrice={setPrice} />
-        </View>
+        <FieldRow label="가격" required style={{ marginTop: 14 }}>
+          <PriceInput
+            price={price}
+            onChangePrice={setPrice}
+            style={styles.input}        // PriceInput 컨테이너에 style 전달
+          />
+        </FieldRow>
 
-        <View style={{ marginTop: 24 }}>
-          <RegisterLabel required text="카테고리" />
-          <CategoryDropdown selected={category} onSelect={setCategory} />
-        </View>
+        <FieldRow label="카테고리" required style={{ marginTop: 14 }}>
+          <CategoryDropdown
+            selected={category}
+            onSelect={setCategory}
+            style={{ height: 44 }}
+          />
+        </FieldRow>
 
-        <View style={{ marginTop: 24 }}>
+        {/* 상세설명은 세로 배치 유지 */}
+        <View style={{ marginTop: 18 }}>
           <RegisterLabel text="상세설명" />
           <Input
             value={content}
             onChangeText={setContent}
             multiline
             numberOfLines={5}
+            style={[styles.input, { height: 140 }]}
           />
         </View>
 
-        <View style={{ marginVertical: 10 }}>
-          <Button
-            text="등록하기"
-            variant="signUpComplete"
-            onPress={handleRegister}
-          />
+        <View style={{ marginVertical: 16 }}>
+          <Button text="등록하기" variant="signUpComplete" onPress={handleRegister} />
         </View>
       </View>
     </ScrollView>
@@ -179,13 +163,14 @@ export const AddProductForm = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-  },
-  formWrapper: {
-    width: "100%",
-    maxWidth: 393,
-  },
+  container: { alignItems: "center", paddingVertical: 16, paddingHorizontal: 16 },
+  formWrapper: { width: "100%", maxWidth: 393 },
+
+  // 한 줄 레이아웃
+  row: { flexDirection: "row", alignItems: "center", columnGap: 12 },
+  rowLabel: { width: 84 },          // 라벨 고정폭 (디자인에 맞게 조절)
+  rowControl: { flex: 1 },
+
+  // 오른쪽 컨트롤 공통 스타일
+  input: { height: 44, width: "100%" },
 });

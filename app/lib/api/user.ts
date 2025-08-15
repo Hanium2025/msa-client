@@ -46,4 +46,4 @@ export const login = async (data: LoginRequest): Promise<LoginSuccess> => {
     email: res.data.data?.email,
     accessToken,
   };
-};
+}
