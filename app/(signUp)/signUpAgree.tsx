@@ -5,6 +5,8 @@ import {
   ScrollView,
   Text,
   StyleSheet,
+  Alert,
+  Platform,
 } from "react-native";
 import Button from "../components/atoms/Button";
 import TermRow from "../components/molecules/TermRow";
@@ -46,6 +48,13 @@ export default function SignUpAgreeScreen() {
 
   const handleSubmit = () => {
     if (isSubmitEnabled()) {
+      if (Platform.OS === "web") {
+        window.alert("회원가입이 완료되었습니다. 로그인해주세요!");
+      } else {
+        Alert.alert("회원가입 완료", "로그인해주세요!");
+      }
+      console.log("회원가입 완료");
+
       router.push("/(login)");
     }
   };
