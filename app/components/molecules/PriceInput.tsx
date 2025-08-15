@@ -1,27 +1,23 @@
+// molecules/PriceInput.tsx
 import React from "react";
-import { View } from "react-native";
-import { Input } from "../atoms/Input";
+import { View, TextInput, ViewStyle, StyleProp, TextStyle } from "react-native";
 
-export const PriceInput = ({
-  price,
-  onChangePrice,
-}: {
+type Props = {
   price: string;
-  onChangePrice: (value: string) => void;
-}) => {
-  const formatPrice = (text: string) => {
-    const numeric = text.replace(/[^0-9]/g, "");
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
+  onChangePrice: (v: string) => void;
+  style?: StyleProp<ViewStyle>;       // 컨테이너 스타일
+  inputStyle?: StyleProp<TextStyle>;  // 내부 TextInput 스타일(선택)
+};
 
+export function PriceInput({ price, onChangePrice, style, inputStyle }: Props) {
   return (
-    <View>
-      <Input
+    <View style={[{ borderRadius: 8, paddingHorizontal: 12, height: 44, justifyContent: "center" }, style]}>
+      <TextInput
         value={price}
-        onChangeText={(text) => onChangePrice(formatPrice(text))}
+        onChangeText={onChangePrice}
         keyboardType="numeric"
-        placeholder="가격을 입력하세요"
+        style={[{ width: "100%" }, inputStyle]}
       />
     </View>
   );
-};
+}
