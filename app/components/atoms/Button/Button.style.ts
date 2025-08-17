@@ -190,24 +190,39 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 1, // 테두리 두께
   },
-  registerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  // registerItem
+  registerWrapper: {
+  alignItems: "center",
+  marginTop: 12,
+  marginBottom: 12,
+},
+registerGradientBorder: {
+  borderRadius: 10,
+  padding: 1, // 테두리 두께
+},
+registerItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'flex-start',   // 왼쪽 정렬
+  width: 376,
+  height: 44,
+  borderRadius: 10,
+  backgroundColor: '#fff',
+  paddingHorizontal: 12,          // 왼쪽 여백
+},
+registerIcon: {
+  marginRight: 8,
+},
+registerText: {
+  fontSize: 16,
+  color: "#000",
+},
+registerImage: {
+  width: 18,
+  height: 18,
+  marginRight: 8,
+},
 
-    width: 376, 
-    height: 44,
-    borderRadius: 10,
-
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  text: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#666',
-  },
   
   
 });

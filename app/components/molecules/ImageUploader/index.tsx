@@ -79,14 +79,15 @@ export const ImageUploader = ({ images, setImages }: ImageUploaderProps) => {
 
 const styles = StyleSheet.create({
   imagePreview: {
-    width: 80,
-    height: 80,
+    width: 192,
+    height: 124,
     borderRadius: 8,
     marginRight: 10,
   },
   uploadBox: {
-    width: 80,
-    height: 80,
+    width: 192,
+    height: 124,
+    marginLeft: 90,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,

@@ -1,5 +1,6 @@
+// Button.tsx
 import React from "react";
-import { TouchableOpacity, Text, View } from "react-native";
+import { TouchableOpacity, Text, View, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "./Button.style";
@@ -11,13 +12,13 @@ interface ButtonProps {
   isPressed?: boolean;
   text: string;
   variant?:
-    | "action"
-    | "submit"
-    | "signUpComplete"
-    | "check"
-    | "login"
-    | "socialLogin"
-    | "registerItem";
+  | "action"
+  | "submit"
+  | "signUpComplete"
+  | "check"
+  | "login"
+  | "socialLogin"
+  | "registerItem";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -39,10 +40,39 @@ const Button: React.FC<ButtonProps> = ({
   textColor,
 }) => {
   const handlePress = async () => {
-    if (onPress) {
-      await onPress(); // 비동기 함수로 변경
-    }
+    if (onPress) await onPress();
   };
+
+  // registerItem
+
+  if (variant === "registerItem") {
+    return (
+      <View style={styles.registerWrapper}>
+        <LinearGradient
+          colors={["#023047", "#C1F209"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.registerGradientBorder}
+        >
+          <TouchableOpacity
+            style={styles.registerItem}
+            onPress={handlePress}
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}
+            disabled={disabled}
+          >
+            <Image
+              source={require("../../../../assets/images/add-circle.png")} // ← 여기 경로 확인
+              style={styles.registerImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.registerText}>{text}</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+    );
+  }
+
 
   const getContainerStyle = () => {
     switch (variant) {
@@ -91,7 +121,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <TouchableOpacity
       style={getContainerStyle()}
-      onPress={handlePress} // 비동기 함수 호출
+      onPress={handlePress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       disabled={disabled}
