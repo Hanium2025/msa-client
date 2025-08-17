@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import UserInfo from "../molecules/UserInfo";
 import ImageCarousel from "../molecules/ImageCarousel";
 import PriceText from "../atoms/PriceText";
@@ -17,7 +17,8 @@ interface Product {
   };
   status: "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT";
   likeCount?: number;
-  images: { imageUrl: string }[]; // imageUrl 객체 배열
+  liked?: boolean; // 사용자가 좋아요 눌렀는지 여부
+  images: { imageUrl: string }[];
 }
 
 interface Props {
@@ -25,8 +26,6 @@ interface Props {
 }
 
 export default function ProductCard({ product }: Props) {
-  console.log(product.title);
-
   return (
     <View style={styles.card}>
       {/* 제목 + 가격 */}
@@ -35,6 +34,7 @@ export default function ProductCard({ product }: Props) {
         <PriceText price={product.price} />
       </View>
 
+      {/* 작성자 + 카테고리 */}
       <View style={styles.userRow}>
         <UserInfo
           nickname={product.user?.nickname ?? "알 수 없음"}
@@ -43,14 +43,24 @@ export default function ProductCard({ product }: Props) {
         <Tag label={product.category} />
       </View>
 
-      {/* 이미지 슬라이더 */}
-      <ImageCarousel images={product.images.map((img) => img.imageUrl)} />
-
-      {/* 설명 */}
-      <Text style={styles.description}>{product.description}</Text>
+      {/* 이미지 + 설명 묶음 */}
+      <View style={styles.body}>
+        <ImageCarousel images={product.images.map((img) => img.imageUrl)} />
+        <Text style={styles.description}>{product.description}</Text>
+      </View>
 
       {/* 좋아요 수 */}
-      <Text style={styles.likes}>⭐ {product.likeCount ?? 0}</Text>
+      <View style={styles.likesRow}>
+        <Image
+          source={
+            product.liked
+              ? require("../../../assets/images/star_black.png")
+              : require("../../../assets/images/star_gray.png")
+          }
+          style={styles.starIcon}
+        />
+        <Text style={styles.likesText}>{product.likeCount ?? 0}</Text>
+      </View>
     </View>
   );
 }
@@ -58,15 +68,14 @@ export default function ProductCard({ product }: Props) {
 const styles = StyleSheet.create({
   card: {
     width: 341,
-    height: 570,
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 16,
     marginHorizontal: 16,
     marginTop: 16,
     elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
+    shadowColor: "#D9D9D9",
+    shadowOpacity: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
   },
@@ -89,19 +98,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  tagRight: {
-    alignItems: "flex-end",
-    width: "100%",
-    marginBottom: 12,
+  body: {
+    marginTop: 8,
   },
   description: {
     fontSize: 14,
+    width: 303,
+    height: 242,
     color: "#333",
     marginTop: 12,
+    lineHeight: 20,
   },
-  likes: {
+  likesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  starIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
+  },
+  likesText: {
     fontSize: 13,
-    color: "#888",
-    marginTop: 8,
+    color: "#555",
   },
 });

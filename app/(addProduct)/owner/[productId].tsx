@@ -10,6 +10,8 @@ import ProductOwnerActions from "../../components/organisms/ProductOwnerActions"
 import { tokenStore } from "../../auth/tokenStore";
 import { useProductDetail } from "../../hooks/useProductDetail";
 
+const PHONE_WIDTH = 390; // iPhone 기준 폭
+
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
   if (Platform.OS === "web") window.alert(text);
@@ -54,13 +56,12 @@ function OwnerContent({ id, token }: { id: number; token: string }) {
   const router = useRouter();
 
   const handleEdit = () => {
-  router.push({
-    pathname: "/(addProduct)/edit/[productId]",
-    params: { productId: String(id) },
-  });
-};
+    router.push({
+      pathname: "/(addProduct)/edit/[productId]",
+      params: { productId: String(id) },
+    });
+  };
   const handleDelete = () => {
-    // TODO: 삭제 훅 연결
     console.log("삭제하기 클릭", id);
   };
 
@@ -78,7 +79,6 @@ function OwnerContent({ id, token }: { id: number; token: string }) {
     );
   }
 
-  // API → UI 매핑
   const images = (Array.isArray(data.images) ? data.images : [])
     .map((img: any) => ({ imageUrl: img?.imageUrl ?? "" }))
     .filter((i: any) => i.imageUrl);
@@ -97,24 +97,44 @@ function OwnerContent({ id, token }: { id: number; token: string }) {
     price: priceNum,
     category: data.category,
     description: data.content,
-    images, // [{ imageUrl }]
+    images,
     user: { nickname: "판매자", postedAt: "방금 전" },
     status: status as "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT",
     likeCount: Number(data.likeCount ?? 0),
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ProductCard product={product} />
-        <ProductOwnerActions onEdit={handleEdit} onDelete={handleDelete} />
-      </ScrollView>
-    </SafeAreaView>
+    <View style={styles.webRoot}>
+      <SafeAreaView style={styles.phoneFrame}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <ProductCard product={product} />
+          <ProductOwnerActions onEdit={handleEdit} onDelete={handleDelete} />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F9F9F9" },
+  webRoot: {
+    flex: 1,
+    backgroundColor: Platform.OS === "web" ? "#F5F6F7" : "#fff",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  phoneFrame: {
+    flex: 1,
+    backgroundColor: "#fff",
+    maxWidth: Platform.OS === "web" ? PHONE_WIDTH : undefined,
+    width: Platform.OS === "web" ? PHONE_WIDTH : undefined,
+    alignSelf: "center",
+    borderRadius: Platform.OS === "web" ? 24 : 0,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    overflow: Platform.OS === "web" ? "hidden" : "visible",
+  },
   scrollContainer: { paddingBottom: 32 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
 });
