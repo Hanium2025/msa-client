@@ -1,13 +1,16 @@
+// NewProductsSection.tsx
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList, ImageSourcePropType } from 'react-native';
 import { SectionTitle } from '../atoms/SectionTitle';
 import { ProductItemCard } from '../molecules/ProductItemCard';
 
+type Product = { id: string; name: string; price: string; image: ImageSourcePropType };
+
 interface Props {
-  products: { id: string; name: string; price: string }[];
+  products: Product[]; // ← 이미지 포함
 }
 
-const ITEM_W = (390 - 16 * 2 - 8 * 2) / 3; // 390 기준, 좌우 padding 16, 간격 8
+const ITEM_W = (390 - 16 * 2 - 8 * 2) / 3;
 
 export default function NewProductsSection({ products }: Props) {
   return (
@@ -19,7 +22,7 @@ export default function NewProductsSection({ products }: Props) {
         numColumns={3}
         renderItem={({ item }) => (
           <View style={[styles.item, { width: ITEM_W }]}>
-            <ProductItemCard name={item.name} price={item.price} />
+            <ProductItemCard name={item.name} price={item.price} image={item.image} />
           </View>
         )}
         columnWrapperStyle={styles.row}
@@ -31,12 +34,6 @@ export default function NewProductsSection({ products }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  item: {
-    flexGrow: 0,
-    flexShrink: 0,
-  },
+  row: { justifyContent: 'space-between', marginBottom: 12 },
+  item: { flexGrow: 0, flexShrink: 0 },
 });

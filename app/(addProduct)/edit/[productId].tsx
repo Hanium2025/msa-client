@@ -1,6 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Alert, Platform, SafeAreaView, ScrollView, StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Image,
+  Alert,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import RegisterLabel from "../../components/atoms/Label";
@@ -12,6 +21,29 @@ import Button from "../../components/atoms/Button";
 import { useProductDetail } from "../../hooks/useProductDetail";
 import { useUpdateProduct } from "../../hooks/useUpdateProduct";
 import { tokenStore } from "../../auth/tokenStore";
+const PHONE_WIDTH = 390; // iPhone 14 Pro width
+const MAX_IMAGES = 5;
+
+type CategoryValue =
+  | 'ELECTRONICS'
+  | 'FURNITURE'
+  | 'CLOTHES'
+  | 'BOOK'
+  | 'BEAUTY'
+  | 'FOOD'
+  | 'ETC';
+
+const isCategoryValue = (v: string): v is CategoryValue =>
+  (['ELECTRONICS','FURNITURE','CLOTHES','BOOK','BEAUTY','FOOD','ETC'] as const).includes(v as any);
+
+const CATEGORY_LABEL_TO_VALUE: Record<string, CategoryValue> = {
+  'IT, 전자제품': 'ELECTRONICS',
+  '가구, 인테리어': 'FURNITURE',
+  '옷, 잡화, 장신구': 'CLOTHES',
+  '도서, 학습 용품': 'BOOK',
+  '헤어, 뷰티, 화장품': 'BEAUTY',
+};
+
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -48,10 +80,21 @@ export default function EditProductScreen() {
   }, [id, router]);
 
   if (!boot || !authed) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
-  return <EditContent productId={id} />;
+  // 웹에서는 390px 고정 프레임 중앙 정렬, 네이티브는 전체 화면
+  return (
+    <View style={styles.webRoot}>
+      <SafeAreaView style={styles.phoneFrame}>
+        <EditContent productId={id} />
+      </SafeAreaView>
+    </View>
+  );
 }
 
 function EditContent({ productId }: { productId: number }) {
@@ -63,10 +106,9 @@ function EditContent({ productId }: { productId: number }) {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("선택");
 
-  // 새로 추가할 이미지
+  // 새로 추가할 이미지(웹: File[])
   const [newImages, setNewImages] = useState<File[]>([]);
-  // 기존 이미지 + 유지/삭제 토글
-  type ExistingImage = { productImageId: number; imageUrl: string; keep: boolean };
+  // 기존 이미지(keep=true만 화면에 보임)
   const [existing, setExisting] = useState<ExistingImage[]>([]);
 
   useEffect(() => {
@@ -74,9 +116,11 @@ function EditContent({ productId }: { productId: number }) {
     setTitle(data.title ?? "");
     setContent(data.content ?? "");
     setCategory(data.category ?? "선택");
+
     const priceNum =
-      typeof data.price === "number" ? data.price :
-      Number(String(data.price ?? "0").replace(/[^\d]/g, ""));
+      typeof data.price === "number"
+        ? data.price
+        : Number(String(data.price ?? "0").replace(/[^\d]/g, ""));
     setPrice(String(priceNum));
 
     const ex: ExistingImage[] = Array.isArray(data.images)
@@ -92,12 +136,12 @@ function EditContent({ productId }: { productId: number }) {
   }, [data]);
 
   const keptCount = existing.filter((e) => e.keep).length;
-  const MAX_IMAGES = 5;
   const remaining = Math.max(0, MAX_IMAGES - keptCount - newImages.length);
 
-  const toggleKeep = (id: number) => {
+  const removeExistingById = (id: number) => {
+    // X 누르면 렌더에서 사라지도록 keep=false
     setExisting((prev) =>
-      prev.map((e) => (e.productImageId === id ? { ...e, keep: !e.keep } : e))
+      prev.map((e) => (e.productImageId === id ? { ...e, keep: false } : e))
     );
   };
 
@@ -105,11 +149,14 @@ function EditContent({ productId }: { productId: number }) {
     setNewImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // ImageUploader가 maxCount를 지원하지 않는다고 가정하고 강제 제한
+  // ImageUploader가 maxCount 제어를 하지 않는다고 가정하고 강제 제한
   const handleSetNewImages = (list: File[]) => {
-    const allow = MAX_IMAGES - keptCount;
+    const allow = MAX_IMAGES - keptCount; // 남은 슬롯(신규만 고려)
     if (list.length > allow) {
-      showAlert("이미지 제한", `기존+신규 합쳐 최대 ${MAX_IMAGES}장입니다.\n남은 슬롯: ${allow}장`);
+      showAlert(
+        "이미지 제한",
+        `기존+신규 합쳐 최대 ${MAX_IMAGES}장입니다.\n남은 슬롯: ${allow}장`
+      );
       setNewImages(list.slice(0, allow));
     } else {
       setNewImages(list);
@@ -119,41 +166,47 @@ function EditContent({ productId }: { productId: number }) {
   const { mutate: updateProduct, isPending } = useUpdateProduct();
 
   const onSubmit = () => {
-    if (!title.trim()) return showAlert("상품명은 필수입니다.");
-    const priceValue = parseInt(price.replace(/[^0-9]/g, ""), 10) || 0;
-    if (priceValue <= 0) return showAlert("가격을 올바르게 입력해 주세요.");
-    if (category === "선택") return showAlert("카테고리를 선택해 주세요.");
+  if (!title.trim()) return showAlert("상품명은 필수입니다.");
+  const priceValue = parseInt(price.replace(/[^0-9]/g, ""), 10) || 0;
+  if (priceValue <= 0) return showAlert("가격을 올바르게 입력해 주세요.");
+  if (category === "선택") return showAlert("카테고리를 선택해 주세요.");
 
-    const leftImageIds = existing.filter((e) => e.keep).map((e) => e.productImageId);
-    if (leftImageIds.length + newImages.length > MAX_IMAGES) {
-      return showAlert("이미지 제한", `최대 ${MAX_IMAGES}장까지 가능합니다.`);
-    }
+  const leftImageIds = existing.filter(e => e.keep).map(e => e.productImageId);
 
-    updateProduct(
-      {
-        productId,
-        title: title.trim(),
-        content: content.trim(),
-        price: priceValue,
-        category,
-        leftImageIds,
-        newImages,
+
+  // 라벨이 들어오면 Enum 값으로 치환 (이미 값이면 그대로 사용)
+  const categoryValue = CATEGORY_LABEL_TO_VALUE[category] ?? category;
+
+  updateProduct(
+    {
+      productId,
+      title: title.trim(),
+      content: content.trim(),
+      price: priceValue,
+      category: categoryValue,   // 여기
+      leftImageIds,
+      newImages,
+    },
+    {
+      onSuccess: (res: any) => {
+        showAlert("완료", res?.message ?? "상품 수정이 완료되었습니다.");
+        router.replace(`/(addProduct)/owner/${productId}`);
       },
-      {
-        onSuccess: (res: any) => {
-          showAlert("완료", res?.message ?? "상품 수정이 완료되었습니다.");
-          router.replace(`/(addProduct)/owner/${productId}`);
-        },
-        onError: (e: any) => {
-          const msg = e?.response?.data?.message || e?.message || "상품 수정 중 오류가 발생했습니다.";
-          showAlert("오류", msg);
-        },
-      }
-    );
-  };
+      onError: (e: any) => {
+        const msg = e?.response?.data?.message || e?.message || "상품 수정 중 오류가 발생했습니다.";
+        showAlert("오류", msg);
+      },
+    }
+  );
+};
+
 
   if (isLoading) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
   if (error || !data) {
     return (
@@ -166,103 +219,187 @@ function EditContent({ productId }: { productId: number }) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* 이미지 라벨 */}
+      <RegisterLabel required text="이미지 (최대 5장)" />
 
-        {/* 이미지 라벨 */}
-        <RegisterLabel required text="이미지 (최대 5장)" />
+      {/* 썸네일 나열 */}
+<ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={styles.imageRowH}
+>
+  {/* 기존 이미지 */}
+  {existing.filter(e => e.keep).map((img) => (
+    <View key={`old-${img.productImageId}`} style={styles.thumb}>
+      <Image source={{ uri: img.imageUrl }} style={styles.thumbImg} />
+      <TouchableOpacity
+        onPress={() => removeExistingById(img.productImageId)}
+        style={styles.closeBtn}
+      >
+        <Text style={styles.closeTxt}>×</Text>
+      </TouchableOpacity>
+      <View style={styles.badge}><Text style={styles.badgeTxt}>기존</Text></View>
+    </View>
+  ))}
 
-        {/* ✔ 기존(유지) + 신규 프리뷰 + 추가 슬롯을 한 줄 컨테이너에 묶기 */}
-        <View style={styles.imageRow}>
-          {/* 기존 이미지 (유지/삭제 토글) */}
-          {existing.map((img) => (
-            <View key={`old-${img.productImageId}`} style={styles.thumb}>
-              <Image source={{ uri: img.imageUrl }} style={styles.thumbImg} />
-              <TouchableOpacity onPress={() => toggleKeep(img.productImageId)} style={styles.badge}>
-                <Text style={{ color: "#fff", fontSize: 12 }}>{img.keep ? "유지" : "삭제"}</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-
-          {/* 신규 이미지 프리뷰 (삭제 버튼) */}
-          {newImages.map((file, idx) => (
-            <View key={`new-${idx}`} style={styles.thumb}>
-              {/* 웹 File 미리보기 */}
-              {Platform.OS === "web" ? (
-                <Image src={URL.createObjectURL(file)} style={styles.thumbImg as any} />
-              ) : (
-                // 네이티브는 ImageUploader가 넣어주는 uri를 쓰는 게 안전
-                // 여기선 단순 표시 생략 가능
-                <View style={[styles.thumbImg, { alignItems: "center", justifyContent: "center" }]}>
-                  <Text>새 이미지</Text>
-                </View>
-              )}
-              <TouchableOpacity onPress={() => removeNewImageAt(idx)} style={[styles.badge, { backgroundColor: "#b00020" }]}>
-                <Text style={{ color: "#fff", fontSize: 12 }}>지우기</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-
-          {/* 추가(+) 타일: 남은 슬롯이 있을 때만 노출 */}
-          {remaining > 0 && (
-            <View style={styles.addSlot}>
-              {/* 기존 ImageUploader 재사용: 같은 row에 들어오도록 width 제한 */}
-              <ImageUploader
-                images={newImages}
-                setImages={handleSetNewImages}
-              />
-            </View>
-          )}
+  {/* 신규 이미지 */}
+  {newImages.map((file, idx) => (
+    <View key={`new-${idx}`} style={styles.thumb}>
+      {Platform.OS === "web" ? (
+        <Image
+          source={{ uri: URL.createObjectURL(file) }}   // src → source={{uri}}
+          style={styles.thumbImg}
+        />
+      ) : (
+        <View style={[styles.thumbImg, {alignItems:"center",justifyContent:"center"}]}>
+          <Text>새 이미지</Text>
         </View>
+      )}
+      <TouchableOpacity onPress={() => removeNewImageAt(idx)} style={styles.closeBtn}>
+        <Text style={styles.closeTxt}>×</Text>
+      </TouchableOpacity>
+      <View style={[styles.badge, styles.badgeNew]}>
+        <Text style={styles.badgeTxt}>신규</Text>
+      </View>
+    </View>
+  ))}
 
-        <View style={{ marginTop: 24 }}>
-          <RegisterLabel required text="상품명" />
-          <Input placeholder="상품명을 입력하세요" value={title} onChangeText={setTitle} />
-        </View>
+  {/* 추가(+) 버튼 */}
+  {remaining > 0 && (
+    <View style={styles.thumb}>
+      <ImageUploader
+        images={newImages}
+        setImages={handleSetNewImages}
+        buttonOnly
+        size={{ width: 192, height: 124 }}
+      />
+    </View>
+  )}
+</ScrollView>
 
-        <View style={{ marginTop: 24 }}>
-          <RegisterLabel required text="가격" />
-          <PriceInput price={price} onChangePrice={setPrice} />
-        </View>
 
-        <View style={{ marginTop: 24 }}>
-          <RegisterLabel required text="카테고리" />
-          <CategoryDropdown selected={category} onSelect={setCategory} />
-        </View>
+      <View style={{ marginTop: 24 }}>
+        <RegisterLabel required text="상품명" />
+        <Input
+          placeholder="상품명을 입력하세요"
+          value={title}
+          onChangeText={setTitle}
+        />
+      </View>
 
-        <View style={{ marginTop: 24 }}>
-          <RegisterLabel text="상세설명" />
-          <Input value={content} onChangeText={setContent} multiline numberOfLines={5} />
-        </View>
+      <View style={{ marginTop: 24 }}>
+        <RegisterLabel required text="가격" />
+        <PriceInput price={price} onChangePrice={setPrice} />
+      </View>
 
-        <View style={{ marginVertical: 16 }}>
-          <Button
-            text={isPending ? "수정 중..." : "수정 완료"}
-            variant="signUpComplete"
-            onPress={onSubmit}
-            disabled={isPending}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <View style={{ marginTop: 24 }}>
+        <RegisterLabel required text="카테고리" />
+        <CategoryDropdown selected={category} onSelect={setCategory} />
+      </View>
+
+      <View style={{ marginTop: 24 }}>
+        <RegisterLabel text="상세설명" />
+        <Input
+          value={content}
+          onChangeText={setContent}
+          multiline
+          numberOfLines={5}
+        />
+      </View>
+
+      <View style={{ marginVertical: 16 }}>
+        <Button
+          text={isPending ? "수정 중..." : "수정 완료"}
+          variant="signUpComplete"
+          onPress={onSubmit}
+          disabled={isPending}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
-
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
+  // 웹 중앙 정렬 프레임
+  webRoot: {
+    flex: 1,
+    backgroundColor: Platform.OS === "web" ? "#F5F6F7" : "#fff",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  phoneFrame: {
+    flex: 1,
+    backgroundColor: "#fff",
+    maxWidth: Platform.OS === "web" ? PHONE_WIDTH : undefined,
+    width: Platform.OS === "web" ? PHONE_WIDTH : undefined,
+    alignSelf: "center",
+    borderRadius: Platform.OS === "web" ? 24 : 0,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    overflow: Platform.OS === "web" ? "hidden" : "visible",
+  },
+
   container: { paddingVertical: 16, paddingHorizontal: 16 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
 
-  // 한 줄에 이미지들을 나열하고 줄바꿈 허용
-  imageRow: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 8 },
+  // 이미지 썸네일 레이아웃
+  imageRowH: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
 
-  // 썸네일/추가 타일 공통 사이즈
-  thumb: { width: 96, height: 96, borderRadius: 8, overflow: "hidden", position: "relative", backgroundColor: "#eee" },
+  // 썸네일/추가 타일
+  thumb: {
+    width: 192,
+    height: 124,
+    borderRadius: 8,
+    overflow: "hidden",
+    position: "relative",
+    backgroundColor: "#eee",
+  },
   thumbImg: { width: "100%", height: "100%" },
-  badge: { position: "absolute", bottom: 6, right: 6, backgroundColor: "#111", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, opacity: 0.85 },
 
-  // ImageUploader가 이 안에서 “+ 타일”을 표시하도록 작은 컨테이너 부여
-  addSlot: { width: 96, height: 96, borderRadius: 8, overflow: "hidden" },
+  // 우상단 X 버튼
+  closeBtn: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
+  closeTxt: { color: "#fff", fontSize: 16, lineHeight: 16, fontWeight: "700" },
+
+  // 좌하단 뱃지(옵션)
+  badge: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    backgroundColor: "#111",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    opacity: 0.85,
+  },
+  badgeNew: { backgroundColor: "#0d6efd" },
+  badgeTxt: { color: "#fff", fontSize: 11 },
+
+  addSlot: {
+  width: 192,
+  height: 124,
+  borderRadius: 8,
+  overflow: "hidden",
+},
+
 });
-
