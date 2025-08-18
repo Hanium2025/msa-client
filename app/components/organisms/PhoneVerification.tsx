@@ -18,7 +18,15 @@ const CodeVerificationInput: React.FC<CodeVerificationInputProps> = ({
 }) => {
   return (
     <RowLabelWithInput
-      label={<Label text="인증번호" />}
+      label={
+        <Label
+          text="인증번호"
+          style={{
+            fontWeight: "bold",
+            marginTop: 8,
+          }}
+        />
+      }
       input={
         <RowWithButton
           input={

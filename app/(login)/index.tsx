@@ -45,7 +45,7 @@ export default function LoginScreen() {
       const { accessToken } = await login({ email, password });
 
       // 2) 토큰 저장 (네이티브는 SecureStore, 웹은 localStorage)
-      await tokenStore.set(accessToken); 
+      await tokenStore.set(accessToken);
 
       // 2) 토큰 저장 (네이티브는 SecureStore, 웹은 localStorage)
       /*try {
@@ -83,9 +83,6 @@ export default function LoginScreen() {
       <View style={{ marginTop: 40, gap: 36, alignItems: "center" }}>
         <View style={{ alignItems: "center" }}>
           <LogoCircle />
-          <Text style={{ fontSize: 20, fontWeight: "700", marginTop: 16 }}>
-            서비스/캐치프레이즈
-          </Text>
         </View>
         <View style={{ gap: 26, alignItems: "center" }}>
           <LoginForm
