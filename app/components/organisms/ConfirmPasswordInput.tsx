@@ -14,7 +14,14 @@ const ConfirmPasswordInput: React.FC<ConfirmPasswordInputProps> = ({
 }) => {
   return (
     <RowLabelWithInput
-      label={<Label text="비밀번호 확인" />}
+      label={
+        <Label
+          text={"비밀번호\n확인"}
+          style={{
+            fontWeight: "bold",
+          }}
+        />
+      }
       input={
         <UnderlineInput
           placeholder="비밀번호 재입력"

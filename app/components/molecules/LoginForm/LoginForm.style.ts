@@ -7,5 +7,6 @@ export default StyleSheet.create({
     flexDirection: "column",
     alignItems: "flex-start",
     gap: 12,
+    marginTop: 10,
   },
 });

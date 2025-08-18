@@ -2,6 +2,7 @@ import React from "react";
 import RowLabelWithInput from "../molecules/RowLabelWithInput";
 import InlineEmailInput from "../molecules/InlineEmailInput";
 import Label from "../atoms/Label";
+import axios from "axios";
 
 interface EmailInputProps {
   email: string;
@@ -20,7 +21,15 @@ const EmailInput: React.FC<EmailInputProps> = ({
 }) => {
   return (
     <RowLabelWithInput
-      label={<Label text="이메일" />}
+      label={
+        <Label
+          text="이메일"
+          style={{
+            fontWeight: "bold",
+            marginTop: 8,
+          }}
+        />
+      }
       input={
         <InlineEmailInput
           email={email}
