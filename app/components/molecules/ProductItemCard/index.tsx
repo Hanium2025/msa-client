@@ -1,18 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
 
 interface Props {
   name: string;
   price: string;
+  image: ImageSourcePropType; // require(...) 또는 { uri: 'https://...' }
 }
 
-export const ProductItemCard = ({ name, price }: Props) => (
+export const ProductItemCard = ({ name, price, image }: Props) => (
   <View style={styles.card}>
-    <View style={styles.imagePlaceholder} />
+    <Image source={image} style={styles.image} resizeMode="cover" />
     <View style={styles.infoRow}>
-      <Text style={styles.name} numberOfLines={1}>
-        {name}
-      </Text>
+      <Text style={styles.name} numberOfLines={1}>{name}</Text>
       <Text style={styles.price}>{price}</Text>
     </View>
   </View>
@@ -24,23 +23,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginRight: 8,
   },
-  imagePlaceholder: {
-    backgroundColor: '#e0e0e0',
+  image: {
+    width: 120,
     height: 120,
     borderRadius: 8,
+    backgroundColor: '#e0e0e0',
     marginBottom: 4,
   },
-  // 상품명 + 가격 가로 배치
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   name: {
     fontSize: 10,
     fontWeight: '400',
     color: '#000',
-    flex: 1,               
+    flex: 1,
     marginRight: 4,
   },
   price: {

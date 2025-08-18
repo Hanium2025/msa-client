@@ -1,3 +1,4 @@
+// components/molecules/ImageUploader.tsx
 import React from "react";
 import {
   Alert,
@@ -14,19 +15,30 @@ import { Ionicons } from "@expo/vector-icons";
 interface ImageUploaderProps {
   images: (File | any)[];
   setImages: (files: (File | any)[]) => void;
+
+  // 추가 옵션
+  maxCount?: number;                     // 업로드 허용 최대 수 (미지정 시 5)
+  buttonOnly?: boolean;                  // true면 버튼(+)만 렌더, 프리뷰는 렌더 X
+  size?: { width: number; height: number }; // UI 크기 지정 (버튼/프리뷰 공통 기본값)
 }
 
-export const ImageUploader = ({ images, setImages }: ImageUploaderProps) => {
+export const ImageUploader = ({
+  images,
+  setImages,
+  maxCount = 5,
+  buttonOnly = false,
+  size = { width: 192, height: 124 },
+}: ImageUploaderProps) => {
   const handleUpload = async () => {
-    if (images.length >= 5) {
-      Alert.alert("최대 5장까지 업로드할 수 있습니다.");
+    if (images.length >= maxCount) {
+      Alert.alert(`최대 ${maxCount}장까지 업로드할 수 있습니다.`);
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       quality: 0.7,
-      mediaTypes: ["images"],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // ✅ 올바른 옵션
       base64: false,
     });
 
@@ -38,23 +50,43 @@ export const ImageUploader = ({ images, setImages }: ImageUploaderProps) => {
         const blob = await response.blob();
         const file = new File(
           [blob],
-          asset.fileName || `image_${Date.now()}.jpg`,
+          (asset as any).fileName || `image_${Date.now()}.jpg`,
           { type: blob.type || "image/jpeg" }
         );
-        setImages([...images, file]); // 웹은 File을 그대로 보관
+        setImages([...images, file]); // 웹은 File
       } else {
         setImages([
           ...images,
           {
             uri: asset.uri,
-            name: asset.fileName || `image_${Date.now()}.jpg`,
-            type: asset.type || "image/jpeg",
+            name: (asset as any).fileName || `image_${Date.now()}.jpg`,
+            type: (asset as any).type || "image/jpeg",
           },
         ]); // RN은 {uri,name,type}
       }
     }
   };
 
+  // 버튼만 (편집 페이지 + 타일 96x96 등에 사용)
+  if (buttonOnly) {
+    return (
+      <TouchableOpacity
+        onPress={handleUpload}
+        style={[
+          styles.uploadBox,
+          {
+            width: size.width,
+            height: size.height,
+          },
+        ]}
+        accessibilityLabel="이미지 추가"
+      >
+        <Ionicons name="camera-outline" size={40} color="#bbb" />
+      </TouchableOpacity>
+    );
+  }
+
+  // 기본(프리뷰 + 버튼)
   return (
     <View style={{ marginTop: 24 }}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -64,12 +96,21 @@ export const ImageUploader = ({ images, setImages }: ImageUploaderProps) => {
             source={{
               uri: Platform.OS === "web" ? URL.createObjectURL(img) : img.uri,
             }}
-            style={styles.imagePreview}
+            style={[
+              styles.imagePreview,
+              { width: size.width, height: size.height },
+            ]}
           />
         ))}
-        {images.length < 5 && (
-          <TouchableOpacity onPress={handleUpload} style={styles.uploadBox}>
-            <Ionicons name="camera-outline" size={40} color="#ccc" />
+        {images.length < maxCount && (
+          <TouchableOpacity
+            onPress={handleUpload}
+            style={[
+              styles.uploadBox,
+              { width: size.width, height: size.height, marginLeft: images.length ? 10 : 0 },
+            ]}
+          >
+            <Ionicons name="camera-outline" size={40} color="#bbb" />
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -79,18 +120,13 @@ export const ImageUploader = ({ images, setImages }: ImageUploaderProps) => {
 
 const styles = StyleSheet.create({
   imagePreview: {
-    width: 192,
-    height: 124,
     borderRadius: 8,
     marginRight: 10,
   },
   uploadBox: {
-    width: 192,
-    height: 124,
-    marginLeft: 90,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
+    borderColor: "#e0e0e0",
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#fafafa",

@@ -1,56 +1,73 @@
-import React, { useCallback } from 'react';
+// home.tsx
+import React, { useCallback, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SearchBar } from '../components/atoms/SearchBar';
 import RegisterItemButton from '../components/atoms/Button';
 import NewProductsSection from '../components/organisms/NewProductsSection';
 import CategorySection from '../components/organisms/CategorySection';
+import BottomTabBar from '../components/molecules/BottomTabBar';   // 하단 탭바
 import { tokenStore } from '../auth/tokenStore';
+import { images } from '../../assets/imageRegistry';
+import { categoryIcons } from '../../assets/categoryIcons';
 
-const PHONE_WIDTH = 390;   // iPhone 14 Pro width
+const todayProducts = [
+  { id: '1', name: '청바지 팔아요',       price: '9,000원',  image: images.jeans },
+  { id: '2', name: '노트북 13인치',       price: '99,000원', image: images.laptop13 },
+  { id: '3', name: '미니 휴대용 드라이어', price: '10,000원', image: images.miniDryer },
+  { id: '4', name: '전기포트 나눔해요',    price: '0원',     image: images.kettle },
+  { id: '5', name: '흰색 스커트 팬츠',     price: '8,000원',  image: images.whiteSkirt },
+  { id: '6', name: '레더자켓 프리미엄',    price: '19,000원', image: images.leatherJacket },
+];
+
+const PHONE_WIDTH = 390;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState('home'); // 홈
 
   const handleRegisterPress = useCallback(async () => {
     const token = await tokenStore.get();
-    if (!token) router.push('/(beforeLogin)');
+    if (!token) router.push('/(login)');
     else router.push('/(addProduct)');
   }, []);
 
-  const products = Array.from({ length: 6 }).map((_, i) => ({
-    id: i.toString(),
-    name: '상품명',
-    price: '99,000원',
-  }));
-
   const categories = [
-    { id: '1', name: '식물/원예' },
-    { id: '2', name: 'IT/가전' },
-    { id: '3', name: '명품/쥬얼리' },
-    { id: '4', name: '패션잡화' },
+    { id: '1', name: '옷, 잡화, 장신구', icon: categoryIcons.clothes },
+    { id: '2', name: 'IT, 전자제품',     icon: categoryIcons.electronics },
+    { id: '3', name: '도서, 학습 용품',   icon: categoryIcons.books },
+    { id: '4', name: '기타',             icon: categoryIcons.etc },
   ];
 
+  const onTabPress = (tab: string) => {
+    setActiveTab(tab);
+    // 필요하면 라우팅 연결
+    // if (tab === 'profile') router.push('/(me)');
+  };
+
   return (
-    // 웹: 바깥은 flex:1로 화면 전체 차지 + 가운데 정렬
     <View style={styles.webRoot}>
-      {/* 폰 프레임: 웹에선 390 고정폭, 네이티브에선 flex:1 */}
       <SafeAreaView style={styles.phoneFrame}>
         <StatusBar barStyle="dark-content" />
-        <SearchBar />
-        <RegisterItemButton
-          variant="registerItem"
-          text="내 물품 등록하기"
-          onPress={handleRegisterPress}
-        />
+
+        {/* 스크롤 영역 */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingBottom: 12 }} // 탭바와 살짝 간격
           showsVerticalScrollIndicator={false}
         >
-          <NewProductsSection products={products} />
+          <SearchBar />
+          <RegisterItemButton
+            variant="registerItem"
+            text="내 물품 등록하기"
+            onPress={handleRegisterPress}
+          />
+          <NewProductsSection products={todayProducts} />
           <CategorySection categories={categories} />
         </ScrollView>
+
+        {/* 고정 하단 탭바 (스크롤 밖) */}
+        <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
     </View>
   );
@@ -59,19 +76,16 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   webRoot: {
     flex: 1,
-    // 웹일 때만 회색 배경
     backgroundColor: Platform.OS === 'web' ? '#F5F6F7' : '#fff',
-    alignItems: 'center',        // 가로 가운데
-    justifyContent: 'flex-start' // 세로 위에서 시작
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   phoneFrame: {
     flex: 1,
     backgroundColor: '#fff',
-    // 웹에서만 390px로 폭 제한하고 가운데 두기
     maxWidth: Platform.OS === 'web' ? PHONE_WIDTH : undefined,
     width: Platform.OS === 'web' ? PHONE_WIDTH : undefined,
     alignSelf: 'center',
-    // (웹에서도 적용 가능)
     borderRadius: Platform.OS === 'web' ? 24 : 0,
     shadowColor: '#000',
     shadowOpacity: 0.08,

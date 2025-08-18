@@ -1,4 +1,3 @@
-// app/(addProduct)/owner/[productId].tsx
 import React, { useEffect, useState } from "react";
 import {
   View, SafeAreaView, ScrollView, StyleSheet,
@@ -7,10 +6,13 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import ProductCard from "../../components/organisms/ProductCard";
 import ProductOwnerActions from "../../components/organisms/ProductOwnerActions";
+import BottomTabBar from "../../components/molecules/BottomTabBar"; 
 import { tokenStore } from "../../auth/tokenStore";
 import { useProductDetail } from "../../hooks/useProductDetail";
+import { useDeleteProduct } from "../../hooks/useDeleteProduct";
 
-const PHONE_WIDTH = 390; // iPhone 기준 폭
+const PHONE_WIDTH = 390;
+const TABBAR_SPACE = 90; // 스크롤 내용이 탭바에 가리지 않도록 여백
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -52,17 +54,13 @@ export default function DetailOwnerScreen() {
 }
 
 function OwnerContent({ id, token }: { id: number; token: string }) {
-  const { data, isLoading, error } = useProductDetail(id, token);
   const router = useRouter();
+  const { mutate: deleteProduct } = useDeleteProduct();
+  const { data, isLoading, error } = useProductDetail(id, token);
 
-  const handleEdit = () => {
-    router.push({
-      pathname: "/(addProduct)/edit/[productId]",
-      params: { productId: String(id) },
-    });
-  };
-  const handleDelete = () => {
-    console.log("삭제하기 클릭", id);
+  const [activeTab, setActiveTab] = useState<'notifications'|'chat'|'documents'|'explore'|'profile'>('documents'); // ✅ 추가
+  const onTabPress = (tab: string) => {
+    setActiveTab(tab as any);
   };
 
   if (isLoading) {
@@ -79,37 +77,59 @@ function OwnerContent({ id, token }: { id: number; token: string }) {
     );
   }
 
-  const images = (Array.isArray(data.images) ? data.images : [])
+  const d = data!;
+  const images = (Array.isArray(d.images) ? d.images : [])
     .map((img: any) => ({ imageUrl: img?.imageUrl ?? "" }))
     .filter((i: any) => i.imageUrl);
 
   const priceNum =
-    typeof data.price === "number" ? data.price
-    : Number(String(data.price ?? "0").replace(/[^\d]/g, ""));
+    typeof d.price === "number" ? d.price : Number(String(d.price ?? "0").replace(/[^\d]/g, ""));
 
   const status =
-    data.status === "SELLING" ? "ON_SALE" :
-    data.status === "IN_PROGRESS" ? "IN_PROGRESS" : "SOLD_OUT";
+    d.status === "SELLING" ? "ON_SALE" :
+    d.status === "IN_PROGRESS" ? "IN_PROGRESS" : "SOLD_OUT";
 
   const product = {
     id: String(id),
-    title: data.title,
+    title: d.title,
     price: priceNum,
-    category: data.category,
-    description: data.content,
+    category: d.category,
+    description: d.content,
     images,
     user: { nickname: "판매자", postedAt: "방금 전" },
     status: status as "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT",
-    likeCount: Number(data.likeCount ?? 0),
+    likeCount: Number(d.likeCount ?? 0),
+  };
+
+  const handleEdit = () => {
+    router.push({ pathname: "/(addProduct)/edit/[productId]", params: { productId: String(id) } });
+  };
+
+  const handleDelete = () => {
+    deleteProduct(id, {
+      onSuccess: (res: any) => {
+        const msg = res?.message ?? "상품이 삭제되었습니다.";
+        showAlert("완료", msg);
+        router.replace("/(home)");
+      },
+      onError: (e: any) => {
+        const msg = e?.response?.data?.message || e?.message || "상품 삭제 중 오류가 발생했습니다.";
+        showAlert("오류", msg);
+      },
+    });
   };
 
   return (
     <View style={styles.webRoot}>
       <SafeAreaView style={styles.phoneFrame}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* 스크롤 영역 */}
+        <ScrollView contentContainerStyle={[styles.scrollContainer, { paddingBottom: TABBAR_SPACE }]}>
           <ProductCard product={product} />
           <ProductOwnerActions onEdit={handleEdit} onDelete={handleDelete} />
         </ScrollView>
+
+        {/* 고정 하단 탭바 */}
+        <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
     </View>
   );
