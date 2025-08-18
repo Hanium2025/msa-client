@@ -46,4 +46,42 @@ export const login = async (data: LoginRequest): Promise<LoginSuccess> => {
     email: res.data.data?.email,
     accessToken,
   };
+};
+
+// 인증번호 발송
+export interface SendSmsRequest {
+  phoneNumber: string;
 }
+
+export interface ApiMessage {
+  code: number;
+  message: string;
+}
+
+/** 하이픈/공백 제거 후 발송 */
+export const sendSmsCode = async (phoneNumber: string): Promise<ApiMessage> => {
+  const body: SendSmsRequest = {
+    phoneNumber: phoneNumber.replace(/[^0-9]/g, ""),
+  };
+  const res = await api.post("/user/sms/send", body);
+  // 기대 응답: { code:200, message:"메시지 발송 완료" }
+  return res.data as ApiMessage;
+};
+
+// 인증번호 검증
+export interface VerifySmsRequest {
+  phoneNumber: string; // 하이픈 없이, 혹은 자동 정리
+  smsCode: string;
+}
+
+export const verifySmsCode = async (
+  params: VerifySmsRequest
+): Promise<ApiMessage> => {
+  const body = {
+    phoneNumber: params.phoneNumber.replace(/[^0-9]/g, ""),
+    smsCode: params.smsCode,
+  };
+  const res = await api.post("/user/sms/verify", body);
+  // 기대 응답: { code:200, message:"인증번호 확인되었습니다." }
+  return res.data as ApiMessage;
+};
