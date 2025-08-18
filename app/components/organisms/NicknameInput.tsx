@@ -14,7 +14,15 @@ const NicknameInput: React.FC<NicknameInputProps> = ({
 }) => {
   return (
     <RowLabelWithInput
-      label={<Label text="닉네임" />}
+      label={
+        <Label
+          text="닉네임"
+          style={{
+            fontWeight: "bold",
+            marginTop: 8,
+          }}
+        />
+      }
       input={
         <UnderlineInput
           placeholder="닉네임 입력"

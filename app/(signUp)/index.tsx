@@ -18,10 +18,10 @@ import NicknameInput from "../components/organisms/NicknameInput";
 import Button from "../components/atoms/Button";
 import { router } from "expo-router";
 import { useSignUp } from "../hooks/useSignUp";
-
-// ✅ 추가: 인증 훅 분리 버전 임포트
 import { useSendSmsCode } from "../hooks/useSendSmsCode";
 import { useVerifySmsCode } from "../hooks/useVerifySmsCode";
+
+const PHONE_WIDTH = 390; // iPhone width
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -39,23 +39,14 @@ export default function SignUpScreen() {
   const [nickname, setNickname] = useState("");
   const [isPressed, setIsPressed] = useState(false);
 
-  // 회원가입 훅
   const { submit, loading } = useSignUp();
-
-  // ✅ 추가: 인증번호 발송/검증 훅 사용
-  const { send: sendCode, loading: sendingCode } = useSendSmsCode();
-  const { verify: verifyCode, loading: verifyingCode } = useVerifySmsCode();
-
-  // ✅ 추가: 인증 성공 여부(선택)
+  const { send: sendCode } = useSendSmsCode();
+  const { verify: verifyCode } = useVerifySmsCode();
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
 
-  // ✅ 추가: 인증번호 발송
   const handleSendCode = async () => {
     const cleaned = phone.replace(/[^0-9]/g, "");
-    if (!cleaned) {
-      showAlert("알림", "전화번호를 입력해 주세요.");
-      return;
-    }
+    if (!cleaned) return showAlert("알림", "전화번호를 입력해 주세요.");
     try {
       const { message } = await sendCode(cleaned);
       showAlert("인증번호 발송", message ?? "메시지 발송 완료");
@@ -65,13 +56,10 @@ export default function SignUpScreen() {
     }
   };
 
-  // ✅ 추가: 인증번호 검증
   const handleVerifyCode = async () => {
     const cleaned = phone.replace(/[^0-9]/g, "");
-    if (!cleaned || !code.trim()) {
-      showAlert("알림", "전화번호와 인증번호를 입력해 주세요.");
-      return;
-    }
+    if (!cleaned || !code.trim())
+      return showAlert("알림", "전화번호와 인증번호를 입력해 주세요.");
     try {
       const { message } = await verifyCode(cleaned, code.trim());
       setIsPhoneVerified(true);
@@ -92,30 +80,24 @@ export default function SignUpScreen() {
       !phone ||
       !nickname
     ) {
-      showAlert("필수 입력이 비었습니다.");
-      return;
+      return showAlert("필수 입력이 비었습니다.");
     }
     if (password !== confirmPassword) {
-      showAlert("비밀번호가 일치하지 않습니다.");
-      return;
+      return showAlert("비밀번호가 일치하지 않습니다.");
     }
-    // 8~16자, 대/소문자+숫자+특수문자 포함
     const passwordFormat =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,16}$/;
     if (!passwordFormat.test(password)) {
-      showAlert(
+      return showAlert(
         "비밀번호 형식 오류",
         "비밀번호는 8~16자의 영문 대/소문자, 숫자, 특수문자를 모두 포함해야 합니다."
       );
-      return;
     }
-
     if (!isPhoneVerified) {
-      showAlert(
+      return showAlert(
         "휴대폰 인증이 필요합니다.",
         "인증번호 확인 후 다시 시도해 주세요."
       );
-      return;
     }
 
     const fullEmail = `${email}@${emailDomain}`;
@@ -146,72 +128,99 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView contentContainerStyle={{ padding: 24 }}>
-        <Text
-          style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            marginBottom: 32,
-            textAlign: "center",
-          }}
-        >
-          회원가입
-        </Text>
+    // ✅ 바깥: 웹에서는 배경/가운데 정렬
+    <View style={styles.webRoot}>
+      {/* ✅ 폰 프레임: 웹에서만 폭 390 고정 */}
+      <SafeAreaView style={styles.phoneFrame}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.title}>회원가입</Text>
 
-        <View style={{ marginBottom: 20 }}>
-          <EmailInput
-            email={email}
-            emailDomain={emailDomain}
-            onChangeEmail={setEmail}
-            onChangeEmailDomain={setEmailDomain}
+          <View style={styles.section}>
+            <EmailInput
+              email={email}
+              emailDomain={emailDomain}
+              onChangeEmail={setEmail}
+              onChangeEmailDomain={setEmailDomain}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <PasswordInput password={password} onChangePassword={setPassword} />
+          </View>
+
+          <View style={styles.section}>
+            <ConfirmPasswordInput
+              confirmPassword={confirmPassword}
+              onChangeConfirmPassword={setConfirmPassword}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <PhoneInput
+              phone={phone}
+              onChangePhone={setPhone}
+              onPressSendCode={handleSendCode}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <CodeVerificationInput
+              code={code}
+              onChangeCode={setCode}
+              onPressVerify={handleVerifyCode}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <NicknameInput nickname={nickname} onChangeNickname={setNickname} />
+          </View>
+
+          <Button
+            style={{ marginTop: 100 }}
+            text={loading ? "처리 중..." : "다음으로"}
+            onPress={handleSignUp}
+            isPressed={isPressed}
+            variant="submit"
+            onPressIn={() => setIsPressed(true)}
+            onPressOut={() => setIsPressed(false)}
+            disabled={loading}
           />
-        </View>
-
-        <View style={{ marginBottom: 20 }}>
-          <PasswordInput password={password} onChangePassword={setPassword} />
-        </View>
-
-        <View style={{ marginBottom: 20 }}>
-          <ConfirmPasswordInput
-            confirmPassword={confirmPassword}
-            onChangeConfirmPassword={setConfirmPassword}
-          />
-        </View>
-
-        <View style={{ marginBottom: 20 }}>
-          <PhoneInput
-            phone={phone}
-            onChangePhone={setPhone}
-            onPressSendCode={handleSendCode}
-            // disabled={sendingCode}           // 컴포넌트가 받도록 되어 있다면 주석 해제
-          />
-        </View>
-
-        <View style={{ marginBottom: 20 }}>
-          <CodeVerificationInput
-            code={code}
-            onChangeCode={setCode}
-            onPressVerify={handleVerifyCode}
-            // disabled={verifyingCode}         // 컴포넌트가 받도록 되어 있다면 주석 해제
-          />
-        </View>
-
-        <View style={{ marginBottom: 20 }}>
-          <NicknameInput nickname={nickname} onChangeNickname={setNickname} />
-        </View>
-
-        <Button
-          text={loading ? "처리 중..." : "다음으로"}
-          onPress={handleSignUp}
-          isPressed={isPressed}
-          variant="submit"
-          onPressIn={() => setIsPressed(true)}
-          onPressOut={() => setIsPressed(false)}
-          disabled={loading}
-        />
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  webRoot: {
+    flex: 1,
+    backgroundColor: Platform.OS === "web" ? "#F5F6F7" : "#fff",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  phoneFrame: {
+    flex: 1,
+    backgroundColor: "#fff",
+    maxWidth: Platform.OS === "web" ? PHONE_WIDTH : undefined,
+    width: Platform.OS === "web" ? PHONE_WIDTH : undefined,
+    alignSelf: "center",
+    borderRadius: Platform.OS === "web" ? 24 : 0,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    overflow: Platform.OS === "web" ? "hidden" : "visible",
+  },
+  content: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  section: { marginBottom: 20 },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 32,
+    textAlign: "center",
+  },
+});

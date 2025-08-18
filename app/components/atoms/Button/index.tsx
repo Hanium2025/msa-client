@@ -1,6 +1,13 @@
 // Button.tsx
 import React from "react";
-import { TouchableOpacity, Text, View, Image } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  View,
+  Image,
+  StyleProp,
+  ViewStyle,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "./Button.style";
@@ -11,14 +18,15 @@ interface ButtonProps {
   onPressOut?: () => void;
   isPressed?: boolean;
   text: string;
+  style?: StyleProp<ViewStyle>;
   variant?:
-  | "action"
-  | "submit"
-  | "signUpComplete"
-  | "check"
-  | "login"
-  | "socialLogin"
-  | "registerItem";
+    | "action"
+    | "submit"
+    | "signUpComplete"
+    | "check"
+    | "login"
+    | "socialLogin"
+    | "registerItem";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -32,6 +40,7 @@ const Button: React.FC<ButtonProps> = ({
   onPressOut,
   isPressed = false,
   text,
+  style,
   variant = "action",
   checked = false,
   disabled = false,
@@ -72,7 +81,6 @@ const Button: React.FC<ButtonProps> = ({
       </View>
     );
   }
-
 
   const getContainerStyle = () => {
     switch (variant) {
@@ -120,7 +128,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <TouchableOpacity
-      style={getContainerStyle()}
+      style={[getContainerStyle(), style]}
       onPress={handlePress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
