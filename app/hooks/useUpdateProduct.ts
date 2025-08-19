@@ -1,8 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { tokenStore } from "../auth/tokenStore";
 import {
-  updateProduct,
-  UpdateProductJson,     
+  updateProduct,   
   RNFile,
 } from "../lib/api/product";
 
@@ -27,6 +26,8 @@ export type UpdateProductPayload = {
 };
 
 export function useUpdateProduct() {
+  const qc = useQueryClient();
+
   return useMutation({
     mutationFn: async (p: UpdateProductPayload) => {
       const token = await tokenStore.get();
@@ -45,5 +46,20 @@ export function useUpdateProduct() {
         token,
       });
     },
+
+    onSuccess: (_res, vars) => {
+      // 상세 캐시 무효화
+      qc.invalidateQueries({ queryKey: ["productDetail", vars.productId], exact: false });
+
+      // 목록 캐시가 있다면 함께 무효화
+      qc.invalidateQueries({ queryKey: ["productList"], exact: false });
+
+      qc.setQueryData(["productDetail", vars.productId], (old: any) =>
+        old
+          ? { ...old, title: vars.title, content: vars.content, price: vars.price, category: vars.category }
+          : old
+      );
+    },
   });
+  
 }

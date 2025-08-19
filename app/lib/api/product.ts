@@ -51,12 +51,12 @@ export async function updateProduct({
 }: {
   productId: number;
   json: UpdateProductJson;
-  newImages: Array<File | RNFile>;  // ← 웹 File + RNFile
+  newImages: Array<File | RNFile>;  
   token: string;
 }) {
   const fd = new FormData();
 
-  // ✅ 수정: Blob 대신 "문자 파트"로 (등록과 동일하게)
+  // 수정: Blob 대신 "문자 파트"로 (등록과 동일하게)
   fd.append("json", JSON.stringify(json));
 
   // 새 이미지(있을 때만)
