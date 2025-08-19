@@ -38,7 +38,7 @@ export const ImageUploader = ({
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       quality: 0.7,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // ✅ 올바른 옵션
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, 
       base64: false,
     });
 
@@ -121,7 +121,6 @@ export const ImageUploader = ({
 const styles = StyleSheet.create({
   imagePreview: {
     borderRadius: 8,
-    marginRight: 10,
   },
   uploadBox: {
     borderWidth: 1,

@@ -1,6 +1,6 @@
 // hooks/useProductDetail.ts
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../lib/api"; // ← 경로 프로젝트 구조에 맞게 조정
+import { api } from "../lib/api"; 
 
 type ApiImage = {
   productImageId: number;
@@ -13,7 +13,7 @@ export type ApiProduct = {
   title: string;
   content: string;
   price: number | string;
-  category: string; // "ELECTRONICS" 등
+  category: string; 
   status: "SELLING" | "IN_PROGRESS" | "SOLD_OUT";
   images: ApiImage[];
 };
@@ -25,7 +25,6 @@ type ApiResponse = ApiOk | ApiNotFound;
 async function fetchProductDetail(productId: number): Promise<ApiProduct> {
   const { data } = await api.get<ApiResponse>(`/product/${productId}`);
 
-  // HTTP 200이라도 body.code가 404일 수 있음
   if ("code" in data && data.code === 404) {
     throw new Error(data.message || "해당하는 상품을 찾을 수 없습니다.");
   }

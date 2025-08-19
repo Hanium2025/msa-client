@@ -34,7 +34,7 @@ type CategoryValue =
   | 'ETC';
 
 const isCategoryValue = (v: string): v is CategoryValue =>
-  (['ELECTRONICS','FURNITURE','CLOTHES','BOOK','BEAUTY','FOOD','ETC'] as const).includes(v as any);
+  (['ELECTRONICS', 'FURNITURE', 'CLOTHES', 'BOOK', 'BEAUTY', 'FOOD', 'ETC'] as const).includes(v as any);
 
 const CATEGORY_LABEL_TO_VALUE: Record<string, CategoryValue> = {
   'IT, 전자제품': 'ELECTRONICS',
@@ -125,12 +125,12 @@ function EditContent({ productId }: { productId: number }) {
 
     const ex: ExistingImage[] = Array.isArray(data.images)
       ? data.images
-          .map((img: any) => ({
-            productImageId: Number(img?.productImageId),
-            imageUrl: String(img?.imageUrl ?? ""),
-            keep: true,
-          }))
-          .filter((x) => x.productImageId && x.imageUrl)
+        .map((img: any) => ({
+          productImageId: Number(img?.productImageId),
+          imageUrl: String(img?.imageUrl ?? ""),
+          keep: true,
+        }))
+        .filter((x) => x.productImageId && x.imageUrl)
       : [];
     setExisting(ex);
   }, [data]);
@@ -166,39 +166,39 @@ function EditContent({ productId }: { productId: number }) {
   const { mutate: updateProduct, isPending } = useUpdateProduct();
 
   const onSubmit = () => {
-  if (!title.trim()) return showAlert("상품명은 필수입니다.");
-  const priceValue = parseInt(price.replace(/[^0-9]/g, ""), 10) || 0;
-  if (priceValue <= 0) return showAlert("가격을 올바르게 입력해 주세요.");
-  if (category === "선택") return showAlert("카테고리를 선택해 주세요.");
+    if (!title.trim()) return showAlert("상품명은 필수입니다.");
+    const priceValue = parseInt(price.replace(/[^0-9]/g, ""), 10) || 0;
+    if (priceValue <= 0) return showAlert("가격을 올바르게 입력해 주세요.");
+    if (category === "선택") return showAlert("카테고리를 선택해 주세요.");
 
-  const leftImageIds = existing.filter(e => e.keep).map(e => e.productImageId);
+    const leftImageIds = existing.filter(e => e.keep).map(e => e.productImageId);
 
 
-  // 라벨이 들어오면 Enum 값으로 치환 (이미 값이면 그대로 사용)
-  const categoryValue = CATEGORY_LABEL_TO_VALUE[category] ?? category;
+    // 라벨이 들어오면 Enum 값으로 치환 (이미 값이면 그대로 사용)
+    const categoryValue = CATEGORY_LABEL_TO_VALUE[category] ?? category;
 
-  updateProduct(
-    {
-      productId,
-      title: title.trim(),
-      content: content.trim(),
-      price: priceValue,
-      category: categoryValue,   // 여기
-      leftImageIds,
-      newImages,
-    },
-    {
-      onSuccess: (res: any) => {
-        showAlert("완료", res?.message ?? "상품 수정이 완료되었습니다.");
-        router.replace(`/(addProduct)/owner/${productId}`);
+    updateProduct(
+      {
+        productId,
+        title: title.trim(),
+        content: content.trim(),
+        price: priceValue,
+        category: categoryValue,   // 여기
+        leftImageIds,
+        newImages,
       },
-      onError: (e: any) => {
-        const msg = e?.response?.data?.message || e?.message || "상품 수정 중 오류가 발생했습니다.";
-        showAlert("오류", msg);
-      },
-    }
-  );
-};
+      {
+        onSuccess: (res: any) => {
+          showAlert("완료", res?.message ?? "상품 수정이 완료되었습니다.");
+          router.replace(`/(addProduct)/owner/${productId}`);
+        },
+        onError: (e: any) => {
+          const msg = e?.response?.data?.message || e?.message || "상품 수정 중 오류가 발생했습니다.";
+          showAlert("오류", msg);
+        },
+      }
+    );
+  };
 
 
   if (isLoading) {
@@ -228,78 +228,83 @@ function EditContent({ productId }: { productId: number }) {
       <RegisterLabel required text="이미지 (최대 5장)" />
 
       {/* 썸네일 나열 */}
-<ScrollView
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  contentContainerStyle={styles.imageRowH}
->
-  {/* 기존 이미지 */}
-  {existing.filter(e => e.keep).map((img) => (
-    <View key={`old-${img.productImageId}`} style={styles.thumb}>
-      <Image source={{ uri: img.imageUrl }} style={styles.thumbImg} />
-      <TouchableOpacity
-        onPress={() => removeExistingById(img.productImageId)}
-        style={styles.closeBtn}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.imageRowH}
       >
-        <Text style={styles.closeTxt}>×</Text>
-      </TouchableOpacity>
-      <View style={styles.badge}><Text style={styles.badgeTxt}>기존</Text></View>
-    </View>
-  ))}
+        {/* 기존 이미지 */}
+        {existing.filter(e => e.keep).map((img) => (
+          <View key={`old-${img.productImageId}`} style={styles.thumb}>
+            <Image source={{ uri: img.imageUrl }} style={styles.thumbImg} />
+            <TouchableOpacity
+              onPress={() => removeExistingById(img.productImageId)}
+              style={styles.closeBtn}
+            >
+              <Text style={styles.closeTxt}>×</Text>
+            </TouchableOpacity>
+            <View style={styles.badge}><Text style={styles.badgeTxt}>기존</Text></View>
+          </View>
+        ))}
 
-  {/* 신규 이미지 */}
-  {newImages.map((file, idx) => (
-    <View key={`new-${idx}`} style={styles.thumb}>
-      {Platform.OS === "web" ? (
-        <Image
-          source={{ uri: URL.createObjectURL(file) }}   // src → source={{uri}}
-          style={styles.thumbImg}
-        />
-      ) : (
-        <View style={[styles.thumbImg, {alignItems:"center",justifyContent:"center"}]}>
-          <Text>새 이미지</Text>
-        </View>
-      )}
-      <TouchableOpacity onPress={() => removeNewImageAt(idx)} style={styles.closeBtn}>
-        <Text style={styles.closeTxt}>×</Text>
-      </TouchableOpacity>
-      <View style={[styles.badge, styles.badgeNew]}>
-        <Text style={styles.badgeTxt}>신규</Text>
-      </View>
-    </View>
-  ))}
+        {/* 신규 이미지 */}
+        {newImages.map((file, idx) => (
+          <View key={`new-${idx}`} style={styles.thumb}>
+            {Platform.OS === "web" ? (
+              <Image
+                source={{ uri: URL.createObjectURL(file) }}   // src → source={{uri}}
+                style={styles.thumbImg}
+              />
+            ) : (
+              <View style={[styles.thumbImg, { alignItems: "center", justifyContent: "center" }]}>
+                <Text>새 이미지</Text>
+              </View>
+            )}
+            <TouchableOpacity onPress={() => removeNewImageAt(idx)} style={styles.closeBtn}>
+              <Text style={styles.closeTxt}>×</Text>
+            </TouchableOpacity>
+            <View style={[styles.badge, styles.badgeNew]}>
+              <Text style={styles.badgeTxt}>신규</Text>
+            </View>
+          </View>
+        ))}
 
-  {/* 추가(+) 버튼 */}
-  {remaining > 0 && (
-    <View style={styles.thumb}>
-      <ImageUploader
-        images={newImages}
-        setImages={handleSetNewImages}
-        buttonOnly
-        size={{ width: 192, height: 124 }}
-      />
-    </View>
-  )}
-</ScrollView>
+        {/* 추가 버튼 */}
+        {remaining > 0 && (
+          <View style={styles.thumb}>
+            <ImageUploader
+              images={newImages}
+              setImages={handleSetNewImages}
+              buttonOnly
+              size={{ width: 192, height: 124 }}
+            />
+          </View>
+        )}
+      </ScrollView>
 
 
-      <View style={{ marginTop: 24 }}>
-        <RegisterLabel required text="상품명" />
+      <View style={styles.row}>
+        <RegisterLabel required text="상품명" style={styles.label} />
         <Input
           placeholder="상품명을 입력하세요"
           value={title}
           onChangeText={setTitle}
+          style={styles.flexInput}
         />
       </View>
 
-      <View style={{ marginTop: 24 }}>
-        <RegisterLabel required text="가격" />
-        <PriceInput price={price} onChangePrice={setPrice} />
+      <View style={styles.row}>
+        <RegisterLabel required text="가격" style={styles.label} />
+        <PriceInput price={price} onChangePrice={setPrice} style={styles.flexInput} />
       </View>
 
-      <View style={{ marginTop: 24 }}>
-        <RegisterLabel required text="카테고리" />
-        <CategoryDropdown selected={category} onSelect={setCategory} />
+      <View style={styles.row}>
+        <RegisterLabel required text="카테고리" style={styles.label} />
+        <CategoryDropdown
+          selected={category}
+          onSelect={setCategory}
+          style={styles.flexInput}
+        />
       </View>
 
       <View style={{ marginTop: 24 }}>
@@ -309,6 +314,9 @@ function EditContent({ productId }: { productId: number }) {
           onChangeText={setContent}
           multiline
           numberOfLines={5}
+          style={[
+      styles.textarea, // 새 스타일 적용
+    ]}
         />
       </View>
 
@@ -396,10 +404,36 @@ const styles = StyleSheet.create({
   badgeTxt: { color: "#fff", fontSize: 11 },
 
   addSlot: {
-  width: 192,
-  height: 124,
-  borderRadius: 8,
-  overflow: "hidden",
-},
+    width: 192,
+    height: 124,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+    borderBottomWidth: 1,        // 추가
+    borderBottomColor: "#E0E0E0", // 연한 회색
+    paddingBottom: 8,
+  },
+  label: {
+    width: 80, // 라벨 고정 폭
+    marginRight: 8,
+  },
+  flexInput: {
+    flex: 1,
+  },
+
+  textarea: {
+    width: 345,
+    height: 310,
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+    borderRadius: 10,
+    padding: 10,
+    textAlignVertical: 'top', // 안드로이드에서 위쪽 정렬
+  },
 
 });

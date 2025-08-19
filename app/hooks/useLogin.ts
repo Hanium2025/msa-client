@@ -1,4 +1,3 @@
-// app/hooks/useLogin.ts  ← 새 파일
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { login, LoginRequest } from "../lib/api/user";

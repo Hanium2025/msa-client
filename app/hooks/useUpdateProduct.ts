@@ -4,10 +4,9 @@ import {
   updateProduct,
   UpdateProductJson,     
   RNFile,
-  // ProductDTO 같은 반환 타입이 있다면 함께 import
 } from "../lib/api/product";
 
-// 서버 enum에 맞춰 제한
+
 export type CategoryValue =
   | "ELECTRONICS"
   | "FURNITURE"
@@ -21,8 +20,8 @@ export type UpdateProductPayload = {
   productId: number;
   title: string;
   content: string;
-  price: number;                  // 서버 DTO(Long)과 동일
-  category: CategoryValue;        // enum으로 제한
+  price: number;                  
+  category: CategoryValue;        
   leftImageIds: number[];
   newImages: Array<File | RNFile>;
 };
