@@ -1,16 +1,16 @@
-import { useState, useCallback } from "react";
-import { signUp, type SignUpRequest } from "../lib/api/user";
+import { useState } from "react";
+import { signUp, SignUpRequest } from "../lib/api/user";
 
 export const useSignUp = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = useCallback(async (data: SignUpRequest) => {
+  const submit = async (data: SignUpRequest) => {
     setLoading(true);
     setError(null);
     try {
       const res = await signUp(data);
-      return res.data; // { code, message, data } 가정
+      return res.data; // { code, message, data }
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? "회원가입 실패";
       setError(msg);
@@ -18,7 +18,7 @@ export const useSignUp = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   return { submit, loading, error };
 };

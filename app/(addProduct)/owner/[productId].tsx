@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View, SafeAreaView, ScrollView, StyleSheet,
   ActivityIndicator, Text, Alert, Platform,
@@ -6,7 +7,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import ProductCard from "../../components/organisms/ProductCard";
 import ProductOwnerActions from "../../components/organisms/ProductOwnerActions";
-import BottomTabBar from "../../components/molecules/BottomTabBar"; 
+import BottomTabBar from "../../components/molecules/BottomTabBar";
 import { tokenStore } from "../../auth/tokenStore";
 import { useProductDetail } from "../../hooks/useProductDetail";
 import { useDeleteProduct } from "../../hooks/useDeleteProduct";
@@ -56,12 +57,20 @@ export default function DetailOwnerScreen() {
 function OwnerContent({ id, token }: { id: number; token: string }) {
   const router = useRouter();
   const { mutate: deleteProduct } = useDeleteProduct();
-  const { data, isLoading, error } = useProductDetail(id, token);
+  const { data, isLoading, error, refetch } = useProductDetail(id, token);
 
-  const [activeTab, setActiveTab] = useState<'notifications'|'chat'|'documents'|'explore'|'profile'>('documents'); // ✅ 추가
+  const [activeTab, setActiveTab] = useState<'notifications' | 'chat' | 'documents' | 'explore' | 'profile'>('documents');
   const onTabPress = (tab: string) => {
     setActiveTab(tab as any);
   };
+
+  // 화면이 다시 포커스될 때마다 최신 데이터로 갱신
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+      return () => { };
+    }, [id, refetch])
+  );
 
   if (isLoading) {
     return <View style={styles.center}><ActivityIndicator size="large" /></View>;
@@ -87,7 +96,7 @@ function OwnerContent({ id, token }: { id: number; token: string }) {
 
   const status =
     d.status === "SELLING" ? "ON_SALE" :
-    d.status === "IN_PROGRESS" ? "IN_PROGRESS" : "SOLD_OUT";
+      d.status === "IN_PROGRESS" ? "IN_PROGRESS" : "SOLD_OUT";
 
   const product = {
     id: String(id),
