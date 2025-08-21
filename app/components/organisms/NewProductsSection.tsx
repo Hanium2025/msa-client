@@ -1,30 +1,39 @@
+// NewProductsSection.tsx
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, FlatList, ImageSourcePropType } from 'react-native';
 import { SectionTitle } from '../atoms/SectionTitle';
 import { ProductItemCard } from '../molecules/ProductItemCard';
 
+type Product = { id: string; name: string; price: string; image: ImageSourcePropType };
+
 interface Props {
-  products: { id: string; name: string; price: string }[];
+  products: Product[]; // ← 이미지 포함
 }
 
-const NewProductsSection = ({ products }: Props) => (
-  <View>
-    <SectionTitle title="오늘 새로 올라왔어요" />
-    <View style={styles.grid}>
-      {products.map((p) => (
-        <ProductItemCard key={p.id} name={p.name} price={p.price} />
-      ))}
+const ITEM_W = (390 - 16 * 2 - 8 * 2) / 3;
+
+export default function NewProductsSection({ products }: Props) {
+  return (
+    <View style={{ width: 390, alignSelf: 'center' }}>
+      <SectionTitle title="오늘 새로" subtitle="올라왔어요" />
+      <FlatList
+        data={products}
+        keyExtractor={(it) => it.id}
+        numColumns={3}
+        renderItem={({ item }) => (
+          <View style={[styles.item, { width: ITEM_W }]}>
+            <ProductItemCard name={item.name} price={item.price} image={item.image} />
+          </View>
+        )}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
-  </View>
-);
+  );
+}
 
 const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
+  row: { justifyContent: 'space-between', marginBottom: 12 },
+  item: { flexGrow: 0, flexShrink: 0 },
 });
-
-export default NewProductsSection;

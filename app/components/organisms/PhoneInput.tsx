@@ -18,7 +18,15 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 }) => {
   return (
     <RowLabelWithInput
-      label={<Label text="전화번호" />}
+      label={
+        <Label
+          text="전화번호"
+          style={{
+            fontWeight: "bold",
+            marginTop: 9,
+          }}
+        />
+      }
       input={
         <RowWithButton
           input={

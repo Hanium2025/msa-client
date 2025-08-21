@@ -14,10 +14,18 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 }) => {
   return (
     <RowLabelWithInput
-      label={<Label text="비밀번호" />}
+      label={
+        <Label
+          text="비밀번호"
+          style={{
+            fontWeight: "bold",
+            marginTop: 8,
+          }}
+        />
+      }
       input={
         <UnderlineInput
-          placeholder="비밀번호 입력 (8~16자의 영문 대/소문자, 숫자, 특수문자)"
+          placeholder="비밀번호 입력(8~16자의 영문 대/소문자, 숫자, 특수문자)"
           secureTextEntry
           value={password}
           onChangeText={onChangePassword}

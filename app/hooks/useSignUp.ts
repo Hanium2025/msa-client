@@ -10,7 +10,7 @@ export const useSignUp = () => {
     setError(null);
     try {
       const res = await signUp(data);
-      return res.data; // { code, message, data } 형태일 가능성
+      return res.data; // { code, message, data }
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? "회원가입 실패";
       setError(msg);

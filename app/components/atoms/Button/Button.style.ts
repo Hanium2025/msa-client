@@ -168,21 +168,21 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  
+
   button: {
-    backgroundColor: '#023047',
+    backgroundColor: "#023047",
     borderRadius: 25,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#C1F209',
+    fontWeight: "600",
+    color: "#C1F209",
   },
 
   wrapper: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 12,
     marginBottom: 12,
   },
@@ -190,24 +190,36 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 1, // 테두리 두께
   },
+  // registerItem
+  registerWrapper: {
+    alignItems: "center",
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  registerGradientBorder: {
+    borderRadius: 10,
+    padding: 1, // 테두리 두께
+  },
   registerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    width: 376, 
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start", // 왼쪽 정렬
+    width: 376,
     height: 44,
     borderRadius: 10,
-
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: "#fff",
+    paddingHorizontal: 12, // 왼쪽 여백
   },
-  text: {
-    marginLeft: 8,
+  registerIcon: {
+    marginRight: 8,
+  },
+  registerText: {
     fontSize: 16,
-    color: '#666',
+    color: "#000",
   },
-  
-  
+  registerImage: {
+    width: 18,
+    height: 18,
+    marginRight: 8,
+  },
 });
