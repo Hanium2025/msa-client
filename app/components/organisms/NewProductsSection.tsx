@@ -8,7 +8,7 @@ type Product = { id: string; name: string; price: string; image: ImageSourceProp
 
 interface Props {
   products: Product[];
-  onPress?: (productId: string) => void; // ← 이미지 포함
+  onPress?: (productId: string) => void; 
 }
 
 const ITEM_W = (390 - 16 * 2 - 8 * 2) / 3;
@@ -24,7 +24,7 @@ export default function NewProductsSection({ products }: Props) {
         renderItem={({ item }) => (
           <View style={[styles.item, { width: ITEM_W }]}>
             <TouchableOpacity
-              onPress={() => { if (onPress) onPress(item.id); }}  // ✅ 안전 가드로 호출
+              onPress={() => { if (onPress) onPress(item.id); }}  
               activeOpacity={0.8}
             >
               <ProductItemCard name={item.name} price={item.price} image={item.image} />
