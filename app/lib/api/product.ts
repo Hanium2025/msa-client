@@ -43,6 +43,8 @@ export const fetchProductDetail = async (productId: number, token: string) => {
 
 
 //상품 수정
+const JSON_PART_NAME = "json";
+
 export async function updateProduct({
   productId,
   json,
@@ -51,44 +53,59 @@ export async function updateProduct({
 }: {
   productId: number;
   json: UpdateProductJson;
-  newImages: Array<File | RNFile>;  
+  newImages: Array<File | RNFile>;
   token: string;
 }) {
   const fd = new FormData();
 
-  // 수정: Blob 대신 "문자 파트"로 (등록과 동일하게)
-  fd.append("json", JSON.stringify(json));
+  if (Platform.OS === "web") {
+  fd.append(JSON_PART_NAME, JSON.stringify(json));
+} else {
+  fd.append(JSON_PART_NAME, JSON.stringify(json) as any);
+}
 
-  // 새 이미지(있을 때만)
-  if (newImages && newImages.length > 0) {
+  if (Array.isArray(newImages) && newImages.length > 0) {
+    // 새 이미지들 추가
     newImages.forEach((img, idx) => {
       if (Platform.OS === "web") {
         const f = img as File;
         fd.append("images", f, f.name ?? `image_${idx}.jpg`);
       } else {
         const f = img as RNFile;
-        fd.append("images", {
-          uri: f.uri,
-          name: f.name ?? `image_${idx}.jpg`,
-          type: f.type ?? "image/jpeg",
-        } as any);
+        fd.append(
+          "images",
+          { uri: f.uri, name: f.name ?? `image_${idx}.jpg`, type: f.type ?? "image/jpeg" } as any
+        );
       }
     });
+  } else {
+    // 0개여도 images 키 포함
+    if (Platform.OS === "web") {
+      // 0바이트 빈 파일
+      fd.append("images", new File([], ""));
+    } else {
+      // 0바이트 data URI로 빈 파일 파트
+      fd.append(
+        "images",
+        {
+          uri: "data:application/octet-stream;base64,", // 빈 데이터
+          name: "empty",
+          type: "application/octet-stream",
+        } as any
+      );
+    }
   }
 
   const res = await api.put(`/product/${productId}`, fd, {
     headers: { Authorization: `Bearer ${token}` },
     transformRequest: (data, headers) => {
-      // boundary 자동 생성을 위해 수동 Content-Type 제거
-      // @ts-ignore
       delete headers["Content-Type"];
-      // @ts-ignore
       delete headers.common?.["Content-Type"];
       return data;
     },
   });
 
-  return res.data; // { code, message, data }
+  return res.data;
 }
 
 
@@ -99,7 +116,6 @@ export async function deleteProduct(productId: number, token: string) {
       Authorization: `Bearer ${token}`,
     },
   });
-  // 서버 응답 형식: { code, message, data? }
   return res.data;
 }
 
@@ -126,7 +142,6 @@ export async function fetchHomeApi(token?: string) {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (data.code !== 200) {
-    // 명세의 예외 메시지(레디스 오류 등) 그대로 throw
     throw new Error(data.message || "홈 데이터를 불러오지 못했습니다.");
   }
   return data.data; // { products, categories }
