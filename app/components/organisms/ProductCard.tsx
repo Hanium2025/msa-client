@@ -5,7 +5,6 @@ import ImageCarousel from "../molecules/ImageCarousel";
 import PriceText from "../atoms/PriceText";
 import Tag from "../atoms/Tag";
 
-// 백엔드 응답 형태에 맞게 타입 정의
 interface Product {
   title: string;
   price: number;
