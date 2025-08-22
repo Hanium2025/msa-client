@@ -85,3 +85,55 @@ export const verifySmsCode = async (
   // 기대 응답: { code:200, message:"인증번호 확인되었습니다." }
   return res.data as ApiMessage;
 };
+
+// 카카오 로그인 설정 값 요청
+export interface KakaoLoginConfig {
+  kakaoRedirectUri: String;
+  kakaoClientId: String;
+}
+export const getKakaoConfig = async (): Promise<KakaoLoginConfig> => {
+  const res = await api.get("/user/auth/kakao-config");
+  return {
+    kakaoRedirectUri: res.data.kakaoRedirectUri,
+    kakaoClientId: res.data.kakaoClientId,
+  };
+};
+// 카카오 로그인
+export const kakaoLogin = async (code: String): Promise<LoginSuccess> => {
+  const res = await api.get("/user/auth/kakao/redirect", {
+    params: {
+      code: code,
+    },
+  });
+  return {
+    email: res.data.data?.email,
+    accessToken: res.data.data?.accessToken,
+  };
+};
+
+// 네이버 로그인 설정 값 요청
+export interface NaverLoginConfing {
+  naverClientId: String;
+  naverRedirectUri: String;
+  state: String;
+}
+export const getNaverConfig = async (): Promise<NaverLoginConfing> => {
+  const res = await api.get("/user/auth/naver-config");
+  return {
+    naverClientId: res.data.naverClientId,
+    naverRedirectUri: res.data.naverRedirectUri,
+    state: res.data.state,
+  };
+};
+// 네이버 로그인
+export const naverLogin = async (code: String): Promise<LoginSuccess> => {
+  const res = await api.get("/user/auth/naver/redirect", {
+    params: {
+      code: code,
+    },
+  });
+  return {
+    email: res.data.data?.email,
+    accessToken: res.data.data?.accessToken,
+  };
+};
