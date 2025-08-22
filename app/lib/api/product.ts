@@ -82,7 +82,7 @@ export async function updateProduct({
     // 0개여도 images 키 포함
     if (Platform.OS === "web") {
       // 0바이트 빈 파일
-      fd.append("images", new File([], "")); // filename 비워도 됨
+      fd.append("images", new File([], ""));
     } else {
       // 0바이트 data URI로 빈 파일 파트
       fd.append(
