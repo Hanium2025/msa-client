@@ -4,7 +4,12 @@ import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { useRouter } from "expo-router";
 import Button from "../atoms/Button";
-import { getKakaoConfig, kakaoLogin } from "../../lib/api/user";
+import {
+  getKakaoConfig,
+  kakaoLogin,
+  getNaverConfig,
+  naverLogin,
+} from "../../lib/api/user";
 import { setAccessToken } from "../../lib/api";
 import { tokenStore } from "../../auth/tokenStore";
 
@@ -17,7 +22,6 @@ export default function SocialLoginGroup() {
     if (Platform.OS === "web") window.alert(text);
     else Alert.alert(title, message);
   };
-
   const router = useRouter();
 
   // 웹에서 팝업이 보낸 메시지 수신
@@ -27,18 +31,25 @@ export default function SocialLoginGroup() {
     const onMessage = async (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;
       if (e.data?.type !== "OAUTH_RESULT") return;
-      const { code } = e.data || {};
+      const { code, provider } = e.data || {};
       if (!code) return;
 
       (async () => {
         try {
-          const { email, accessToken } = await kakaoLogin(code);
-          await tokenStore.set(accessToken);
-          setAccessToken(accessToken);
-          console.log("카카오 로그인 성공: ", email);
+          if (provider === "naver") {
+            const { email, accessToken } = await naverLogin(code);
+            await tokenStore.set(accessToken);
+            setAccessToken(accessToken);
+            console.log("네이버 로그인 성공: ", email);
+          } else if (provider === "kakao") {
+            const { email, accessToken } = await kakaoLogin(code);
+            await tokenStore.set(accessToken);
+            setAccessToken(accessToken);
+            console.log("카카오 로그인 성공: ", email);
+          }
           router.replace("/(home)");
         } catch (e: any) {
-          showAlert("카카오 로그인 실패", e.message);
+          showAlert("로그인 실패", e.message);
           router.replace("/(login)");
         }
       })();
@@ -51,19 +62,23 @@ export default function SocialLoginGroup() {
     return () => window.removeEventListener("message", onMessage);
   }, [router]);
 
-  // 카카오 로그인 팝업 띄우기
+  //--- 카카오 로그인 팝업 띄우기 ---//
   const onKakaoLogin = useCallback(async () => {
-    const router = useRouter();
     const { kakaoClientId } = await getKakaoConfig();
-    const localKakaoRedirectUri = AuthSession.makeRedirectUri({
+    const redirectUri = AuthSession.makeRedirectUri({
       scheme: "frontend",
-      path: "/kakaoCallback",
+      path: "/socialLoginPopup",
+      queryParams: {
+        provider: "kakao",
+      },
     });
-
-    // 카카오 로그인 링크
     const kakaoLink =
       `https://kauth.kakao.com/oauth/authorize?` +
-      `client_id=${kakaoClientId}&redirect_uri=${localKakaoRedirectUri}&response_type=code`;
+      `client_id=${kakaoClientId}&redirect_uri=${redirectUri}&response_type=code` +
+      `&provider=kakao`;
+
+    console.log("redirect 경로: ", redirectUri);
+    console.log("카카오 이동할 경로: ", kakaoLink);
 
     if (Platform.OS === "web") {
       const popup = window.open(kakaoLink, "_blank", "width=420,height=640");
@@ -73,7 +88,37 @@ export default function SocialLoginGroup() {
       }
     } else {
       // 카카오 로그인 링크로 연결 후 리다이렉트
-      await WebBrowser.openAuthSessionAsync(kakaoLink, localKakaoRedirectUri);
+      await WebBrowser.openAuthSessionAsync(kakaoLink, redirectUri);
+    }
+  }, []);
+
+  //--- 네이버 로그인 팝업 띄우기 ---//
+  const onNaverLogin = useCallback(async () => {
+    const { naverClientId, state } = await getNaverConfig();
+    const redirectUri = AuthSession.makeRedirectUri({
+      scheme: "frontend",
+      path: "/socialLoginPopup",
+      queryParams: {
+        provider: "naver",
+      },
+    });
+    const naverLink =
+      `https://nid.naver.com/oauth2.0/authorize?` +
+      `client_id=${naverClientId}&response_type=code&redirect_uri=${redirectUri}&state=${state}` +
+      `&provider=naver`;
+
+    console.log("redirect 경로: ", redirectUri);
+    console.log("네이버 이동할 경로: ", naverLink);
+
+    if (Platform.OS === "web") {
+      const popup = window.open(naverLink, "_blank", "width=420,height=640");
+      if (!popup) {
+        // 팝업 차단된 경우: 같은 탭으로 열기
+        window.location.assign(naverLink);
+      }
+    } else {
+      // 네이버 로그인 링크로 연결 후 리다이렉트
+      await WebBrowser.openAuthSessionAsync(naverLink, redirectUri);
     }
   }, []);
 
@@ -110,7 +155,7 @@ export default function SocialLoginGroup() {
           />
         }
         // 네이버 로그인 onPress
-        onPress={() => console.log("네이버 로그인")}
+        onPress={onNaverLogin}
       />
     </View>
   );

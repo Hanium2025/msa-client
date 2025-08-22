@@ -10,9 +10,10 @@ export default function OAuthCallback() {
     else Alert.alert(title, message);
   };
 
-  const { code, state } = useLocalSearchParams<{
+  const { code, state, provider } = useLocalSearchParams<{
     code?: string;
     state?: string;
+    provider?: string;
   }>();
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function OAuthCallback() {
     if (typeof code === "string") {
       // 원래 탭으로 안전하게 전달 (같은 오리진으로만 전송)
       opener.postMessage(
-        { type: "OAUTH_RESULT", code },
+        { type: "OAUTH_RESULT", code, provider },
         window.location.origin // targetOrigin: 반드시 명시!
       );
       // 메시지 보낸 후 팝업 닫기
