@@ -104,3 +104,30 @@ export async function deleteProduct(productId: number, token: string) {
 }
 
 
+// 메인 상품
+export type HomeApiProduct = {
+  productId: number;
+  title: string;
+  price: number;
+  imageUrl: string; // 빈 문자열일 수 있음
+};
+
+
+export type HomeApiResponse = {
+  code: number;
+  message: string;
+  data: {
+    products: HomeApiProduct[];
+  };
+};
+
+export async function fetchHomeApi(token?: string) {
+  const { data } = await api.get<HomeApiResponse>("/product", {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (data.code !== 200) {
+    // 명세의 예외 메시지(레디스 오류 등) 그대로 throw
+    throw new Error(data.message || "홈 데이터를 불러오지 못했습니다.");
+  }
+  return data.data; // { products, categories }
+}

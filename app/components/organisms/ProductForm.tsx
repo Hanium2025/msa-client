@@ -12,8 +12,8 @@ type Props = {
   setTitle: (v: string) => void;
   price: string;
   setPrice: (v: string) => void;
-  category: CategoryValue | '선택';
-  setCategory: React.Dispatch<React.SetStateAction<CategoryValue | '선택'>>;
+  category: string;
+  setCategory: (v: string) => void;
   content: string;
   setContent: (v: string) => void;
 };
