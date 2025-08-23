@@ -46,6 +46,7 @@ export const ChatMessage = ({
         style={[
           styles.bubbleCol,
           isSender ? styles.alignEnd : styles.alignStart,
+          isSender && styles.senderBump,
         ]}
       >
         <TouchableOpacity activeOpacity={1} onLongPress={handleLongPress}>
@@ -59,9 +60,9 @@ export const ChatMessage = ({
 
       {/* 보낸 사람 쪽은 오른쪽에 빈 공간 맞추기 */}
       {isSender ? (
-        <View style={styles.avatarSpacer} />
-      ) : (
         <View style={{ width: 8 }} />
+      ) : (
+        <View style={styles.avatarSpacer} />
       )}
     </View>
   );

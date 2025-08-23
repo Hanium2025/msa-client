@@ -10,12 +10,7 @@ export type ChatHeaderProps = {
   onMenuPress?: () => void; // 우측 ⋮
 };
 
-export const ChatHeader = ({
-  title,
-  subtitle,
-  onBack,
-  onMenuPress,
-}: ChatHeaderProps) => {
+export const ChatHeader = ({ title, onBack, onMenuPress }: ChatHeaderProps) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -29,11 +24,6 @@ export const ChatHeader = ({
         <Text numberOfLines={1} style={styles.title}>
           {title}
         </Text>
-        {subtitle ? (
-          <Text numberOfLines={1} style={styles.subtitle}>
-            {subtitle}
-          </Text>
-        ) : null}
       </View>
 
       <TouchableOpacity

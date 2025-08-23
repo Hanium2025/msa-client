@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -8,6 +8,7 @@ import {
   StyleProp,
 } from "react-native";
 import { ChatInput } from "../atoms/ChatInput";
+import { AttachmentMenu } from "../molecules/ChatAttachmentMenu/AttachmentMenu";
 
 export type ChatFooterProps = {
   onSend: (text: string) => void | Promise<void>;
@@ -16,6 +17,8 @@ export type ChatFooterProps = {
   sending?: boolean;
   onPickImage?: () => void;
   maxLength?: number;
+  onRequestMeetup?: () => void;
+  onRequestDelivery?: () => void;
 
   /** 스타일 주입 props */
   containerStyle?: StyleProp<ViewStyle>;
@@ -30,6 +33,8 @@ export const ChatFooter = ({
   disabled = false,
   sending = false,
   onPickImage,
+  onRequestMeetup,
+  onRequestDelivery,
   maxLength,
   containerStyle,
   attachButtonStyle,
@@ -37,6 +42,14 @@ export const ChatFooter = ({
   sendDisabledStyle,
 }: ChatFooterProps) => {
   const [text, setText] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [anchor, setAnchor] = useState<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } | null>(null);
+  const attachRef = useRef<TouchableOpacity>(null);
 
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();
@@ -47,14 +60,36 @@ export const ChatFooter = ({
 
   const disabledSend = disabled || sending || text.trim().length === 0;
 
+  const hasAttachmentActions = Boolean(
+    onPickImage || onRequestMeetup || onRequestDelivery
+  );
+
+  const openMenu = () => {
+    // + 버튼의 화면 좌표를 측정해서 메뉴를 자연스럽게 배치
+    const node = attachRef.current as any;
+    if (node?.measureInWindow) {
+      node.measureInWindow((x: number, y: number, w: number, h: number) => {
+        setAnchor({ x, y, w, h });
+        setMenuOpen(true);
+      });
+    } else {
+      setAnchor(null);
+      setMenuOpen(true);
+    }
+  };
+
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <View style={containerStyle}>
-      {onPickImage ? (
+      {hasAttachmentActions ? (
         <TouchableOpacity
+          ref={attachRef}
           style={attachButtonStyle}
-          onPress={onPickImage}
+          onPress={openMenu}
           disabled={disabled || sending}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          activeOpacity={0.7}
         >
           <Text>＋</Text>
         </TouchableOpacity>
@@ -82,6 +117,36 @@ export const ChatFooter = ({
       >
         {sending ? <ActivityIndicator /> : <Text>전송</Text>}
       </TouchableOpacity>
+      {/* 팝오버 메뉴 */}
+      <AttachmentMenu
+        visible={menuOpen}
+        anchor={anchor}
+        onClose={closeMenu}
+        onPickImage={
+          onPickImage
+            ? () => {
+                closeMenu();
+                onPickImage();
+              }
+            : undefined
+        }
+        onRequestMeetup={
+          onRequestMeetup
+            ? () => {
+                closeMenu();
+                onRequestMeetup();
+              }
+            : undefined
+        }
+        onRequestDelivery={
+          onRequestDelivery
+            ? () => {
+                closeMenu();
+                onRequestDelivery();
+              }
+            : undefined
+        }
+      />
     </View>
   );
 };

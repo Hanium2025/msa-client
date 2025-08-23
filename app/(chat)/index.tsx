@@ -10,7 +10,7 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { ChatHeader } from "../components/molecules/ChatHeader";
 import { ChatMessageList } from "../components/organisms/ChatMessageList";
 import { ChatFooter } from "../components/organisms/ChatFooter";
-// import { useLocalSearchParams } from 'expo-router'; // 필요하면 라우터 파라미터 사용
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 type Message = {
   id: string | number;
@@ -21,26 +21,33 @@ type Message = {
 };
 
 export default function ChatScreen() {
-  // const { chatroomId } = useLocalSearchParams<{ chatroomId: string }>();
-  const myUserId = 10; // TODO: 로그인/토큰에서 가져오기
+  const { chatroomId, roomName, opponentId } = useLocalSearchParams<{
+    chatroomId?: string;
+    roomName?: string;
+    opponentId?: string;
+  }>();
+
+  const roomId = chatroomId ? Number(chatroomId) : null;
+  const receiverId = opponentId ? Number(opponentId) : undefined;
+  const myUserId = 2; // TODO: 로그인/토큰에서 가져오기
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       content: "안녕하세요! 상품 문의 드립니다.",
-      senderId: 20,
+      senderId: 2,
       timestamp: Date.now() - 1000 * 60 * 3,
     },
     {
       id: 2,
       content: "안녕하세요. 무엇이 궁금하세요?",
-      senderId: 10,
+      senderId: 1,
       timestamp: Date.now() - 1000 * 60 * 2,
     },
     {
       id: 3,
       content: "옷 색상과 사이즈 어떻게 되나요?",
-      senderId: 20,
+      senderId: 2,
       timestamp: Date.now() - 1000 * 60,
     },
   ]);
@@ -85,9 +92,7 @@ export default function ChatScreen() {
     >
       <View style={styles.container}>
         <ChatHeader
-          title="구매자명 / 상품명ABC"
-          subtitle="온라인"
-          // onBack={() => router.back()} // expo-router 사용 시
+          title={roomName ?? `채팅방 #${chatroomId}`}
           onMenuPress={() => {}}
         />
 
