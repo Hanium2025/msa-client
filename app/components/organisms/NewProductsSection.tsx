@@ -1,13 +1,14 @@
 // NewProductsSection.tsx
 import React from 'react';
-import { View, StyleSheet, FlatList, ImageSourcePropType } from 'react-native';
+import { View, StyleSheet, FlatList, ImageSourcePropType, TouchableOpacity } from 'react-native';
 import { SectionTitle } from '../atoms/SectionTitle';
 import { ProductItemCard } from '../molecules/ProductItemCard';
 
 type Product = { id: string; name: string; price: string; image: ImageSourcePropType };
 
 interface Props {
-  products: Product[]; // ← 이미지 포함
+  products: Product[];
+  onPress?: (productId: string) => void; 
 }
 
 const ITEM_W = (390 - 16 * 2 - 8 * 2) / 3;
@@ -22,7 +23,12 @@ export default function NewProductsSection({ products }: Props) {
         numColumns={3}
         renderItem={({ item }) => (
           <View style={[styles.item, { width: ITEM_W }]}>
-            <ProductItemCard name={item.name} price={item.price} image={item.image} />
+            <TouchableOpacity
+              onPress={() => { if (onPress) onPress(item.id); }}  
+              activeOpacity={0.8}
+            >
+              <ProductItemCard name={item.name} price={item.price} image={item.image} />
+            </TouchableOpacity>
           </View>
         )}
         columnWrapperStyle={styles.row}

@@ -1,6 +1,7 @@
 // home.tsx
 import React, { useCallback, useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform } from 'react-native';
+import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform, ActivityIndicator,
+  Text, } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SearchBar } from '../components/atoms/SearchBar';
 import RegisterItemButton from '../components/atoms/Button';
@@ -8,29 +9,91 @@ import NewProductsSection from '../components/organisms/NewProductsSection';
 import CategorySection from '../components/organisms/CategorySection';
 import BottomTabBar from '../components/molecules/BottomTabBar';   // 하단 탭바
 import { tokenStore } from '../auth/tokenStore';
-import { images } from '../../assets/imageRegistry';
 import { categoryIcons } from '../../assets/categoryIcons';
+import { useHomeProducts } from "../hooks/useHomeProduct";
+import { fetchProductDetail } from "../lib/api/product";
 
-const todayProducts = [
-  { id: '1', name: '청바지 팔아요',       price: '9,000원',  image: images.jeans },
-  { id: '2', name: '노트북 13인치',       price: '99,000원', image: images.laptop13 },
-  { id: '3', name: '미니 휴대용 드라이어', price: '10,000원', image: images.miniDryer },
-  { id: '4', name: '전기포트 나눔해요',    price: '0원',     image: images.kettle },
-  { id: '5', name: '흰색 스커트 팬츠',     price: '8,000원',  image: images.whiteSkirt },
-  { id: '6', name: '레더자켓 프리미엄',    price: '19,000원', image: images.leatherJacket },
-];
 
 const PHONE_WIDTH = 390;
+
+function getUserIdFromToken(token: string): number | null {
+  try {
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
+
+    const hasAtob = typeof atob === "function";
+    // @ts-ignore
+    const hasBuffer = typeof Buffer !== "undefined";
+
+    const binary = hasAtob
+      ? atob(base64)
+      : hasBuffer
+      // @ts-ignore
+      ? Buffer.from(base64, "base64").toString("binary")
+      : null;
+
+    if (!binary) return null;
+
+    const json = decodeURIComponent(
+      Array.from(binary)
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join("")
+    );
+    const payload = JSON.parse(json);
+
+    const raw = payload.memberId ?? payload.userId ?? payload.id ?? payload.sub;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function HomeScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('home'); // 홈
+
+  const { data: products, isLoading, error } = useHomeProducts();
 
   const handleRegisterPress = useCallback(async () => {
     const token = await tokenStore.get();
     if (!token) router.push('/(login)');
     else router.push('/(addProduct)');
   }, []);
+
+
+  // 상세 조회
+  const handlePressProduct = useCallback(
+    async (id: string) => {
+      const productId = Number(id);
+      const token = await tokenStore.get();
+
+      // 비로그인: 상세로
+      if (!token) {
+        router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
+        return;
+      }
+
+      // 내 ID 파싱 시도 (실패해도 상세로 fallback)
+      const myId = getUserIdFromToken(token);
+
+      try {
+        const detail = await fetchProductDetail(productId, token);
+        const sellerId = Number(detail?.sellerId);
+
+        if (myId && sellerId === myId) {
+          router.push(`/(addProduct)/owner/${productId}`);
+        } else {
+          router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
+        }
+      } catch {
+        // 상세 조회 실패 시에도 일반 상세로
+        router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
+      }
+    },
+    [router]
+  );
 
   const categories = [
     { id: '1', name: '옷, 잡화, 장신구', icon: categoryIcons.clothes },
@@ -62,7 +125,18 @@ export default function HomeScreen() {
             text="내 물품 등록하기"
             onPress={handleRegisterPress}
           />
-          <NewProductsSection products={todayProducts} />
+          {/* 상품 섹션만 API로 교체 */}
+          {isLoading ? (
+            <View style={{ paddingVertical: 24, alignItems: "center" }}>
+              <ActivityIndicator />
+            </View>
+          ) : error ? (
+            <View style={{ paddingVertical: 16, alignItems: "center" }}>
+              <Text>상품을 불러오지 못했습니다.</Text>
+            </View>
+          ) : (
+             <NewProductsSection products={products ?? []} onPress={handlePressProduct} />
+          )}
           <CategorySection categories={categories} />
         </ScrollView>
 
