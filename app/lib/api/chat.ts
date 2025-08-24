@@ -82,3 +82,26 @@ export async function getMyChatroomList(
     } as ChatPreview;
   });
 }
+
+export type ChatMessageDTO = {
+  messageId: number;
+  chatroomId: number;
+  senderId: number;
+  receiverId: number;
+  content: string;
+  timestamp: number;
+  mine: Boolean;
+  type: string;
+  imageUrl: string[];
+  receiverNickname: string;
+};
+
+export async function getChatMessagesByRoomId(
+  chatroomId: number,
+  token?: string
+): Promise<ChatMessageDTO[]> {
+  const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+  const url = `/chatroom/get/chatroom/${chatroomId}/allMessages`;
+  const res = await api.get<ApiResponse<ChatMessageDTO[]>>(url, config);
+  return res.data?.data ?? [];
+}

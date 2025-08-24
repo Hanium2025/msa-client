@@ -47,32 +47,10 @@ export default function ChatListScreen() {
     router.push("/home"); // 실제 경로에 맞게 조정
   };
 
-  // const data: ChatPreview[] = useMemo(
-  //   () => [
-  //     {
-  //       id: "1",
-  //       partnerName: "홍길동",
-  //       productTitle: "청바지팔아요",
-  //       lastMessage: "네, 직거래 선택해서 거래 요청주세요!",
-  //       updatedAt: new Date(),
-  //       unreadCount: 0,
-  //     },
-  //     {
-  //       id: "2",
-  //       partnerName: "김민주",
-  //       productTitle: "중고 아이폰 판매",
-  //       lastMessage: "사진 한번 자세히 찍어주실 수 있나요?",
-  //       updatedAt: Date.now() - 2 * 60 * 60 * 1000,
-  //       unreadCount: 3,
-  //     },
-  //   ],
-  //   []
-  // );
-
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>채팅</Text>
-      <CreateChatroomButton productId={4} receiverId={1} />
+      <CreateChatroomButton productId={1} receiverId={1} />
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator />
