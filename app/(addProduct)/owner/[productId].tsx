@@ -167,3 +167,4 @@ const styles = StyleSheet.create({
   scrollContainer: { paddingBottom: 32 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
 });
+  
