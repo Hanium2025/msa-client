@@ -1,4 +1,6 @@
 import { api } from "../api";
+import { setAccessToken } from "../api";
+import { tokenStore } from "../../auth/tokenStore";
 
 // 회원가입
 export interface SignUpRequest {
@@ -136,4 +138,32 @@ export const naverLogin = async (code: String): Promise<LoginSuccess> => {
     email: res.data.data?.email,
     accessToken: res.data.data?.accessToken,
   };
+};
+
+// 토큰 저장
+const saveAccessToken = async (token: string) => {
+  await tokenStore.set(token);   // SecureStore / localStorage
+  setAccessToken(token);         // axios 기본 헤더에 Authorization 세팅
+};
+
+export const refreshAccessToken = async (): Promise<string> => {
+  // 서버는 RefreshToken을 쿠키로 받음(withCredentials: true 필요)
+  const res = await api.post("/user/auth/refresh", null);
+
+  const bodyToken: string | undefined = res?.data?.data?.accessToken;
+  const headerTokenRaw: string | undefined = res?.headers?.authorization;
+  const headerToken = headerTokenRaw?.replace(/^Bearer\s+/i, "");
+
+  const newToken = bodyToken ?? headerToken;
+  if (!newToken) {
+    throw new Error("refresh 응답에서 accessToken을 찾을 수 없습니다.");
+  }
+
+  await saveAccessToken(newToken);
+  return newToken;
+};
+
+export const logout = async () => {
+  await tokenStore.clear();     // 저장된 토큰 제거
+  setAccessToken(undefined);    // axios 기본헤더에서 제거
 };
