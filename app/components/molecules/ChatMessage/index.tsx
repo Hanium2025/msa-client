@@ -13,6 +13,8 @@ export type ChatMessageProps = {
   showAvatar?: boolean; // 수신 메시지일 때 아바타 보이기
   avatarUrl?: string; // 상대방 프로필
   onLongPress?: (id: string | number) => void;
+  type?: "TEXT" | "IMAGE";
+  imageUrls?: string[];
 };
 
 export const ChatMessage = ({
@@ -23,8 +25,41 @@ export const ChatMessage = ({
   showAvatar = true,
   avatarUrl,
   onLongPress,
+  type = "TEXT",
+  imageUrls = [],
 }: ChatMessageProps) => {
   const handleLongPress = () => onLongPress?.(id);
+
+  const renderBody = () => {
+    if (type === "IMAGE" && Array.isArray(imageUrls) && imageUrls.length > 0) {
+      // 간단한 썸네일 그리드 (2열)
+      return (
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 6,
+            maxWidth: 280,
+          }}
+        >
+          {imageUrls.map((uri, idx) => (
+            <Image
+              key={`${id}-${idx}`}
+              source={{ uri }}
+              style={{
+                width: 130,
+                height: 130,
+                borderRadius: 10,
+              }}
+              // 필요 시 onPress로 풀뷰어 연결 가능
+            />
+          ))}
+        </View>
+      );
+    }
+    // 기본: 텍스트 버블
+    return <ChatBubble text={text} isSender={isSender} />;
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -50,7 +85,7 @@ export const ChatMessage = ({
         ]}
       >
         <TouchableOpacity activeOpacity={1} onLongPress={handleLongPress}>
-          <ChatBubble text={text} isSender={isSender} />
+          {renderBody()}
         </TouchableOpacity>
         <ChatTimestamp
           timestamp={timestamp}

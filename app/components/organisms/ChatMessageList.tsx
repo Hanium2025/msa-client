@@ -16,6 +16,8 @@ export type BaseMessage = {
   senderId: number;
   receiverId?: number;
   avatarUrl?: string;
+  type?: "TEXT" | "IMAGE";
+  imageUrls?: string[];
 };
 
 export type ChatMessageListProps<T extends BaseMessage = BaseMessage> = {
@@ -55,6 +57,8 @@ export const ChatMessageList = <T extends BaseMessage>({
         showAvatar={!isSender && showAvatars}
         avatarUrl={item.avatarUrl ?? otherAvatarUrl}
         onLongPress={onLongPressMessage}
+        type={(item as any).type}
+        imageUrls={(item as any).imageUrls}
       />
     );
   };
