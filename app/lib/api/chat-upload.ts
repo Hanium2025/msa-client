@@ -50,6 +50,10 @@ export async function putToS3(
   file: Blob | File,
   contentType: string
 ): Promise<void> {
+  const ct = contentType?.toLowerCase().startsWith("image/")
+    ? contentType
+    : "image/jpeg";
+
   const res = await fetch(uploadUrl, {
     method: "PUT",
     mode: "cors", // 👈 추가
