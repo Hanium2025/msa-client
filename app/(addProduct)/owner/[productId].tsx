@@ -57,7 +57,7 @@ export default function DetailOwnerScreen() {
 function OwnerContent({ id, token }: { id: number; token: string }) {
   const router = useRouter();
   const { mutate: deleteProduct } = useDeleteProduct();
-  const { data, isLoading, error, refetch } = useProductDetail(id, token);
+  const { data, isLoading, error, refetch } = useProductDetail(id);
 
   const [activeTab, setActiveTab] = useState<'notifications' | 'chat' | 'documents' | 'explore' | 'profile'>('documents');
   const onTabPress = (tab: string) => {
@@ -96,7 +96,7 @@ function OwnerContent({ id, token }: { id: number; token: string }) {
 
   const status =
     d.status === "SELLING" ? "ON_SALE" :
-      d.status === "IN_PROGRESS" ? "IN_PROGRESS" : "SOLD_OUT";
+    d.status === "IN_PROGRESS" ? "IN_PROGRESS" : "SOLD_OUT";
 
   const product = {
     id: String(id),
@@ -105,7 +105,7 @@ function OwnerContent({ id, token }: { id: number; token: string }) {
     category: d.category,
     description: d.content,
     images,
-    user: { nickname: "판매자", postedAt: "방금 전" },
+    user: { nickname: d.sellerNickname ?? `판매자 #${d.sellerId}`, postedAt: "방금 전" },
     status: status as "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT",
     likeCount: Number(d.likeCount ?? 0),
   };
@@ -167,3 +167,4 @@ const styles = StyleSheet.create({
   scrollContainer: { paddingBottom: 32 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
 });
+  

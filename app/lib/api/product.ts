@@ -128,21 +128,49 @@ export type HomeApiProduct = {
   imageUrl: string; // 빈 문자열일 수 있음
 };
 
+export type HomeApiCategory = {
+  name: string;     // 예: "IT, 전자제품"
+  imageUrl: string; // S3 URL
+};
+
+export type HomeApiData = {
+  products: HomeApiProduct[];
+  categories?: HomeApiCategory[]; // 백엔드가 보낼 수도, 안 보낼 수도
+  memberId?: number;              // 백엔드가 보낼 수도, 안 보낼 수도
+};
 
 export type HomeApiResponse = {
   code: number;
-  message: string;
-  data: {
-    products: HomeApiProduct[];
-  };
+  message: string; // "메인페이지가 조회되었습니다 - 회원 ID: 1" 같은 메시지일 수 있음
+  data: HomeApiData;
 };
 
-export async function fetchHomeApi(token?: string) {
+export async function fetchHomeApi(token?: string): Promise<HomeApiData> {
   const { data } = await api.get<HomeApiResponse>("/product", {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
+
   if (data.code !== 200) {
     throw new Error(data.message || "홈 데이터를 불러오지 못했습니다.");
   }
-  return data.data; // { products, categories }
+  return data.data; // { products, categories?, memberId? }
+}
+
+// 상품 좋아요/취소 토글
+export type ToggleLikeResponse = {
+  code: number;
+  message: string; // "상품 (id=2) 찜이 등록되었습니다." | "상품 (id=2) 찜이 취소되었습니다."
+};
+
+export async function toggleProductLike(productId: number, token: string): Promise<ToggleLikeResponse> {
+  const res = await api.post(
+    `/product/like/${productId}`,
+    {}, // 바디 없음
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return res.data as ToggleLikeResponse;
 }
