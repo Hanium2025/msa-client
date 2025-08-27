@@ -101,7 +101,7 @@ export async function getChatMessagesByRoomId(
   token?: string
 ): Promise<ChatMessageDTO[]> {
   const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-  const url = `/chatroom/get/chatroom/${chatroomId}/allMessages`;
+  const url = `/chatroom/get/${chatroomId}/allMessages`;
   const res = await api.get<ApiResponse<ChatMessageDTO[]>>(url, config);
   return res.data?.data ?? [];
 }
