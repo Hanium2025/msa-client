@@ -1,25 +1,48 @@
-import { router } from 'expo-router';
-import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import styles from './ProductCard.style';
+import React from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
+import { styles } from "./ProductCard.style";
 
-interface Product {
-  id: string;
-  name: string;
-  price: string;
+export type ProductItem = {
+  id: number;
+  title: string;
+  price: number;
+  imageUrl?: string;
+};
+
+type Props = {
+  item: ProductItem;
+  onPress?: (id: number) => void;
+};
+
+function formatPrice(n: number) {
+  return n.toLocaleString("ko-KR") + "원";
 }
 
-export default function ProductCard({ item }: { item: Product }) {
-  if (!item) return null; // item이 없으면 렌더링하지 않음
-
+export function ProductCard({ item, onPress }: Props) {
   return (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => router.push(`/product/${String(item.id)}`)}
+      activeOpacity={0.9}
+      onPress={() => onPress?.(item.id)}
     >
-      <View style={styles.image} />
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.price}>{item.price}</Text>
+      <View style={styles.thumbWrap}>
+        {item.imageUrl ? (
+          <Image source={{ uri: item.imageUrl }} style={styles.thumb} />
+        ) : (
+          <View style={styles.thumbPlaceholder} />
+        )}
+      </View>
+
+      <View style={styles.infoRow}>
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={styles.title}
+        >
+          {item.title}
+        </Text>
+        <Text style={styles.price}>{formatPrice(item.price)}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
