@@ -1,22 +1,32 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import styles from './CategoryItem.style';
+import { Image, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
+import { styles } from './CategoryItem.style';
 
 interface Category {
   id: string;
   name: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  iconSource: ImageSourcePropType; 
 }
 
 export default function CategoryItem({ item }: { item: Category }) {
   return (
-    <TouchableOpacity style={styles.item} onPress={() => router.push(`/category/${item.id}`)}>
-      <View style={styles.icon}>
-        <Ionicons name={item.icon} size={24} color="#666" />
+    <TouchableOpacity
+      style={styles.item}
+      onPress={() =>
+        router.push({
+          pathname: '/(category)/[slug]', 
+          params: { slug: item.id, title: item.name },
+        })
+      }
+      activeOpacity={0.9}
+    >
+      <View style={styles.iconWrap}>
+        <Image source={item.iconSource} style={styles.iconImage} resizeMode="contain" />
       </View>
-      <Text style={styles.name}>{item.name}</Text>
+      <Text style={styles.name} numberOfLines={1}>
+        {item.name}
+      </Text>
     </TouchableOpacity>
   );
 }
