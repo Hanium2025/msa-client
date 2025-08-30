@@ -24,6 +24,7 @@ export type ChatMessageListProps<T extends BaseMessage = BaseMessage> = {
   messages: T[];
   myUserId: number;
   otherAvatarUrl?: string;
+  otherDisplayName?: string;
   showAvatars?: boolean;
   onLongPressMessage?: (id: T["id"]) => void;
   autoScrollOnNewMessage?: boolean;
@@ -36,6 +37,7 @@ export const ChatMessageList = <T extends BaseMessage>({
   messages,
   myUserId,
   otherAvatarUrl,
+  otherDisplayName,
   showAvatars = true,
   onLongPressMessage,
   autoScrollOnNewMessage = true,
@@ -56,6 +58,11 @@ export const ChatMessageList = <T extends BaseMessage>({
         isSender={isSender}
         showAvatar={!isSender && showAvatars}
         avatarUrl={item.avatarUrl ?? otherAvatarUrl}
+        receiverNickname={
+          item.senderId !== myUserId
+            ? ((item as any).receiverNickname ?? otherDisplayName)
+            : undefined
+        }
         onLongPress={onLongPressMessage}
         type={(item as any).type}
         imageUrls={(item as any).imageUrls}

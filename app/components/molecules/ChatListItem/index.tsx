@@ -9,7 +9,8 @@ export type ChatPreview = {
   productTitle: string;
   lastMessage: string;
   updatedAt: string | number | Date;
-  avatarUrl?: string;
+  opponentProfileUrl?: string;
+  opponentNickname?: string;
   unreadCount?: number;
 };
 
@@ -25,10 +26,10 @@ export default function ChatListItem({
   return (
     <TouchableOpacity onPress={() => onPress?.(item.id)} activeOpacity={0.7}>
       <View style={styles.row}>
-        <Avatar uri={item.avatarUrl} />
+        <Avatar uri={item.opponentProfileUrl} size={44} />
         <View style={styles.center}>
           <Text style={styles.title} numberOfLines={1}>
-            {item.partnerName}/{item.productTitle}
+            {item.opponentNickname}/{item.productTitle}
           </Text>
           <Text style={styles.preview} numberOfLines={1}>
             {item.lastMessage}

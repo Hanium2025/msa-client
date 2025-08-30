@@ -17,6 +17,7 @@ import { ChatHeader } from "../components/molecules/ChatHeader";
 import { ChatMessageList } from "../components/organisms/ChatMessageList";
 import { ChatFooter } from "../components/organisms/ChatFooter";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { useRoute } from "@react-navigation/native";
 import { api } from "../lib/api";
 import { tokenStore } from "../auth/tokenStore";
 import { decodeJwt, extractUserId } from "../auth/jwt.ts";
@@ -70,17 +71,25 @@ type Message = {
   avatarUrl?: string;
   type?: string;
   imageUrls?: string[]; //이미지 메시지
+  receiverNickname?: string;
+};
+
+type OpponentMeta = {
+  id?: string | number | null;
+  name?: string;
+  profileUrl?: string;
 };
 
 export default function ChatScreen() {
-  const { chatroomId, roomName, opponentId } = useLocalSearchParams<{
-    chatroomId?: string;
+  const { chatroomId } = useLocalSearchParams<{ chatroomId: string }>();
+  const route = useRoute();
+  const { opponent, roomName } = (route.params ?? {}) as {
+    opponent?: OpponentMeta;
     roomName?: string;
-    opponentId?: string;
-  }>();
+  };
 
   const roomId = chatroomId ? Number(chatroomId) : null;
-  const receiverId = opponentId ? Number(opponentId) : undefined;
+  const receiverId = opponent?.id != null ? Number(opponent.id) : undefined;
 
   const [myUserId, setMyUserId] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
@@ -118,6 +127,7 @@ export default function ChatScreen() {
       timestamp: ts,
       type: m.type,
       imageUrls: (m as any).imageUrls ?? m.imageUrl ?? [], // ✅ 둘 다 대응
+      receiverNickname: (m as any).receiverNickname ?? undefined,
     };
   };
 
@@ -475,7 +485,8 @@ export default function ChatScreen() {
         <ChatMessageList
           messages={messages}
           myUserId={myUserId}
-          otherAvatarUrl={otherAvatar}
+          otherAvatarUrl={opponent?.profileUrl}
+          otherDisplayName={opponent?.name}
           containerStyle={styles.listContainer}
           contentContainerStyle={styles.listContent}
           inverted
