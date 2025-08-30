@@ -26,6 +26,16 @@ const showAlert = (title: string, message?: string) => {
   else Alert.alert(title, message);
 };
 
+const koToEnum: Record<string, "TRAVEL" | "FEEDING" | "SLEEP" | "PLAY" | "LIVING" | "APPAREL" | "OTHER"> = {
+  "이동·안전장비": "TRAVEL",
+  "식사·수유·위생 가전": "FEEDING",
+  "수면·안전": "SLEEP",
+  "놀이·교육": "PLAY",
+  "리빙·가구": "LIVING",
+  "의류·잡화": "APPAREL",
+  "기타": "OTHER",
+};
+
 export default function AddProductScreen() {
   const ready = useRequireToken();
   const router = useRouter();
@@ -41,8 +51,24 @@ export default function AddProductScreen() {
   const patch = (p: Partial<AddProductFormValues>) => setValues((v) => ({ ...v, ...p }));
 
   const handleSubmit = async () => {
+    // 대표 이미지 1장 필수
     if (!values.images.length) {
       showAlert('대표 이미지 1장은 필수입니다.');
+      return;
+    }
+
+    // 최대 5장
+    if (values.images.length > 5) {
+      showAlert('이미지는 최대 5개까지 업로드 가능합니다.');
+      return;
+    }
+
+    const mappedCategory =
+      (koToEnum[values.category] as keyof typeof koToEnum | undefined) ||
+      (["TRAVEL","FEEDING","SLEEP","PLAY","LIVING","APPAREL","OTHER"].includes(values.category) ? values.category : undefined);
+
+    if (!mappedCategory) {
+      showAlert('카테고리를 선택해 주세요.', '허용: TRAVEL, FEEDING, SLEEP, PLAY, LIVING, APPAREL, OTHER');
       return;
     }
 
@@ -53,19 +79,28 @@ export default function AddProductScreen() {
       return;
     }
 
+    const priceNumber = parseInt(values.price.replace(/[^0-9]/g, ''), 10);
+    if (Number.isNaN(priceNumber) || priceNumber < 0) {
+      showAlert('가격을 확인해 주세요.', '숫자만 입력 가능합니다.');
+      return;
+    }
+
     const productData = {
-      title: values.title,
-      content: values.content,
-      price: parseInt(values.price.replace(/[^0-9]/g, ''), 10),
-      category: values.category,
+      title: values.title.trim(),
+      content: values.content.trim(),
+      price: priceNumber,
+      category: mappedCategory, 
     };
 
     const formData = new FormData();
     formData.append('json', JSON.stringify(productData));
+
     values.images.forEach((img: any, idx: number) => {
       if (Platform.OS === 'web') {
+        // File 객체
         formData.append('images', img as File, (img as File).name);
       } else {
+        // RN FileLike
         formData.append('images', {
           uri: img.uri,
           name: img.name ?? `image_${idx}.jpg`,
@@ -81,7 +116,7 @@ export default function AddProductScreen() {
           const message = res?.message ?? '등록 성공';
           const productId = res?.data?.productId;
           if (!productId) {
-            showAlert('등록 성공', 'id를 가져오지 못했습니다.');
+            showAlert('등록 성공', '상품 ID를 가져오지 못했습니다.');
             return;
           }
           const goOwner = () =>
@@ -110,7 +145,6 @@ export default function AddProductScreen() {
     );
   };
 
-  // 로딩도 동일한 “폰 프레임” 안에서 중앙 정렬
   if (!ready) {
     return (
       <View style={styles.webRoot}>
@@ -139,14 +173,12 @@ export default function AddProductScreen() {
 }
 
 const styles = StyleSheet.create({
-  // 웹에서 가운데 배치 + 회색 배경, 네이티브는 흰색
   webRoot: {
     flex: 1,
     backgroundColor: Platform.OS === 'web' ? '#F5F6F7' : '#fff',
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
-  // iPhone 14 Pro 프레임
   phoneFrame: {
     flex: 1,
     backgroundColor: '#fff',
