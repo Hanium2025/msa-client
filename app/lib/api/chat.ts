@@ -32,7 +32,8 @@ export interface GetMyChatroomDTO {
   latestMessage: string;
   productId: number;
   opponentId: number;
-  // (미구현) opponentAvatarUrl?: string;
+  opponentProfileUrl?: string;
+  opponentNickname?: string;
   // (미구현) unreadCount?: number;
 }
 export async function getMyChatroomList(
@@ -77,6 +78,8 @@ export async function getMyChatroomList(
       opponentId: r.opponentId,
       updatedAt,
       avatarUrl: undefined, // 아직 미구현 → Avatar에서 placeholder 표시
+      opponentProfileUrl: r.opponentProfileUrl,
+      opponentNickname: r.opponentNickname,
       unreadCount: 0, // 서버에서 제공 전까진 0
       // 필요하면 productId, opponentId를 확장 모델에 보관해도 됨
     } as ChatPreview;

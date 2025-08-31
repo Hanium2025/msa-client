@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { styles } from "./ChatHeader.style";
 
 export type ChatHeaderProps = {
-  title: string; // "구매자명 / 상품명ABC"
+  title: string; // "상대발닉네임 / 상품명ABC"
   subtitle?: string; // 상태, 마지막 접속 등
   onBack?: () => void;
   onMenuPress?: () => void; // 우측 ⋮

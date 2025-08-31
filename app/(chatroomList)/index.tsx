@@ -6,7 +6,7 @@ import {
   Text,
   StyleSheet,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 import ChatList from "../components/organisms/ChatList";
 import type { ChatPreview } from "../components/molecules/ChatListItem";
 import BottomTabBar from "../components/molecules/BottomTabBar";
@@ -15,6 +15,7 @@ import ChatEmptyState from "../components/molecules/ChatListItem/ChatEmptyState"
 import { getMyChatroomList } from "../lib/api/chat";
 
 export default function ChatListScreen() {
+  const navigation = useNavigation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("home"); // 홈
   const [data, setData] = useState<ChatPreview[]>([]);
@@ -70,21 +71,23 @@ export default function ChatListScreen() {
             const rn =
               item?.roomName ?? // 1) 아이템에 roomName이 이미 있으면 그걸 쓰고
               (item // 2) 없으면 아이템이 있을 때
-                ? `${item.partnerName}${
+                ? `${item.opponentNickname}${
                     //    partnerName / productTitle 로 조합
                     item.productTitle ? ` / ${item.productTitle}` : "" // 3) 아이템도 없으면 빈 문자열
                   }`
                 : "");
-            router.push({
-              pathname: "/[chatroomId]",
-              params: {
+            navigation.navigate(
+              "(chat)/[chatroomId]" as never,
+              {
                 chatroomId: String(id),
-                ...(item?.opponentId
-                  ? { opponentId: String(item.opponentId) }
-                  : {}),
-                ...(rn ? { roomName: rn } : {}),
-              }, // 쿼리로 전달
-            });
+                opponent: {
+                  id: item?.opponentId ?? null,
+                  receiverNickname: item?.opponentNickname ?? "",
+                  profileUrl: item?.opponentProfileUrl ?? "",
+                },
+                roomName: rn ?? "",
+              } as never
+            );
           }}
         />
       )}
