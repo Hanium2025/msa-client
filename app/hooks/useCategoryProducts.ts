@@ -6,13 +6,10 @@ import {
   type ServerSort,
 } from "../lib/api/category";
 
-/** UI에서 쓰는 정렬 값 */
 export type UiSort = "new" | "popular";
 
-/** UI → 서버 정렬 매핑 */
 const uiToServerSort = (s: UiSort): ServerSort => (s === "popular" ? "like" : "recent");
 
-/** 화면 컴포넌트에 넘길 아이템 형태 */
 export type ProductItem = {
   id: number;
   title: string;
@@ -38,13 +35,11 @@ export function useCategoryProducts(slug: string, initialSort: UiSort = "new") {
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
-  // slug는 이미 서버 enum과 동일
   const category = useMemo(
     () => (slug as ServerCategoryKey) ?? ("OTHER" as const),
     [slug]
   );
 
-  // 진행 중 요청 취소용
   const abortRef = useRef<AbortController | null>(null);
 
   const mapDTO = useCallback((dto: CategoryProductDTO): ProductItem => {
@@ -75,7 +70,6 @@ export function useCategoryProducts(slug: string, initialSort: UiSort = "new") {
 
         const list = data.map(mapDTO);
 
-        // 서버 기본 1페이지당 20개
         setHasMore(list.length >= 20);
 
         if (replace || targetPage === 0) {
@@ -99,11 +93,9 @@ export function useCategoryProducts(slug: string, initialSort: UiSort = "new") {
     [category, sort, mapDTO]
   );
 
-  // 카테고리/정렬이 바뀌면 0페이지부터 새로 불러오기
   useEffect(() => {
     setRefreshing(true);
     fetchPage(0, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, sort]);
 
   const refresh = useCallback(() => {
@@ -117,10 +109,9 @@ export function useCategoryProducts(slug: string, initialSort: UiSort = "new") {
   }, [loading, hasMore, page, fetchPage]);
 
   return {
-    // 상태 & 액션
-    sort,               // 'new' | 'popular'
-    setSort,            // 정렬 변경 시 자동 refetch
-    items,              // ProductGrid에 그대로 전달
+    sort,               
+    setSort,           
+    items,             
     loading,
     refreshing,
     error,

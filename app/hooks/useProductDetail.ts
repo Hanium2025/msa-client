@@ -7,7 +7,6 @@ type ApiImage = {
   imageUrl: string;
 };
 
-// 서버 응답 원형(서버에서 내려오는 그대로의 타입)
 type ServerProduct = {
   productId: number;
   sellerId: number;
@@ -15,15 +14,14 @@ type ServerProduct = {
   title: string;
   content: string;
   price: number | string;
-  category: string;              // 서버는 "IT, 전자제품" 같은 한글 라벨
-  status: string;                // 서버는 "판매 중" 등 한글
-  seller?: boolean;              // 내가 판매자인지 여부
-  liked?: boolean;               // 내가 찜했는지 여부
-  likeCount?: number;            // (있으면 사용, 없으면 프론트 기본값)
+  category: string;              
+  status: string;                
+  seller?: boolean;              
+  liked?: boolean;               
+  likeCount?: number;            
   images: ApiImage[];
 };
 
-// 앱에서 쓰기 편하게 정규화한 타입
 export type ApiProduct = {
   productId: number;
   sellerId: number;
@@ -31,11 +29,11 @@ export type ApiProduct = {
   title: string;
   content: string;
   price: number | string;
-  category: string;              // 그대로 사용(한글 라벨)
-  status: "SELLING" | "IN_PROGRESS" | "SOLD_OUT";  // 정규화
-  seller: boolean;               // 기본 false
-  liked: boolean;                // 기본 false
-  likeCount: number;             // 기본 0
+  category: string;              
+  status: "SELLING" | "IN_PROGRESS" | "SOLD_OUT";  
+  seller: boolean;               
+  liked: boolean;                
+  likeCount: number;             
   images: ApiImage[];
 };
 
@@ -43,7 +41,6 @@ type ApiOk = { code: 200; message: string; data: ServerProduct };
 type ApiNotFound = { code: 404; message: string };
 type ApiResponse = ApiOk | ApiNotFound;
 
-// 서버 한글 상태 → 프런트 enum 매핑
 const STATUS_MAP: Record<string, ApiProduct["status"]> = {
   "판매 중": "SELLING",
   "거래 중": "IN_PROGRESS",
