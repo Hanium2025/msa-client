@@ -14,9 +14,9 @@ export default function CategoryGridScreen() {
     CATEGORIES.find((c) => c.slug === "OTHER")!;
 
   const {
-    sort,            
-    setSort,         
-    items,           
+    sort,
+    setSort,
+    items,
     loading,
     error,
     refresh,
@@ -38,7 +38,7 @@ export default function CategoryGridScreen() {
       onPressProduct={(id) =>
         router.push({
           pathname: "/(addProduct)/detail",
-          params: { id: String(id) },
+          params: { productId: String(id) }, 
         })
       }
     />
