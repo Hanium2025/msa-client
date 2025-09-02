@@ -76,7 +76,7 @@ type Message = {
 
 type OpponentMeta = {
   id?: string | number | null;
-  name?: string;
+  receiverNickname?: string;
   profileUrl?: string;
 };
 
@@ -127,7 +127,7 @@ export default function ChatScreen() {
       timestamp: ts,
       type: m.type,
       imageUrls: (m as any).imageUrls ?? m.imageUrl ?? [], // ✅ 둘 다 대응
-      receiverNickname: (m as any).receiverNickname ?? undefined,
+      receiverNickname: opponent.receiverNickname,
     };
   };
 

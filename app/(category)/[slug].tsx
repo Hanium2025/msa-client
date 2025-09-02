@@ -1,47 +1,44 @@
-import React, { useMemo, useState } from "react";
+// app/(category)/[slug].tsx
+import React from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ProductGrid } from "../components/organisms/ProductGrid";
 import { CATEGORIES } from "../constants/categories";
-
-interface ProductItem {
-  id: number;
-  title: string;
-  price: number;
-  imageUrl?: string;
-}
-
-function useMockProducts(slug: string, sort: "new" | "popular"): ProductItem[] {
-  const base: ProductItem[] = new Array(12).fill(0).map((_, i) => ({
-    id: i + 1,
-    title: `상품명 ABCDE ${i + 1}`,
-    price: 99000 + i * 1000,
-  }));
-  return sort === "popular" ? base.slice().reverse() : base;
-}
+import { useCategoryProducts } from "../hooks/useCategoryProducts";
 
 export default function CategoryGridScreen() {
-  const { slug, title } = useLocalSearchParams<{ slug: string; title?: string }>();
-  const [sort, setSort] = useState<"new" | "popular">("new");
+  const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
 
-  const category = useMemo(
-    () => CATEGORIES.find((c) => c.slug === slug) ?? CATEGORIES[0],
-    [slug]
-  );
+  const cat =
+    CATEGORIES.find((c) => c.slug === slug) ??
+    CATEGORIES.find((c) => c.slug === "OTHER")!;
 
-  const products = useMockProducts(String(slug ?? "etc"), sort);
+  const {
+    sort,
+    setSort,
+    items,
+    loading,
+    error,
+    refresh,
+    loadMore,
+    hasMore,
+  } = useCategoryProducts(String(slug ?? "OTHER"), "new");
 
   return (
     <ProductGrid
-      title={(title as string) || category.title}
-      iconSource={category.icon}            
+      title={cat.title}
+      iconSource={cat.icon}
       sort={sort}
       onChangeSort={setSort}
-      products={products}
+      products={items}
+      loading={loading}
+      errorText={error ?? undefined}
+      onRefresh={refresh}
+      onEndReached={hasMore ? loadMore : undefined}
       onPressProduct={(id) =>
         router.push({
           pathname: "/(addProduct)/detail",
-          params: { id: String(id) },
+          params: { productId: String(id) }, 
         })
       }
     />
