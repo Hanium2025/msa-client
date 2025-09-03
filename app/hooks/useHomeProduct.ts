@@ -4,15 +4,14 @@ import { fetchHomeApi } from "../lib/api/product";
 import { tokenStore } from "../auth/tokenStore";
 import type { ImageSourcePropType } from "react-native";
 
-// NewProductsSection 이 받는 형태와 동일하게 정의
+
 export type HomeProductForSection = {
   id: string;
   name: string;
-  price: string;                // "9,000원"
-  image: ImageSourcePropType;   // { uri: ... } 또는 data URI
+  price: string;                
+  image: ImageSourcePropType;   
 };
 
-// 이미지 URL이 비어있을 때 쓸 1x1 투명 이미지 (웹/네이티브 공용)
 const TRANSPARENT_PX_URI =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
 

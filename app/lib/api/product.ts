@@ -6,26 +6,61 @@ export type RNFile = { uri: string; name?: string; type?: string };
 export type UpdateProductJson = {
   title: string;
   content: string;
-  price: number;          // 서버 DTO: Long
-  category: "ELECTRONICS" | "FURNITURE" | "CLOTHES" | "BOOK" | "BEAUTY" | "FOOD" | "ETC";
+  price: number;          
+  category: "TRAVEL" | "FEEDING" | "SLEEP" | "PLAY" | "LIVING" | "APPAREL" | "OTHER";
   leftImageIds: number[];
 };
 
+export type RegisterCategory =
+  | "TRAVEL" | "FEEDING" | "SLEEP" | "PLAY" | "LIVING" | "APPAREL" | "OTHER";
 
-export const registerProduct = async (
-  formData: FormData,
-  token: string
-) => {
-  const response = await api.post(
-    "/product",   // baseURL 자동으로 붙음
-    formData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
+export type RegisterProductJson = {
+  title: string;
+  content: string;
+  price: number;      
+  category: RegisterCategory;
+};
+
+export function buildRegisterFormData(
+  json: RegisterProductJson,
+  images: Array<File | RNFile>
+): FormData {
+  if (!images?.length) {
+    throw new Error("대표 이미지 1장은 필수입니다.");
+  }
+  if (images.length > 5) {
+    throw new Error("이미지는 최대 5개까지 업로드 가능합니다.");
+  }
+
+  const fd = new FormData();
+  fd.append("json", JSON.stringify(json) as any);
+
+  images.forEach((img, idx) => {
+    if (Platform.OS === "web") {
+      const f = img as File;
+      fd.append("images", f, f.name ?? `image_${idx}.jpg`);
+    } else {
+      const f = img as RNFile;
+      fd.append("images", {
+        uri: f.uri,
+        name: f.name ?? `image_${idx}.jpg`,
+        type: f.type ?? "image/jpeg",
+      } as any);
     }
-  );
+  });
+
+  return fd;
+}
+//상품 등록
+export const registerProduct = async (formData: FormData, token: string) => {
+  const response = await api.post("/product", formData, {
+    headers: { Authorization: `Bearer ${token}` },
+    transformRequest: (data, headers) => {
+      delete headers["Content-Type"];
+      delete headers.common?.["Content-Type"];
+      return data;
+    },
+  });
   return response.data;
 };
 
@@ -128,21 +163,49 @@ export type HomeApiProduct = {
   imageUrl: string; // 빈 문자열일 수 있음
 };
 
+export type HomeApiCategory = {
+  name: string;     
+  imageUrl: string; 
+};
+
+export type HomeApiData = {
+  products: HomeApiProduct[];
+  categories?: HomeApiCategory[]; 
+  memberId?: number;              
+};
 
 export type HomeApiResponse = {
   code: number;
-  message: string;
-  data: {
-    products: HomeApiProduct[];
-  };
+  message: string; 
+  data: HomeApiData;
 };
 
-export async function fetchHomeApi(token?: string) {
+export async function fetchHomeApi(token?: string): Promise<HomeApiData> {
   const { data } = await api.get<HomeApiResponse>("/product", {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
+
   if (data.code !== 200) {
     throw new Error(data.message || "홈 데이터를 불러오지 못했습니다.");
   }
-  return data.data; // { products, categories }
+  return data.data; 
+}
+
+// 상품 좋아요/취소 토글
+export type ToggleLikeResponse = {
+  code: number;
+  message: string; 
+};
+
+export async function toggleProductLike(productId: number, token: string): Promise<ToggleLikeResponse> {
+  const res = await api.post(
+    `/product/like/${productId}`,
+    {}, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return res.data as ToggleLikeResponse;
 }

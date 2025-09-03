@@ -13,7 +13,7 @@ interface Props {
 
 const ITEM_W = (390 - 16 * 2 - 8 * 2) / 3;
 
-export default function NewProductsSection({ products }: Props) {
+export default function NewProductsSection({ products, onPress }: Props) {
   return (
     <View style={{ width: 390, alignSelf: 'center' }}>
       <SectionTitle title="오늘 새로" subtitle="올라왔어요" />
@@ -24,7 +24,7 @@ export default function NewProductsSection({ products }: Props) {
         renderItem={({ item }) => (
           <View style={[styles.item, { width: ITEM_W }]}>
             <TouchableOpacity
-              onPress={() => { if (onPress) onPress(item.id); }}  
+              onPress={() => onPress?.(item.id)}
               activeOpacity={0.8}
             >
               <ProductItemCard name={item.name} price={item.price} image={item.image} />
