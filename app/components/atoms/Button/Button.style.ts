@@ -222,4 +222,28 @@ export const styles = StyleSheet.create({
     height: 18,
     marginRight: 8,
   },
+
+  // reportSubmit(신고 제출 버튼)
+  reportSubmitButton: {
+    width: 219,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+    backgroundColor: "#084C63",
+  },
+  reportSubmitContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  reportSubmitImage: {
+    width: 16.215,
+    height: 14.141,
+  },
+  reportSubmitText: {
+    color: "#FFF",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.32,
+  },
 });
