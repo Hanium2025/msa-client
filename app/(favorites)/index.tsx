@@ -1,38 +1,24 @@
-// app/(favorites).tsx
+// app/(favorites)/index.tsx
 import React, { useMemo, useState } from "react";
-import { SafeAreaView, View, Text, StyleSheet, StatusBar, Platform } from "react-native";
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, Platform, ActivityIndicator } from "react-native";
 import { FavoritesGrid } from "../components/organisms/FavoritesGrid";
 import { SortTabs } from "../components/molecules/SortTabs";
+import { useFavorites } from "../hooks/useFavorites";
 
 export type SortKey = "new" | "old";
-
 const PHONE_WIDTH = 390; // iPhone 14 Pro width
-
-const MOCK = [
-  { id: 1, title: "상품명 ABCDE", price: 99000, imageUrl: undefined, liked: true,  createdAt: "2025-08-31T08:00:00Z" },
-  { id: 2, title: "상품명 ABCDE", price: 99000, imageUrl: undefined, liked: true,  createdAt: "2025-08-30T08:00:00Z" },
-  { id: 3, title: "상품명 ABCDE", price: 99000, imageUrl: undefined, liked: true,  createdAt: "2025-08-28T08:00:00Z" },
-  { id: 4, title: "상품명 ABCDE", price: 99000, imageUrl: undefined, liked: true,  createdAt: "2025-08-20T08:00:00Z" },
-  { id: 5, title: "상품명 ABCDE", price: 99000, imageUrl: undefined, liked: true,  createdAt: "2025-08-18T08:00:00Z" },
-  { id: 6, title: "상품명 ABCDE", price: 99000, imageUrl: undefined, liked: true,  createdAt: "2025-08-10T08:00:00Z" },
-];
 
 export default function FavoritesPage() {
   const [sort, setSort] = useState<SortKey>("new");
-  const [items, setItems] = useState(MOCK);
+  const { items, isLoading, isFetchingNextPage, hasNextPage, loadMore } = useFavorites();
 
   const sorted = useMemo(() => {
-    const cp = [...items];
-    cp.sort((a, b) => {
-      const da = +new Date(a.createdAt);
-      const db = +new Date(b.createdAt);
-      return sort === "new" ? db - da : da - db;
-    });
-    return cp;
+    if (sort === "new") return items;
+    return [...items].reverse();
   }, [items, sort]);
 
   const toggleLike = (id: number) => {
-    setItems(prev => prev.map(it => (it.id === id ? { ...it, liked: !it.liked } : it)));
+    // 관심 해제/재설정 API가 있다면 여기에서 호출 + 낙관적 업데이트 처리
   };
 
   const openDetail = (id: number) => {
@@ -43,17 +29,32 @@ export default function FavoritesPage() {
     <View style={s.webRoot}>
       <SafeAreaView style={s.phoneFrame}>
         <StatusBar barStyle="dark-content" />
+
         <View style={s.header}>
           <Text style={s.title}>나의 관심 상품</Text>
         </View>
 
-        <SortTabs value={sort} onChange={setSort} />
+        <SortTabs<SortKey> value={sort} onChange={(v) => setSort(v)} />
 
-        <FavoritesGrid
-          items={sorted}
-          onToggleLike={toggleLike}
-          onPressItem={openDetail}
-        />
+        {isLoading ? (
+          <View style={{ paddingVertical: 24, alignItems: "center" }}>
+            <ActivityIndicator />
+          </View>
+        ) : (
+          <FavoritesGrid
+            items={sorted as Product[]}
+            onToggleLike={toggleLike}
+            onPressItem={openDetail}
+            onEndReached={() => hasNextPage && loadMore()}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                  <ActivityIndicator />
+                </View>
+              ) : null
+            }
+          />
+        )}
       </SafeAreaView>
     </View>
   );
