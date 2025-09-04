@@ -142,8 +142,8 @@ export const naverLogin = async (code: String): Promise<LoginSuccess> => {
 
 // 토큰 저장
 const saveAccessToken = async (token: string) => {
-  await tokenStore.set(token);   // SecureStore / localStorage
-  setAccessToken(token);         // axios 기본 헤더에 Authorization 세팅
+  await tokenStore.set(token); // SecureStore / localStorage
+  setAccessToken(token); // axios 기본 헤더에 Authorization 세팅
 };
 
 export const refreshAccessToken = async (): Promise<string> => {
@@ -164,6 +164,6 @@ export const refreshAccessToken = async (): Promise<string> => {
 };
 
 export const logout = async () => {
-  await tokenStore.clear();     // 저장된 토큰 제거
-  setAccessToken(undefined);    // axios 기본헤더에서 제거
+  await tokenStore.clear(); // 저장된 토큰 제거
+  setAccessToken(undefined); // axios 기본헤더에서 제거
 };

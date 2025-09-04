@@ -6,7 +6,10 @@ import { refreshAccessToken, logout } from "../lib/api/user";
 let isRefreshing = false;
 let waiters: Array<(t: string | null) => void> = [];
 
-const wakeAll = (t: string | null) => { waiters.forEach(w => w(t)); waiters = []; };
+const wakeAll = (t: string | null) => {
+  waiters.forEach((w) => w(t));
+  waiters = [];
+};
 
 // 요청 시 액세스 토큰 부착
 api.interceptors.request.use(async (cfg) => {
@@ -31,7 +34,9 @@ api.interceptors.response.use(
       (original as any)._retry = true;
 
       if (isRefreshing) {
-        const token = await new Promise<string | null>((resolve) => waiters.push(resolve));
+        const token = await new Promise<string | null>((resolve) =>
+          waiters.push(resolve)
+        );
         if (token) {
           original.headers = original.headers ?? {};
           original.headers.Authorization = `Bearer ${token}`;
@@ -58,3 +63,4 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+

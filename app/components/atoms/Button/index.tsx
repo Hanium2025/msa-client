@@ -26,7 +26,8 @@ interface ButtonProps {
     | "check"
     | "login"
     | "socialLogin"
-    | "registerItem";
+    | "registerItem"
+    | "reportSubmit";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -79,6 +80,28 @@ const Button: React.FC<ButtonProps> = ({
           </TouchableOpacity>
         </LinearGradient>
       </View>
+    );
+  }
+
+  if (variant === "reportSubmit") {
+    return (
+      <TouchableOpacity
+        style={styles.reportSubmitButton}
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={disabled}
+        activeOpacity={0.85}
+      >
+        <View style={styles.reportSubmitContent}>
+          <Image
+            source={require("../../../../assets/images/report-image.svg")} // ← 여기 경로 확인
+            style={styles.reportSubmitImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.reportSubmitText}>{text}</Text>
+        </View>
+      </TouchableOpacity>
     );
   }
 

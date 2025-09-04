@@ -18,6 +18,8 @@ import { setAccessToken } from "../lib/api";
 import { tokenStore } from "../auth/tokenStore"; // 이거 추가
 //import * as SecureStore from "expo-secure-store"; Expo에서 사용 가능
 
+const PHONE_WIDTH = 390; // iPhone width
+
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
