@@ -7,7 +7,7 @@ export function useToggleLikeList(token: string) {
 
   return useMutation<void, Error, number>({
     mutationFn: async (productId: number) => {
-      return await toggleProductLike(productId, token);
+      await toggleProductLike(productId, token);
     },
     onSuccess: (_, productId) => {
       qc.invalidateQueries({ queryKey: ["productDetail", productId] });

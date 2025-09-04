@@ -1,5 +1,6 @@
 // app/(favorites)/index.tsx
 import React, { useMemo, useState, useEffect } from "react";
+import { useRouter } from "expo-router";
 import {
   SafeAreaView,
   View,
@@ -12,7 +13,7 @@ import {
 import { FavoritesGrid } from "../components/organisms/FavoritesGrid";
 import { SortTabs } from "../components/molecules/SortTabs";
 import { useFavorites } from "../hooks/useFavorites";
-import { useToggleLikeList } from "../hooks/useToggleLikeList"; // 리스트용 토글 훅
+import { useToggleLikeList } from "../hooks/useToggleLikeList"; 
 import { tokenStore } from "../auth/tokenStore";
 
 export type SortKey = "new" | "old";
@@ -20,6 +21,14 @@ const PHONE_WIDTH = 390; // iPhone 14 Pro width
 
 export default function FavoritesPage() {
   const [sort, setSort] = useState<SortKey>("new");
+  const router = useRouter();
+
+  const openDetail = (id: number) => {
+    router.push({
+      pathname: "/(addProduct)/detail",
+      params: { productId: String(id) },
+    });
+  };
 
   // 관심목록 조회
   const {
@@ -30,7 +39,6 @@ export default function FavoritesPage() {
     loadMore,
   } = useFavorites();
 
-  // 낙관적 업데이트용 로컬 상태
   const [localItems, setLocalItems] = useState(items);
   useEffect(() => {
     setLocalItems(items);
@@ -51,25 +59,18 @@ export default function FavoritesPage() {
     return [...localItems].reverse();
   }, [localItems, sort]);
 
-  // 관심 해제 (별 클릭)
+  // 관심 해제
   const toggleLike = (id: number) => {
     if (!token) return;
 
-    // 낙관적 업데이트: 목록에서 바로 제거
     setLocalItems((prev) => prev.filter((it) => it.id !== id));
 
-    // 서버 요청
     mutation.mutate(id, {
       onError: () => {
-        // 실패 시 되돌리기
         const original = items.find((it) => it.id === id);
         if (original) setLocalItems((prev) => [...prev, original]);
       },
     });
-  };
-
-  const openDetail = (id: number) => {
-    // router.push(`/product/${id}`)
   };
 
   return (

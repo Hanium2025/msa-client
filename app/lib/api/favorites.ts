@@ -32,6 +32,7 @@ export async function fetchFavorites(page = 0): Promise<FavoriteItem[]> {
   }));
 }
 
+//상품 찜 / 취소
 export async function toggleFavorite(productId: number, token: string): Promise<void> {
   await api.post(`/product/like/${productId}`, null, {
     headers: { Authorization: `Bearer ${token}` },

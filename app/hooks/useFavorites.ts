@@ -7,13 +7,11 @@ const PAGE_SIZE = 20;
 export function useFavorites() {
   const query = useInfiniteQuery<FavoriteItem[]>({
     queryKey: ["favorites"],
-    queryFn: ({ pageParam = 0 }) => fetchFavorites(pageParam),
+    queryFn: ({ pageParam = 0 }) => fetchFavorites(pageParam as number),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === PAGE_SIZE ? allPages.length : undefined,
   });
-
-  //const flatItems = (query.data?.pages ?? []).flat();
 
   const items = useMemo(
     () => (query.data?.pages ?? []).flat(),

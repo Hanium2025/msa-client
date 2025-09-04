@@ -1,27 +1,29 @@
 import React, { useMemo } from "react";
 import { FlatList, View, StyleSheet, ListRenderItemInfo } from "react-native";
 import { FavoriteCard } from "../molecules/FavoriteCard";
-
-type FavoriteItem = {
-  id: number;
-  title: string;
-  price: number;
-  imageUrl?: string;
-  liked: boolean;
-  createdAt: string;
-};
+import type { FavoriteItem} from "../../lib/api/favorites"; 
 
 type Props = {
   items: FavoriteItem[];
   onPressItem?: (id: number) => void;
   onToggleLike?: (id: number) => void;
+  onEndReached?: () => void;
+  ListFooterComponent?: React.ReactElement | null;
 };
 
-export const FavoritesGrid: React.FC<Props> = ({ items, onPressItem, onToggleLike }) => {
+export const FavoritesGrid: React.FC<Props> = ({
+  items,
+  onPressItem,
+  onToggleLike,
+  onEndReached,
+  ListFooterComponent,
+}) => {
   const data = useMemo(() => items, [items]);
 
   const renderItem = ({ item }: ListRenderItemInfo<FavoriteItem>) => (
-    <FavoriteCard item={item} onPress={onPressItem} onToggleLike={onToggleLike} />
+    <View style={s.itemWrap}>
+      <FavoriteCard item={item} onPress={onPressItem} onToggleLike={onToggleLike} />
+    </View>
   );
 
   return (
@@ -33,7 +35,10 @@ export const FavoritesGrid: React.FC<Props> = ({ items, onPressItem, onToggleLik
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.content}
-        columnWrapperStyle={s.row} 
+        columnWrapperStyle={s.row}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.6}
+        ListFooterComponent={ListFooterComponent}
       />
     </View>
   );
@@ -43,7 +48,7 @@ const s = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 12, paddingBottom: 24 },
   row: {
-    justifyContent: "space-between", 
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   itemWrap: {

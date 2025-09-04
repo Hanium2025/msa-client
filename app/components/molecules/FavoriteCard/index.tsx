@@ -4,15 +4,7 @@ import { ProductThumbnail } from "../../atoms/ProductThumbnail";
 import { FavoriteStar } from "../../atoms/FavoriteStar";
 import { PriceLabel } from "../../atoms/PriceLabel";
 import { styles } from "./FavoriteCard.style";
-
-type FavoriteItem = {
-  id: number;
-  title: string;
-  price: number;
-  imageUrl?: string;
-  liked: boolean;
-  createdAt: string; // ISO
-};
+import type { FavoriteItem } from "../../../lib/api/favorites";
 
 type Props = {
   item: FavoriteItem;
