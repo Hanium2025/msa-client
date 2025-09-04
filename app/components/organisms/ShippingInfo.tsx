@@ -1,4 +1,4 @@
-import { Text, View, Pressable, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import ShippingAddress from "../molecules/ShippingAddress";
 import ShippingSelection from "../molecules/ShippingSelection";
 import DropdownMenu from "../atoms/DropdownMenu";

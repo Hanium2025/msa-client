@@ -10,6 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 import ShippingInfo from "../components/organisms/ShippingInfo";
+import OrderInfo from "../components/molecules/OrderInfo";
 
 const PHONE_WIDTH = 390; // iPhone width
 
@@ -26,9 +27,10 @@ export default function PaymentScreen() {
     >
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.paymentInfo}>
+        <View style={styles.shippingInfo}>
           <ShippingInfo />
         </View>
+        <OrderInfo />
       </ScrollView>
     </SafeAreaView>
   );
@@ -43,8 +45,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 40,
     flexShrink: 0,
+    marginTop: 40,
   },
-  paymentInfo: {
+  shippingInfo: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
