@@ -33,6 +33,7 @@ export const FavoritesGrid: React.FC<Props> = ({ items, onPressItem, onToggleLik
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.content}
+        columnWrapperStyle={s.row} 
       />
     </View>
   );
@@ -40,5 +41,12 @@ export const FavoritesGrid: React.FC<Props> = ({ items, onPressItem, onToggleLik
 
 const s = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 8, paddingBottom: 24 },
+  content: { paddingHorizontal: 12, paddingBottom: 24 },
+  row: {
+    justifyContent: "space-between", 
+    marginBottom: 16,
+  },
+  itemWrap: {
+    width: "48%",
+  },
 });

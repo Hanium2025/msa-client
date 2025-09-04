@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
-  card: { flex: 1, marginHorizontal: 8, marginTop: 16 },
+  card: { width: 165, marginHorizontal: 8, marginTop: 16 },
   thumbWrap: {
     height: 150,
     borderRadius: 12,
