@@ -2,6 +2,7 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { tokenStore } from "./auth/tokenStore";
+import { setAccessToken } from "./lib/api";
 
 export default function Index() {
   // 목적지 결정 전까지는 null
@@ -10,6 +11,9 @@ export default function Index() {
   useEffect(() => {
     (async () => {
       const t = await tokenStore.get();
+      if (t) {
+        setAccessToken(t);   // ✅ axios 인스턴스에 토큰 반영
+      }
       setDest(t ? "/(home)" : "/(login)");
     })();
   }, []);
