@@ -50,8 +50,8 @@ export default function ChatListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>채팅</Text>
-      <CreateChatroomButton productId={1} receiverId={1} />
+      <Text style={styles.header}>채팅방</Text>
+      {/* <CreateChatroomButton productId={1} receiverId={1} /> */}
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator />

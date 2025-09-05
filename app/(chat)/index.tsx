@@ -61,7 +61,7 @@ const pickImagesWeb = (): Promise<File[]> =>
 // 로컬/에뮬레이터 환경 주의: 물리 기기라면 localhost 대신 PC LAN IP로 교체
 const WS_BASE = __DEV__
   ? "ws://localhost:8000/ws/chat"
-  : "wss://api.my-service.com/ws/chat";
+  : "wss://api.haniumpicky.click/wss/chat";
 
 type Message = {
   id: string | number;
@@ -243,7 +243,8 @@ export default function ChatScreen() {
       return;
     }
 
-    const url = `${WS_BASE}?token=${encodeURIComponent(wsToken)}`;
+    // const url = `${WS_BASE}?token=${encodeURIComponent(wsToken)}`;
+    const url = `wss://api.haniumpicky.click/wss/chat?token=${encodeURIComponent(wsToken)}`;
 
     const ws = new WebSocket(url);
 

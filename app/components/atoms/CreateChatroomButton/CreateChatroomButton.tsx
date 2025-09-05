@@ -33,13 +33,7 @@ export default function CreateChatroomButton({
     if (loading) return;
     try {
       setLoading(true);
-      const t =
-        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBY2Nlc3NUb2tlbiIsImlkIjoyLCJleHAiOjE3NTU3NjUwMjYsImVtYWlsIjoiaGVsbG8yQGVtYWlsLmNvbSJ9.BNZTDQvSzsENf2tr5ENZU2as5TvsH21I1lO-B25o0GsFtacZDQYaGYUVf0lUxUzvsvngvTxZVW2DfMkj4xZkuQ";
-      const { chatroomId } = await createChatroom({ productId, receiverId }, t);
-      router.push({
-        pathname: "/chat/[chatroomId]",
-        params: { chatroomId: String(id) }, // 쿼리로 전달
-      });
+      router.push("/(chatroomList)");
     } catch (e: any) {
       Alert.alert("실패", e?.message ?? "채팅방 생성에 실패했어요.");
     } finally {

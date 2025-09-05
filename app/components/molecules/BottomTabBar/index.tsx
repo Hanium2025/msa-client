@@ -1,34 +1,51 @@
-import React from 'react';
+import React from "react";
 import {
   Image,
   ImageSourcePropType,
   StyleSheet,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
+import { useRouter } from "expo-router";
 
 interface BottomTabBarProps {
-  activeTab?: string;                     
+  activeTab?: string;
   onTabPress?: (tabName: string) => void;
+  chatListPath?: string;
 }
 
 const tabImages: Record<
-  'notifications' | 'chat' | 'home' | 'community' | 'profile',
+  "notifications" | "chat" | "home" | "community" | "profile",
   ImageSourcePropType
 > = {
-  notifications: require('../../../../assets/images/tabs/notifications.png'),
-  chat:          require('../../../../assets/images/tabs/chat.png'),
-  home:     require('../../../../assets/images/tabs/main.png'),
-  community:       require('../../../../assets/images/tabs/community.png'),
-  profile:       require('../../../../assets/images/tabs/profile.png'),
+  notifications: require("../../../../assets/images/tabs/notifications.png"),
+  chat: require("../../../../assets/images/tabs/chat.png"),
+  home: require("../../../../assets/images/tabs/main.png"),
+  community: require("../../../../assets/images/tabs/community.png"),
+  profile: require("../../../../assets/images/tabs/profile.png"),
 };
 
 const TABS = Object.keys(tabImages) as Array<keyof typeof tabImages>;
 
 const BottomTabBar: React.FC<BottomTabBarProps> = ({
-  activeTab = '',
+  activeTab = "",
   onTabPress,
+  chatListPath = "/(chatroomList)",
 }) => {
+  const router = useRouter();
+
+  const handlePress = (name: keyof typeof tabImages) => {
+    // 부모에게 먼저 콜백
+    onTabPress?.(name);
+
+    // 라우팅: chat 탭 전용
+    if (name === "chat") {
+      router.push(chatListPath);
+      return;
+    }
+    // 필요하면 나머지 탭도 라우팅 규칙을 추가
+    // if (name === 'home') router.replace('/'); ...
+  };
   return (
     <View style={styles.container}>
       <View style={styles.tabBar}>
@@ -38,13 +55,20 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
             <TouchableOpacity
               key={name}
               style={styles.tabItem}
-              onPress={() => onTabPress?.(name)}
+              onPress={() => handlePress(name)}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityState={{ selected: isActive }}
+              accessibilityLabel={`${name} tab`}
             >
-              <View style={[styles.iconWrap, isActive && styles.iconWrapActive]}>
-                <Image source={tabImages[name]} style={styles.icon} resizeMode="contain" />
+              <View
+                style={[styles.iconWrap, isActive && styles.iconWrapActive]}
+              >
+                <Image
+                  source={tabImages[name]}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
               </View>
             </TouchableOpacity>
           );
@@ -58,15 +82,15 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#fff' },
+  container: { backgroundColor: "#fff" },
   tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    backgroundColor: "#fff",
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    shadowColor: '#000',
+    borderTopColor: "#f0f0f0",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -74,26 +98,26 @@ const styles = StyleSheet.create({
   },
   tabItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 6,
   },
   iconWrap: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   iconWrapActive: {
-    backgroundColor: '#F1F2F4', // 선택 시 회색 배경
+    backgroundColor: "#F1F2F4", // 선택 시 회색 배경
   },
   icon: { width: 22, height: 22 },
   homeIndicator: {
     width: 134,
     height: 5,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderRadius: 2.5,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginTop: 8,
     marginBottom: 8,
   },

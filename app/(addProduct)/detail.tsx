@@ -28,7 +28,9 @@ const showAlert = (title: string, message?: string) => {
 
 export default function DetailScreen() {
   const router = useRouter();
-  const { productId } = useLocalSearchParams<{ productId?: string | string[] }>();
+  const { productId } = useLocalSearchParams<{
+    productId?: string | string[];
+  }>();
 
   const parsedId = Array.isArray(productId)
     ? Number(productId[0])
@@ -88,7 +90,13 @@ export default function DetailScreen() {
   );
 }
 
-function DetailContent({ productId, token }: { productId: number; token: string }) {
+function DetailContent({
+  productId,
+  token,
+}: {
+  productId: number;
+  token: string;
+}) {
   const { data, isLoading, error } = useProductDetail(productId, token);
   const toggleLike = useToggleLike(productId, token);
 
@@ -105,7 +113,10 @@ function DetailContent({ productId, token }: { productId: number; token: string 
   }
 
   if (error || !data) {
-    showAlert("오류", (error as any)?.message ?? "상품 정보를 불러오지 못했습니다.");
+    showAlert(
+      "오류",
+      (error as any)?.message ?? "상품 정보를 불러오지 못했습니다."
+    );
     return (
       <View style={styles.errorContainer}>
         <Text style={{ color: "red", marginBottom: 8 }}>
@@ -115,11 +126,17 @@ function DetailContent({ productId, token }: { productId: number; token: string 
     );
   }
 
+  const sellerId: number | undefined =
+    (data as any).sellerId ?? (data as any).seller?.id;
+  if (!sellerId) {
+    console.warn("[detail] sellerId 없음 — createChatroom시 receiverId 필요");
+  }
+
   type ProductImage = { imageUrl: string };
   const images: ProductImage[] = Array.isArray(data.images)
     ? data.images
-      .map((img: any) => ({ imageUrl: img?.imageUrl ?? "" }))
-      .filter((i: ProductImage) => i.imageUrl)
+        .map((img: any) => ({ imageUrl: img?.imageUrl ?? "" }))
+        .filter((i: ProductImage) => i.imageUrl)
     : [];
 
   const priceNum =
@@ -138,8 +155,11 @@ function DetailContent({ productId, token }: { productId: number; token: string 
   const initialLikeCount = data.likeCount ?? 0;
 
   const uiStatus: "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT" =
-  data.status === "SELLING" ? "ON_SALE" : "IN_PROGRESS" === data.status ? "IN_PROGRESS" : "SOLD_OUT";
-
+    data.status === "SELLING"
+      ? "ON_SALE"
+      : "IN_PROGRESS" === data.status
+        ? "IN_PROGRESS"
+        : "SOLD_OUT";
 
   const product = {
     title: data.title,
@@ -148,8 +168,8 @@ function DetailContent({ productId, token }: { productId: number; token: string 
     description: data.content,
     images,
     user: { nickname: data.sellerNickname ?? "판매자", postedAt: "방금 전" },
-    status: uiStatus,            // "SELLING" | "IN_PROGRESS" | "SOLD_OUT"
-    liked: data.liked,              // 서버 값 반영
+    status: uiStatus, // "SELLING" | "IN_PROGRESS" | "SOLD_OUT"
+    liked: data.liked, // 서버 값 반영
     likeCount: data.likeCount,
   };
 
@@ -168,7 +188,12 @@ function DetailContent({ productId, token }: { productId: number; token: string 
             // return { likeCount: someNumber };
           }}
         />
-        <BottomButtonGroup status={product.status} onChat={handleChat} />
+        <BottomButtonGroup
+          status={product.status}
+          productId={productId}
+          receiverId={sellerId}
+          token={token}
+        />
       </ScrollView>
     </View>
   );
