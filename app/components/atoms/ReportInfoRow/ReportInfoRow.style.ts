@@ -17,9 +17,12 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     textAlign: "right",
-    padding: 0, // RN 기본 padding 제거
+    padding: 0,
+    // 폭/축소 이슈로 입력이 안 보이는 것 방지
     minWidth: 80,
     maxWidth: "70%",
+    flexShrink: 1,
+    minHeight: 20,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

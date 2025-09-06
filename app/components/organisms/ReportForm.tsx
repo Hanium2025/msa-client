@@ -1,4 +1,3 @@
-// components/organisms/ReportForm.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -9,7 +8,7 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { InfoRow as ReportInputRow } from "../atoms/ReportInfoRow";
+import { ReportInfoRow } from "../atoms/ReportInfoRow"; // 입력용 TextInput 아톰
 import { ReportDetailInput } from "../molecules/ReportDetailInput";
 
 const REASONS = [
@@ -23,9 +22,9 @@ const REASONS = [
 
 type Props = {
   reason: string;
-  onChangeReason: (v: string) => void; // ✅ 함수 이름 명확화
+  onChangeReason: (v: string) => void;
   detail: string;
-  onChangeDetail: (v: string) => void; // ✅ 함수 이름 명확화
+  onChangeDetail: (v: string) => void;
 };
 
 export const ReportForm: React.FC<Props> = ({
@@ -34,6 +33,10 @@ export const ReportForm: React.FC<Props> = ({
   detail,
   onChangeDetail,
 }) => {
+  // 입력 상태 추가
+  const [productName, setProductName] = useState("");
+  const [seller, setSeller] = useState("");
+
   // 드롭다운 위치/열림 상태
   const [menuOpen, setMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ y: number; height: number }>({
@@ -42,24 +45,24 @@ export const ReportForm: React.FC<Props> = ({
   });
 
   const handleSelect = (r: string) => {
-    onChangeReason(r); // ✅ 부모의 setReason 호출
+    onChangeReason(r);
     setMenuOpen(false);
   };
 
   return (
     <View style={s.container}>
-      {/* 예시: 입력 아톰 (원하면 폼 state로 바꿔도 됨) */}
-      <ReportInputRow
+      {/* ✅ 입력 가능 */}
+      <ReportInfoRow
         label="상품명"
-        value={""}
-        onChangeText={() => {}}
+        value={productName}
+        onChangeText={setProductName}
         placeholder="게시글 제목 가나다"
         textColor="#084C63"
       />
-      <ReportInputRow
+      <ReportInfoRow
         label="판매자"
-        value={""}
-        onChangeText={() => {}}
+        value={seller}
+        onChangeText={setSeller}
         placeholder="홍길동"
         textColor="#084C63"
       />
