@@ -21,12 +21,12 @@ interface CategoryDropdownProps {
 }
 
 const categories = [
-  { label: "IT, 전자제품", value: "ELECTRONICS" },
-  { label: "가구, 인테리어", value: "FURNITURE" },
-  { label: "옷, 잡화, 장신구", value: "CLOTHES" },
-  { label: "도서, 학습 용품", value: "BOOK" },
-  { label: "헤어, 뷰티, 화장품", value: "BEAUTY" },
-  { label: "음식, 식료품", value: "FOOD" },
+  { label: "이동·안전장비", value: "TRAVEL" },
+  { label: "식사·수유·위생 가전", value: "FEEDING" },
+  { label: "수면·안전", value: "SLEEP" },
+  { label: "놀이·교육", value: "PLAY" },
+  { label: "리빙·가구", value: "LIVING" },
+  { label: "의류·잡화", value: "APPAREL" },
   { label: "기타", value: "ETC" },
 ];
 

@@ -62,6 +62,13 @@ export default function HomeScreen() {
     else router.push('/(addProduct)');
   }, []);
 
+  const goSearch = () => {
+  // (productSearch)/index.tsx 로 이동
+  // 폴더가 app/(productSearch)/index.tsx 라면 아래 둘 중 하나로 이동 가능
+  router.push("/(productSearch)");          // 폴더 인덱스
+  // 또는 라우트 별칭이 /product/search 라면: router.push("/product/search");
+  };
+
 
   // 상세 조회
   const handlePressProduct = useCallback(
@@ -119,7 +126,7 @@ export default function HomeScreen() {
           contentContainerStyle={{ paddingBottom: 12 }} // 탭바와 살짝 간격
           showsVerticalScrollIndicator={false}
         >
-          <SearchBar />
+          <SearchBar onTrigger={goSearch} />
           <RegisterItemButton
             variant="registerItem"
             text="내 물품 등록하기"

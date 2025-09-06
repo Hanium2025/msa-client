@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import UserInfo from "../molecules/UserInfo";
 import ImageCarousel from "../molecules/ImageCarousel";
 import PriceText from "../atoms/PriceText";
@@ -16,15 +16,47 @@ interface Product {
   };
   status: "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT";
   likeCount?: number;
-  liked?: boolean; // 사용자가 좋아요 눌렀는지 여부
+  liked?: boolean;
   images: { imageUrl: string }[];
 }
 
 interface Props {
   product: Product;
+  // 서버에 좋아요 반영하고 최신 상태를 반환(또는 성공 여부)하는 옵셔널 콜백
+  onToggleLike?: (nextLiked: boolean) => Promise<{ likeCount?: number } | void> | void;
 }
 
-export default function ProductCard({ product }: Props) {
+export default function ProductCard({ product, onToggleLike }: Props) {
+  const [liked, setLiked] = useState<boolean>(!!product.liked);
+  const [likeCount, setLikeCount] = useState<number>(product.likeCount ?? 0);
+  const [pending, setPending] = useState(false);
+
+  const handleToggleLike = useCallback(async () => {
+    if (pending) return;        // 연타 방지
+    setPending(true);
+
+    const prevLiked = liked;
+    const nextLiked = !liked;
+
+    setLiked(nextLiked);
+    setLikeCount((c) => (nextLiked ? c + 1 : Math.max(0, c - 1)));
+
+    try {
+      if (onToggleLike) {
+        const res = await onToggleLike(nextLiked);
+        if (res && typeof res.likeCount === "number") {
+          setLikeCount(res.likeCount);
+        }
+      }
+    } catch (e) {
+      // 실패 시 롤백
+      setLiked(prevLiked);
+      setLikeCount((c) => (nextLiked ? Math.max(0, c - 1) : c + 1));
+    } finally {
+      setPending(false);
+    }
+  }, [liked, onToggleLike, pending]);
+
   return (
     <View style={styles.card}>
       {/* 제목 + 가격 */}
@@ -48,18 +80,28 @@ export default function ProductCard({ product }: Props) {
         <Text style={styles.description}>{product.description}</Text>
       </View>
 
-      {/* 좋아요 수 */}
-      <View style={styles.likesRow}>
+      {/* 좋아요(터치 가능) */}
+      <Pressable
+        onPress={handleToggleLike}
+        disabled={pending}
+        style={({ pressed }) => [
+          styles.likesRow,
+          pressed && { opacity: 0.7 },
+        ]}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel={liked ? "좋아요 취소" : "좋아요"}
+      >
         <Image
           source={
-            product.liked
+            liked
               ? require("../../../assets/images/star_black.png")
               : require("../../../assets/images/star_gray.png")
           }
           style={styles.starIcon}
         />
-        <Text style={styles.likesText}>{product.likeCount ?? 0}</Text>
-      </View>
+        <Text style={styles.likesText}>{likeCount}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -112,6 +154,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 12,
+    alignSelf: "flex-start", // 누르기 쉬운 위치 고정
   },
   starIcon: {
     width: 18,
