@@ -1,20 +1,22 @@
 // home.tsx
 import React, { useCallback, useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform, ActivityIndicator,
-  Text, } from 'react-native';
+import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform, ActivityIndicator, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SearchBar } from '../components/atoms/SearchBar';
 import RegisterItemButton from '../components/atoms/Button';
 import NewProductsSection from '../components/organisms/NewProductsSection';
 import CategorySection from '../components/organisms/CategorySection';
-import BottomTabBar from '../components/molecules/BottomTabBar';   // 하단 탭바
+import BottomTabBar from '../components/molecules/BottomTabBar';
 import { tokenStore } from '../auth/tokenStore';
-import { categoryIcons } from '../../assets/categoryIcons';
 import { useHomeProducts } from "../hooks/useHomeProduct";
+import { useFocusEffect } from "@react-navigation/native";
 import { fetchProductDetail } from "../lib/api/product";
-
+import { CATEGORIES } from "../constants/categories";
+const TITLE_TO_SLUG = Object.fromEntries(CATEGORIES.map(c => [c.title, c.slug])) as Record<string, string>;
 
 const PHONE_WIDTH = 390;
+const TRANSPARENT_PX_URI =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
 
 function getUserIdFromToken(token: string): number | null {
   try {
@@ -29,9 +31,9 @@ function getUserIdFromToken(token: string): number | null {
     const binary = hasAtob
       ? atob(base64)
       : hasBuffer
-      // @ts-ignore
-      ? Buffer.from(base64, "base64").toString("binary")
-      : null;
+        // @ts-ignore
+        ? Buffer.from(base64, "base64").toString("binary")
+        : null;
 
     if (!binary) return null;
 
@@ -52,60 +54,44 @@ function getUserIdFromToken(token: string): number | null {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('home'); // 홈
+  const [activeTab, setActiveTab] = useState('home');
 
-  const { data: products, isLoading, error } = useHomeProducts();
+  // useHomeProducts 올바른 사용
+  const { data, isLoading, error, refetch } = useHomeProducts();
+
+  useFocusEffect(React.useCallback(() => {
+    refetch();
+  }, [refetch]));
+  const products = data?.products ?? [];
+  const recentCategories = data?.categories ?? [];
+
+  // CategorySection이 기대하는 형태로 어댑트
+  const recentCategoriesForSection = recentCategories.slice(0, 4).map((c, idx) => ({
+    id: String(idx),
+    name: c.name,
+    slug: TITLE_TO_SLUG[c.name] ?? 'OTHER',
+  }));
+
+  //useFocusEffect(React.useCallback(() => { refetch(); }, [refetch]));
 
   const handleRegisterPress = useCallback(async () => {
     const token = await tokenStore.get();
     if (!token) router.push('/(login)');
     else router.push('/(addProduct)');
-  }, []);
+  }, [router]);
 
-
-  // 상세 조회
   const handlePressProduct = useCallback(
     async (id: string) => {
       const productId = Number(id);
       const token = await tokenStore.get();
 
-      // 비로그인: 상세로
-      if (!token) {
-        router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
-        return;
-      }
-
-      // 내 ID 파싱 시도 (실패해도 상세로 fallback)
-      const myId = getUserIdFromToken(token);
-
-      try {
-        const detail = await fetchProductDetail(productId, token);
-        const sellerId = Number(detail?.sellerId);
-
-        if (myId && sellerId === myId) {
-          router.push(`/(addProduct)/owner/${productId}`);
-        } else {
-          router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
-        }
-      } catch {
-        // 상세 조회 실패 시에도 일반 상세로
-        router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
-      }
+      router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
     },
     [router]
   );
 
-  const categories = [
-    { id: '1', name: '옷, 잡화, 장신구', icon: categoryIcons.clothes },
-    { id: '2', name: 'IT, 전자제품',     icon: categoryIcons.electronics },
-    { id: '3', name: '도서, 학습 용품',   icon: categoryIcons.books },
-    { id: '4', name: '기타',             icon: categoryIcons.etc },
-  ];
-
   const onTabPress = (tab: string) => {
     setActiveTab(tab);
-    // 필요하면 라우팅 연결
-    // if (tab === 'profile') router.push('/(me)');
   };
 
   return (
@@ -116,7 +102,7 @@ export default function HomeScreen() {
         {/* 스크롤 영역 */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 12 }} // 탭바와 살짝 간격
+          contentContainerStyle={{ paddingBottom: 12 }}
           showsVerticalScrollIndicator={false}
         >
           <SearchBar />
@@ -125,7 +111,7 @@ export default function HomeScreen() {
             text="내 물품 등록하기"
             onPress={handleRegisterPress}
           />
-          {/* 상품 섹션만 API로 교체 */}
+
           {isLoading ? (
             <View style={{ paddingVertical: 24, alignItems: "center" }}>
               <ActivityIndicator />
@@ -135,9 +121,18 @@ export default function HomeScreen() {
               <Text>상품을 불러오지 못했습니다.</Text>
             </View>
           ) : (
-             <NewProductsSection products={products ?? []} onPress={handlePressProduct} />
+            <>
+              <NewProductsSection products={products} onPress={handlePressProduct} />
+              <CategorySection
+  categories={recentCategoriesForSection}
+  loading={isLoading}
+  onPressHeaderRight={() => router.push("/(category)")} // ← /(category)/index.tsx 로 이동
+  onPressCategory={(slug) =>
+    router.push({ pathname: "/(category)/[slug]", params: { slug } })
+  }
+/>
+            </>
           )}
-          <CategorySection categories={categories} />
         </ScrollView>
 
         {/* 고정 하단 탭바 (스크롤 밖) */}
