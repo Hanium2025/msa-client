@@ -26,6 +26,32 @@ export default function HomeScreen() {
   const products = data?.products ?? [];
   const recentCategories = data?.categories ?? [];
 
+  // 1) 서버에서 온 카테고리 → slug 매핑
+  const mappedRecents = recentCategories.map((c: { name: string }, idx: number) => ({
+    id: `r-${idx}`,
+    name: c.name,
+    slug: TITLE_TO_SLUG[c.name] ?? "OTHER",
+  }));
+
+  // 2) 최근이 비어있거나 4개 미만이면 CATEGORIES로 채워서 4개 보장 (중복 방지)
+  const ensureFour = (seed: Array<{ id: string; name: string; slug: string }>) => {
+    const out = [...seed];
+    const seen = new Set(out.map(it => it.slug));
+    for (const cat of CATEGORIES) {
+      if (out.length >= 4) break;
+      if (seen.has(cat.slug)) continue;
+      out.push({
+        id: `d-${cat.slug}`,
+        name: cat.title,
+        slug: cat.slug,
+      });
+      seen.add(cat.slug);
+    }
+    return out.slice(0, 4);
+  };
+
+  const categoriesForSection = ensureFour(mappedRecents);
+
   const recentCategoriesForSection = recentCategories.slice(0, 4).map((c, idx) => ({
     id: String(idx),
     name: c.name,
@@ -79,7 +105,7 @@ export default function HomeScreen() {
 
           {/* 로딩 중에도 자리 유지하고 싶으면 이 섹션은 항상 렌더 */}
           <CategorySection
-            categories={recentCategoriesForSection}
+            categories={categoriesForSection}
             loading={isLoading}
             onPressHeaderRight={() => router.push("/(category)")} // /(category)/index.tsx
             onPressCategory={(slug) =>

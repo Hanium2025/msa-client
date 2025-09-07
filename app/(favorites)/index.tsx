@@ -15,13 +15,19 @@ import { SortTabs } from "../components/molecules/SortTabs";
 import { useFavorites } from "../hooks/useFavorites";
 import { useToggleLikeList } from "../hooks/useToggleLikeList"; 
 import { tokenStore } from "../auth/tokenStore";
+import BottomTabBar from "../components/molecules/BottomTabBar";
 
 export type SortKey = "new" | "old";
 const PHONE_WIDTH = 390; // iPhone 14 Pro width
+const TABBAR_SPACE = 90;
 
 export default function FavoritesPage() {
   const [sort, setSort] = useState<SortKey>("new");
   const router = useRouter();
+
+  const [activeTab, setActiveTab] =
+    useState<"notifications" | "chat" | "home" | "community" | "profile">("home");
+  const onTabPress = (tab: string) => setActiveTab(tab as any);
 
   const openDetail = (id: number) => {
     router.push({
@@ -95,14 +101,18 @@ export default function FavoritesPage() {
             onPressItem={openDetail}
             onEndReached={() => hasNextPage && loadMore()}
             ListFooterComponent={
-              isFetchingNextPage ? (
-                <View style={{ paddingVertical: 16, alignItems: "center" }}>
-                  <ActivityIndicator />
-                </View>
-              ) : null
+              <>
+                {isFetchingNextPage ? (
+                  <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                    <ActivityIndicator />
+                  </View>
+                ) : null}
+                <View style={{ height: TABBAR_SPACE }} />
+              </>
             }
           />
         )}
+        <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
     </View>
   );

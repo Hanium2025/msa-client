@@ -2,29 +2,37 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import {
-  View, SafeAreaView, ScrollView, StyleSheet, ActivityIndicator,
-  Text, Alert, Platform, StatusBar,
+  View,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  Text,
+  Alert,
+  Platform,
+  StatusBar,
+  Image,
+  Modal,
+  Pressable,
+  ImageSourcePropType,
+  ImageURISource,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+
 import ProductCard from "../components/organisms/ProductCard";
-import BottomButtonGroup from "../components/molecules/BottomButtonGroup";        // 비작성자
-import ProductOwnerActions from "../components/organisms/ProductOwnerActions";    // 작성자
+import BottomButtonGroup from "../components/molecules/BottomButtonGroup"; // 비작성자
+import ProductOwnerActions from "../components/organisms/ProductOwnerActions"; // 작성자
 import BottomTabBar from "../components/molecules/BottomTabBar";
+
 import { tokenStore } from "../auth/tokenStore";
 import { useProductDetail } from "../hooks/useProductDetail";
 import { useToggleLike } from "../hooks/useToggleLike";
 import { useDeleteProduct } from "../hooks/useDeleteProduct";
-import type { ImageSourcePropType, ImageURISource } from "react-native";
-
 
 const PHONE_WIDTH = 390;
 const TABBAR_SPACE = 90;
 
 const DEFAULT_AVATAR = require("../../assets/images/default_profile.png") as ImageSourcePropType;
-
-function toImageSource(url?: string): ImageSourcePropType {
-  return url ? ({ uri: url } as ImageURISource) : DEFAULT_AVATAR;
-}
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -34,18 +42,21 @@ const showAlert = (title: string, message?: string) => {
 
 function mapStatusKToUI(k?: string): "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT" {
   switch (k) {
-    case "판매 중": return "ON_SALE";
-    case "예약 중": return "IN_PROGRESS";
-    case "판매 완료": return "SOLD_OUT";
-    default: return "ON_SALE";
+    case "판매 중":
+      return "ON_SALE";
+    case "예약 중":
+      return "IN_PROGRESS";
+    case "판매 완료":
+      return "SOLD_OUT";
+    default:
+      return "ON_SALE";
   }
 }
 
 // "2025.08.26" 또는 ISO 문자열 → 사람이 읽기 쉬운 값
 function formatCreatedAt(s?: string): string {
   if (!s) return "";
-  // "YYYY.MM.DD" 포맷 지원
-  if (/^\d{4}\.\d{2}\.\d{2}$/.test(s)) return s;
+  if (/^\d{4}\.\d{2}\.\d{2}$/.test(s)) return s; // "YYYY.MM.DD" 지원
   const t = Date.parse(s);
   if (Number.isNaN(t)) return s;
   const d = new Date(t);
@@ -63,12 +74,18 @@ function getUserIdFromToken(token: string): number | null {
     const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
     // @ts-ignore
     const bin = typeof atob === "function" ? atob(base64) : Buffer.from(base64, "base64").toString("binary");
-    const json = decodeURIComponent(Array.from(bin).map(c => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")).join(""));
+    const json = decodeURIComponent(
+      Array.from(bin)
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join("")
+    );
     const payload = JSON.parse(json);
     const raw = payload.memberId ?? payload.userId ?? payload.id ?? payload.sub;
     const n = Number(raw);
     return Number.isFinite(n) ? n : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 export default function UnifiedDetailScreen() {
@@ -101,7 +118,9 @@ export default function UnifiedDetailScreen() {
     return (
       <View style={styles.webRoot}>
         <SafeAreaView style={styles.phoneFrame}>
-          <View style={styles.center}><ActivityIndicator size="large" /></View>
+          <View style={styles.center}>
+            <ActivityIndicator size="large" />
+          </View>
         </SafeAreaView>
       </View>
     );
@@ -114,18 +133,27 @@ function DetailContent({ id, token }: { id: number; token: string }) {
   const router = useRouter();
   const [activeTab, setActiveTab] =
     useState<"notifications" | "chat" | "home" | "community" | "profile">("home");
-  const onTabPress = (tab: string) => setActiveTab(tab as any); 
+  const onTabPress = (tab: string) => setActiveTab(tab as any);
   const myId = getUserIdFromToken(token);
+  const [reportOpen, setReportOpen] = useState(false);
+  const REPORT_ICON = require("../../assets/images/report.png");
 
-  const { data, isLoading, error, refetch } = useProductDetail(id, token); // token optional이면 그대로 동작
+  const { data, isLoading, error, refetch } = useProductDetail(id, token);
   const toggleLike = useToggleLike(id, token);
   const { mutate: deleteProduct } = useDeleteProduct();
 
-  // 화면 재진입 시 최신화
-  useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   if (isLoading) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
   if (error || !data) {
     showAlert("오류", (error as any)?.message ?? "상품 정보를 불러오지 못했습니다.");
@@ -148,11 +176,11 @@ function DetailContent({ id, token }: { id: number; token: string }) {
       ? data.price
       : Number(String(data.price ?? "0").replace(/[^\d]/g, ""));
 
-  // 상태 매핑 (기존 detail.tsx의 버그 수정)
   const uiStatus = mapStatusKToUI(data.status as string);
 
-  // 프로필 이미지(서버가 기본 이미지 URL을 보냄)
-  const avatar: ImageSourcePropType = data.sellerImageUrl ? ({ uri: data.sellerImageUrl } as ImageURISource) : DEFAULT_AVATAR;
+  const avatar: ImageSourcePropType = data.sellerImageUrl
+    ? ({ uri: data.sellerImageUrl } as ImageURISource)
+    : DEFAULT_AVATAR;
 
   const product = {
     id: String(id),
@@ -172,10 +200,14 @@ function DetailContent({ id, token }: { id: number; token: string }) {
   };
 
   const isOwner = data.seller === true || (myId != null && Number(data.sellerId) === myId);
+  const sellerId: number | undefined = (data as any).sellerId ?? (data as any).seller?.id;
 
   // ---- 핸들러 ----
   const handleEdit = () => {
-    router.push({ pathname: "/(addProduct)/edit/[productId]", params: { productId: String(id) } });
+    router.push({
+      pathname: "/(addProduct)/edit/[productId]",
+      params: { productId: String(id) },
+    });
   };
 
   const handleDelete = () => {
@@ -192,7 +224,17 @@ function DetailContent({ id, token }: { id: number; token: string }) {
   };
 
   const handleChat = () => {
-    console.log("채팅하기 클릭");
+    if (!sellerId) {
+      showAlert("오류", "판매자 정보가 없어 채팅을 시작할 수 없습니다.");
+      return;
+    }
+    router.push({
+      pathname: "/(chatroomList)",
+      params: {
+        productId: String(id),
+        receiverId: String(sellerId),
+      },
+    });
   };
 
   return (
@@ -200,18 +242,27 @@ function DetailContent({ id, token }: { id: number; token: string }) {
       <SafeAreaView style={styles.phoneFrame}>
         <StatusBar barStyle="dark-content" />
         <ScrollView
-          contentContainerStyle={[styles.scrollContainer, { paddingBottom: TABBAR_SPACE }]}  
+          contentContainerStyle={[styles.scrollContainer, { paddingBottom: TABBAR_SPACE }]}
           showsVerticalScrollIndicator={false}
         >
-          <ProductCard
-            product={product}
-            // 소유자는 좋아요 토글 불필요 → undefined 전달
-            onToggleLike={
-              isOwner
-                ? undefined
-                : async () => { await toggleLike.mutateAsync(); }
-            }
-          />
+          <View style={{ position: "relative" }}>
+            <ProductCard
+              product={product}
+              onToggleLike={isOwner ? undefined : async () => { await toggleLike.mutateAsync(); }}
+            />
+
+            {!isOwner && (
+              <Pressable
+                onPress={() => setReportOpen(true)}
+                style={styles.reportFab}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="상품 신고하기"
+              >
+                <Image source={REPORT_ICON} style={styles.reportIcon} resizeMode="contain" />
+              </Pressable>
+            )}
+          </View>
 
           {isOwner ? (
             <ProductOwnerActions onEdit={handleEdit} onDelete={handleDelete} />
@@ -219,6 +270,50 @@ function DetailContent({ id, token }: { id: number; token: string }) {
             <BottomButtonGroup status={product.status} onChat={handleChat} />
           )}
         </ScrollView>
+
+        {/* 신고 모달 */}
+        <Modal
+          transparent
+          visible={reportOpen}
+          animationType="fade"
+          onRequestClose={() => setReportOpen(false)}
+        >
+          <View style={styles.alertBackdrop}>
+            <View style={styles.alertBox}>
+              <Text style={styles.alertTitle}>해당 상품에 문제가 있나요?</Text>
+              <Text style={styles.alertMessage}>
+                ‘신고’ 버튼을 누르면 상품 신고 화면으로 이동합니다.
+              </Text>
+
+              <View style={styles.alertActions}>
+                <Pressable style={styles.alertBtn} onPress={() => setReportOpen(false)}>
+                  {({ pressed }) => (
+                    <View style={[styles.alertBtnInner, pressed && styles.alertBtnPressed]}>
+                      <Text style={[styles.alertBtnText, styles.alertCancel]}>취소</Text>
+                    </View>
+                  )}
+                </Pressable>
+
+                <View style={styles.alertDividerVertical} />
+
+                <Pressable
+                  style={styles.alertBtn}
+                  onPress={() => {
+                    setReportOpen(false);
+                    // router.push({ pathname: "/(report)/create", params: { productId: String(id) } });
+                  }}
+                >
+                  {({ pressed }) => (
+                    <View style={[styles.alertBtnInner, pressed && styles.alertBtnPressed]}>
+                      <Text style={[styles.alertBtnText, styles.alertDestructive]}>신고</Text>
+                    </View>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
     </View>
@@ -247,4 +342,75 @@ const styles = StyleSheet.create({
   },
   scrollContainer: { paddingBottom: 32 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  reportFab: {
+    position: "absolute",
+    right: 50,
+    bottom: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+  },
+  reportIcon: { width: 20, height: 20 },
+
+  alertBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  alertBox: {
+    width: 280,
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  alertTitle: {
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    fontSize: 17,
+    fontWeight: "700",
+    textAlign: "center",
+    color: "#111827",
+  },
+  alertMessage: {
+    marginTop: 6,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    color: "#6B7280",
+  },
+  alertActions: {
+    flexDirection: "row",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#E5E7EB",
+    height: 46,
+  },
+  alertBtn: { flex: 1 },
+  alertBtnInner: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  alertBtnPressed: {
+    backgroundColor: "#F3F4F6",
+  },
+  alertDividerVertical: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: "#E5E7EB",
+  },
+  alertBtnText: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  alertCancel: { color: "#0A84FF" },
+  alertDestructive: { color: "#FF3B30" },
 });
