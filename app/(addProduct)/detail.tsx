@@ -9,6 +9,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import ProductCard from "../components/organisms/ProductCard";
 import BottomButtonGroup from "../components/molecules/BottomButtonGroup";        // 비작성자
 import ProductOwnerActions from "../components/organisms/ProductOwnerActions";    // 작성자
+import BottomTabBar from "../components/molecules/BottomTabBar";
 import { tokenStore } from "../auth/tokenStore";
 import { useProductDetail } from "../hooks/useProductDetail";
 import { useToggleLike } from "../hooks/useToggleLike";
@@ -17,6 +18,7 @@ import type { ImageSourcePropType, ImageURISource } from "react-native";
 
 
 const PHONE_WIDTH = 390;
+const TABBAR_SPACE = 90;
 
 const DEFAULT_AVATAR = require("../../assets/images/default_profile.png") as ImageSourcePropType;
 
@@ -110,6 +112,9 @@ export default function UnifiedDetailScreen() {
 
 function DetailContent({ id, token }: { id: number; token: string }) {
   const router = useRouter();
+  const [activeTab, setActiveTab] =
+    useState<"notifications" | "chat" | "home" | "community" | "profile">("home");
+  const onTabPress = (tab: string) => setActiveTab(tab as any); 
   const myId = getUserIdFromToken(token);
 
   const { data, isLoading, error, refetch } = useProductDetail(id, token); // token optional이면 그대로 동작
@@ -194,7 +199,10 @@ function DetailContent({ id, token }: { id: number; token: string }) {
     <View style={styles.webRoot}>
       <SafeAreaView style={styles.phoneFrame}>
         <StatusBar barStyle="dark-content" />
-        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={[styles.scrollContainer, { paddingBottom: TABBAR_SPACE }]}  
+          showsVerticalScrollIndicator={false}
+        >
           <ProductCard
             product={product}
             // 소유자는 좋아요 토글 불필요 → undefined 전달
@@ -211,6 +219,7 @@ function DetailContent({ id, token }: { id: number; token: string }) {
             <BottomButtonGroup status={product.status} onChat={handleChat} />
           )}
         </ScrollView>
+        <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
     </View>
   );

@@ -65,7 +65,7 @@ export default function AddProductScreen() {
 
     const mappedCategory =
       (koToEnum[values.category] as keyof typeof koToEnum | undefined) ||
-      (["TRAVEL","FEEDING","SLEEP","PLAY","LIVING","APPAREL","OTHER"].includes(values.category) ? values.category : undefined);
+      (["TRAVEL", "FEEDING", "SLEEP", "PLAY", "LIVING", "APPAREL", "OTHER"].includes(values.category) ? values.category : undefined);
 
     if (!mappedCategory) {
       showAlert('카테고리를 선택해 주세요.', '허용: TRAVEL, FEEDING, SLEEP, PLAY, LIVING, APPAREL, OTHER');
@@ -89,7 +89,7 @@ export default function AddProductScreen() {
       title: values.title.trim(),
       content: values.content.trim(),
       price: priceNumber,
-      category: mappedCategory, 
+      category: mappedCategory,
     };
 
     const formData = new FormData();
@@ -119,20 +119,20 @@ export default function AddProductScreen() {
             showAlert('등록 성공', '상품 ID를 가져오지 못했습니다.');
             return;
           }
-          const goOwner = () =>
+          const goDetail = () =>
             router.replace({
-              pathname: '/(addProduct)/owner/[productId]',
+              pathname: '/(addProduct)/detail',
               params: { productId: String(productId) },
             });
 
           if (Platform.OS === 'web') {
             window.alert(message);
-            goOwner();
+            goDetail();
           } else if (Platform.OS === 'android') {
             ToastAndroid.show(message, ToastAndroid.SHORT);
-            goOwner();
+            goDetail();
           } else {
-            Alert.alert('등록 성공', message, [{ text: '확인', onPress: goOwner }]);
+            Alert.alert('등록 성공', message, [{ text: '확인', onPress: goDetail }]);
           }
         },
         onError: (err: unknown) => {

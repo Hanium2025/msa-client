@@ -35,8 +35,10 @@ export default function ProductCard({ product, onToggleLike }: Props) {
   const [likeCount, setLikeCount] = useState<number>(product.likeCount ?? 0);
   const [pending, setPending] = useState(false);
   const avatarSource = product.user.avatar ?? DEFAULT_AVATAR;
+  const isInteractive = !!onToggleLike;
+  
   const handleToggleLike = useCallback(async () => {
-    if (pending) return;        // 연타 방지
+    if (pending || !isInteractive) return;        
     setPending(true);
 
     const prevLiked = liked;
@@ -59,7 +61,14 @@ export default function ProductCard({ product, onToggleLike }: Props) {
     } finally {
       setPending(false);
     }
-  }, [liked, onToggleLike, pending]);
+  }, [liked, onToggleLike, pending, isInteractive]);
+
+  const starSource =
+   !isInteractive
+     ? require("../../../assets/images/star_black.png")  // 작성자 화면: 항상 검은 별
+     : liked
+       ? require("../../../assets/images/star_black.png")
+       : require("../../../assets/images/star_gray.png");
 
   return (
     <View style={styles.card}>
@@ -88,23 +97,16 @@ export default function ProductCard({ product, onToggleLike }: Props) {
       {/* 좋아요(터치 가능) */}
       <Pressable
         onPress={handleToggleLike}
-        disabled={pending}
+        disabled={pending || !isInteractive} 
         style={({ pressed }) => [
           styles.likesRow,
-          pressed && { opacity: 0.7 },
+          (pressed && isInteractive) ? { opacity: 0.7 } : null,
         ]}
         hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel={liked ? "좋아요 취소" : "좋아요"}
+        accessibilityRole={isInteractive ? "button" : "text"}
+        accessibilityLabel={isInteractive ? (liked ? "좋아요 취소" : "좋아요") : "좋아요 개수"}
       >
-        <Image
-          source={
-            liked
-              ? require("../../../assets/images/star_black.png")
-              : require("../../../assets/images/star_gray.png")
-          }
-          style={styles.starIcon}
-        />
+        <Image source={starSource} style={styles.starIcon} />
         <Text style={styles.likesText}>{likeCount}</Text>
       </Pressable>
     </View>
