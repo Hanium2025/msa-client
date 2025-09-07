@@ -11,12 +11,19 @@ import {
   Pressable,
   Image,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../components/atoms/Button";
 import { ReportForm } from "../components/organisms/ReportForm";
+import axios from "axios";
+import { tokenStore } from "../auth/tokenStore";
+import { useReportProduct } from "../hooks/useReportProduct";
 
 const PHONE_WIDTH = 390;
 const BACK_ICON = require("../../assets/images/back.png");
+
+async function getAccessToken(): Promise<string> {
+  return "tokenStore";
+}
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -26,16 +33,48 @@ const showAlert = (title: string, message?: string) => {
 
 export default function ReportScreen() {
   const router = useRouter();
+  // URL이 /product/[productId]/report 라면 여기로 넘어옵니다.
+  const { productId } = useLocalSearchParams<{ productId?: string }>();
 
-  // 폼 상태는 여기서 관리
   const [reason, setReason] = useState("");
   const [detail, setDetail] = useState("");
 
-  const handleSubmit = () => {
-    showAlert("신고 제출", "신고가 제출되었습니다.");
-    router.back();
-  };
+  const { mutateAsync, isPending } = useReportProduct();
 
+  const handleSubmit = async () => {
+    if (!productId) {
+      showAlert("오류", "상품 정보가 없습니다.");
+      return;
+    }
+    try {
+      const res = await mutateAsync({
+        productId,
+        reasonDisplay: reason,
+        details: detail,
+      });
+
+      if (res?.code === 200) {
+        router.push({
+          pathname: "/reportSuccess",
+          params: { reason, detail },
+        });
+      } else {
+        console.log("실패");
+        showAlert("신고 실패", res?.message ?? "잠시 후 다시 시도해주세요.");
+      }
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const msg =
+        e?.response?.data?.message ||
+        (status === 400
+          ? "입력할 수 있는 신고 사유 범위가 아닙니다."
+          : status === 404
+            ? "해당하는 상품을 찾을 수 없습니다."
+            : "잠시 후 다시 시도해주세요.");
+      console.log("실패");
+      showAlert("신고 실패", msg);
+    }
+  };
   return (
     <SafeAreaView style={s.phoneFrame}>
       <View style={s.header}>
@@ -78,9 +117,9 @@ export default function ReportScreen() {
         <View style={{ alignItems: "center" }}>
           <Button
             variant="reportSubmit"
-            text="신고 제출"
+            text={isPending ? "제출 중..." : "신고 제출"}
             onPress={handleSubmit}
-            disabled={!reason || !detail.trim()}
+            disabled={!reason || !detail.trim() || isPending}
             style={{ width: 219 }}
           />
         </View>

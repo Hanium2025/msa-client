@@ -246,4 +246,53 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: -0.32,
   },
+
+  // reportToProduct (보던 상품으로 돌아가기 버튼)
+  reportToProductButton: {
+    width: 313,
+    height: 57,
+    borderRadius: 20,
+    backgroundColor: "#084C63",
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  reportToProductDisabled: { opacity: 0.5 },
+  reportToProductText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+
+  // reportToHome (홈으로 버튼)
+  reportToHomeButton: {
+    width: 313,
+    height: 48,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgba(217, 217, 217, 0.80)",
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reportToHomeDisabled: { opacity: 0.5 },
+  reportToHomeText: {
+    color: "#000000",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
 });

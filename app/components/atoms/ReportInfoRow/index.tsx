@@ -11,22 +11,23 @@ import {
 import { styles } from "./ReportInfoRow.style";
 
 type Props = {
-  label: string; // 왼쪽 라벨
-  value: string; // 입력 값 (controlled)
-  onChangeText: (t: string) => void; // 값 변경
-  placeholder?: string; // 플레이스홀더
-  textColor?: string; // 입력 텍스트 색
-  placeholderColor?: string; // 플레이스홀더 색
-  keyboardType?: KeyboardTypeOptions; // "phone-pad" 등
+  label: string;
+  value: string; // controlled value
+  onChangeText: (t: string) => void; // state setter
+  placeholder?: string;
+  textColor?: string;
+  placeholderColor?: string;
+  keyboardType?: KeyboardTypeOptions;
   maxLength?: number;
   secureTextEntry?: boolean;
   autoFocus?: boolean;
-  style?: StyleProp<ViewStyle>; // 행 컨테이너
-  inputStyle?: StyleProp<TextStyle>; // TextInput 추가 스타일
-  showDivider?: boolean; // 하단 구분선
+  style?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
+  showDivider?: boolean;
+  editable?: boolean;
 };
 
-export const InfoRow: React.FC<Props> = ({
+export const ReportInfoRow: React.FC<Props> = ({
   label,
   value,
   onChangeText,
@@ -40,6 +41,7 @@ export const InfoRow: React.FC<Props> = ({
   style,
   inputStyle,
   showDivider = true,
+  editable = true,
 }) => {
   return (
     <>
@@ -48,14 +50,17 @@ export const InfoRow: React.FC<Props> = ({
 
         <TextInput
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={(t) => onChangeText?.(t)}
+          editable={editable}
           placeholder={placeholder}
           placeholderTextColor={placeholderColor}
           keyboardType={keyboardType}
           maxLength={maxLength}
           secureTextEntry={secureTextEntry}
           autoFocus={autoFocus}
-          style={[styles.input, inputStyle, { color: textColor }]}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={[styles.input, { color: textColor }, inputStyle]}
         />
       </View>
       {showDivider && <View style={styles.divider} />}
