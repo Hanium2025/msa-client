@@ -1,10 +1,16 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform, ActivityIndicator,
   Text, } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SearchBar } from '../components/atoms/SearchBar';
 import SearchHistoryList from '../components/molecules/SearchHistoryList'
 import BottomTabBar from '../components/molecules/BottomTabBar';   // 하단 탭바
+import {
+  getSearchHistory,
+  deleteSearchHistory,
+  clearSearchHistory,
+  SearchHistoryItem
+} from "../lib/api/product-search";
 
 
 const PHONE_WIDTH = 390;
@@ -13,7 +19,9 @@ export default function ProductSearchScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('home');
   const [query, setQuery] = useState("");
-  const [histories, setHistories] = useState<string[]>(["유모차", "카시트", "아기띠"]);
+  
+  const [histories, setHistories] = useState<SearchHistoryItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const onTabPress = (tab: string) => {
     setActiveTab(tab);
@@ -21,11 +29,24 @@ export default function ProductSearchScreen() {
     // if (tab === 'profile') router.push('/(me)');
   };
 
+  useEffect(() => {
+    const fetchHistories = async () => {
+      try {
+        setLoading(true);
+        const data = await getSearchHistory();
+        setHistories(data); // [{searchId, keyword}, ...]
+      } catch (e) {
+        console.error("검색 기록 불러오기 실패:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHistories();
+  }, []);
+
   // 검색 실행 (아이콘/엔터)
   const onSubmitSearch = useCallback(() => {
     if (!query.trim()) return;
-    // 최근 검색어에 추가 (중복 제거)
-    setHistories((prev) => [query.trim(), ...prev.filter((v) => v !== query.trim())]);
     router.push({
       pathname: "/(productSearch)/[keyword]",
       params: { keyword: query.trim() },
@@ -33,21 +54,43 @@ export default function ProductSearchScreen() {
   }, [query, router]);
 
   // 리스트 아이템 탭 (검색어 눌렀을 때)
-  const onPressKeyword = useCallback((kw: string) => {
-    setQuery(kw);
-    router.push({
-      pathname: "/(productSearch)/[keyword]",
-      params: { keyword: kw },
-    });
-  }, [router]);
+  const onPressKeyword = useCallback(
+    (kw: string) => {
+      setQuery(kw);
+      router.push({
+        pathname: "/(productSearch)/[keyword]",
+        params: { keyword: kw },
+      });
+    },
+    [router]
+  );
 
-  // 리스트 아이템 삭제 (X 아이콘)
-  const onPressDelete = useCallback((kw: string) => {
-    setHistories((prev) => prev.filter((v) => v !== kw));
+  /** 개별 삭제 */
+  const onPressDelete = useCallback(
+    async (kw: string) => {
+      const target = histories.find((h) => h.keyword === kw);
+      if (!target) return;
+      try {
+        await deleteSearchHistory(target.searchId);
+        setHistories((prev) =>
+          prev.filter((h) => h.searchId !== target.searchId)
+        );
+      } catch (e) {
+        console.error("검색 기록 삭제 실패:", e);
+      }
+    },
+    [histories]
+  );
+
+  /** 전체 삭제 */
+  const onClearAll = useCallback(async () => {
+    try {
+      await clearSearchHistory();
+      setHistories([]);
+    } catch (e) {
+      console.error("검색 기록 전체 삭제 실패:", e);
+    }
   }, []);
-
-  // 모두 삭제
-  const onClearAll = useCallback(() => setHistories([]), []);
 
   return (
     <View style={styles.webRoot}>
@@ -66,7 +109,7 @@ export default function ProductSearchScreen() {
             onSubmit={onSubmitSearch}
           />
           <SearchHistoryList
-            histories={histories}
+            histories={histories.map((h) => h.keyword)}
             onSelect={onPressKeyword}
             onRemove={onPressDelete}
             onClearAll={onClearAll}
