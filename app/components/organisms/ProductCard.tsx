@@ -1,18 +1,20 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import UserInfo from "../molecules/UserInfo";
 import ImageCarousel from "../molecules/ImageCarousel";
 import PriceText from "../atoms/PriceText";
 import Tag from "../atoms/Tag";
+import { Image, ImageProps } from "react-native";
 
 interface Product {
   title: string;
   price: number;
   category: string;
   description: string;
-  user?: {
+  user: {
     nickname: string;
     postedAt: string;
+    avatar?: ImageProps["source"];
   };
   status: "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT";
   likeCount?: number;
@@ -26,13 +28,17 @@ interface Props {
   onToggleLike?: (nextLiked: boolean) => Promise<{ likeCount?: number } | void> | void;
 }
 
+const DEFAULT_AVATAR = require("../../../assets/images/default_profile.png");
+
 export default function ProductCard({ product, onToggleLike }: Props) {
   const [liked, setLiked] = useState<boolean>(!!product.liked);
   const [likeCount, setLikeCount] = useState<number>(product.likeCount ?? 0);
   const [pending, setPending] = useState(false);
-
+  const avatarSource = product.user.avatar ?? DEFAULT_AVATAR;
+  const isInteractive = !!onToggleLike;
+  
   const handleToggleLike = useCallback(async () => {
-    if (pending) return;        // 연타 방지
+    if (pending || !isInteractive) return;        
     setPending(true);
 
     const prevLiked = liked;
@@ -55,7 +61,14 @@ export default function ProductCard({ product, onToggleLike }: Props) {
     } finally {
       setPending(false);
     }
-  }, [liked, onToggleLike, pending]);
+  }, [liked, onToggleLike, pending, isInteractive]);
+
+  const starSource =
+   !isInteractive
+     ? require("../../../assets/images/star_black.png")  // 작성자 화면: 항상 검은 별
+     : liked
+       ? require("../../../assets/images/star_black.png")
+       : require("../../../assets/images/star_gray.png");
 
   return (
     <View style={styles.card}>
@@ -68,8 +81,9 @@ export default function ProductCard({ product, onToggleLike }: Props) {
       {/* 작성자 + 카테고리 */}
       <View style={styles.userRow}>
         <UserInfo
-          nickname={product.user?.nickname ?? "알 수 없음"}
-          postedAt={product.user?.postedAt ?? "방금 전"}
+          avatar={avatarSource}
+          nickname={product.user?.nickname}
+          postedAt={product.user?.postedAt}
         />
         <Tag label={product.category} />
       </View>
@@ -83,23 +97,16 @@ export default function ProductCard({ product, onToggleLike }: Props) {
       {/* 좋아요(터치 가능) */}
       <Pressable
         onPress={handleToggleLike}
-        disabled={pending}
+        disabled={pending || !isInteractive} 
         style={({ pressed }) => [
           styles.likesRow,
-          pressed && { opacity: 0.7 },
+          (pressed && isInteractive) ? { opacity: 0.7 } : null,
         ]}
         hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel={liked ? "좋아요 취소" : "좋아요"}
+        accessibilityRole={isInteractive ? "button" : "text"}
+        accessibilityLabel={isInteractive ? (liked ? "좋아요 취소" : "좋아요") : "좋아요 개수"}
       >
-        <Image
-          source={
-            liked
-              ? require("../../../assets/images/star_black.png")
-              : require("../../../assets/images/star_gray.png")
-          }
-          style={styles.starIcon}
-        />
+        <Image source={starSource} style={styles.starIcon} />
         <Text style={styles.likesText}>{likeCount}</Text>
       </Pressable>
     </View>

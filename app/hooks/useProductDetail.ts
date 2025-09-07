@@ -11,6 +11,8 @@ type ServerProduct = {
   productId: number;
   sellerId: number;
   sellerNickname?: string;
+  sellerImageUrl?: string; 
+  createdAt?: string; 
   title: string;
   content: string;
   price: number | string;
@@ -26,6 +28,8 @@ export type ApiProduct = {
   productId: number;
   sellerId: number;
   sellerNickname?: string;
+  sellerImageUrl?: string;   
+  createdAt?: string;
   title: string;
   content: string;
   price: number | string;
@@ -55,6 +59,8 @@ function normalize(server: ServerProduct): ApiProduct {
     productId: server.productId,
     sellerId: server.sellerId,
     sellerNickname: server.sellerNickname,
+    sellerImageUrl: server.sellerImageUrl,  
+    createdAt: server.createdAt,
     title: server.title,
     content: server.content,
     price: server.price,
