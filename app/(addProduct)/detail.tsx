@@ -300,7 +300,7 @@ function DetailContent({ id, token }: { id: number; token: string }) {
                   style={styles.alertBtn}
                   onPress={() => {
                     setReportOpen(false);
-                    // router.push({ pathname: "/(report)/create", params: { productId: String(id) } });
+                    router.push({ pathname: "/(report)", params: { productId: String(id) } });
                   }}
                 >
                   {({ pressed }) => (
