@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import ShippingInfo from "../components/organisms/ShippingInfo";
 import OrderInfo from "../components/molecules/OrderInfo";
+import PaymentWidget from "../components/organisms/PaymentWidget";
 
 const PHONE_WIDTH = 390; // iPhone width
 
@@ -31,6 +32,7 @@ export default function PaymentScreen() {
           <ShippingInfo />
         </View>
         <OrderInfo />
+        <PaymentWidget />
       </ScrollView>
     </SafeAreaView>
   );
