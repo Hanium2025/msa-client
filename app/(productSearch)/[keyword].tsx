@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { SafeAreaView, View, ActivityIndicator, StyleSheet, Text, ImageSourcePropType, Platform, StatusBar } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ProductGrid } from "../components/organisms/ProductGrid";
 import type { ProductItem } from "../components/molecules/ProductCard"
-import { SearchBar } from "react-native-screens";
+import { SearchBar } from "../components/atoms/SearchBar";
 import BottomTabBar from '../components/molecules/BottomTabBar'; 
+import { getProductsByKeywordList, ServerSort } from "../lib/api/product-search";
 
 type SortKey = "new" | "popular";
 const PHONE_WIDTH = 390;
@@ -20,17 +21,15 @@ export default function KeywordResultScreen() {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const onTabPress = (tab: string) => {
     setActiveTab(tab);
     // 필요하면 라우팅 연결
     // if (tab === 'profile') router.push('/(me)');
   };
 
-  // TODO: 실제 아이콘 이미지 경로로 교체
-//   const iconSource = useMemo<ImageSourcePropType>(
-//     () => require("../../../assets/icons/search.png"),
-//     []
-//   );
+  const toServerSort = (s: SortKey): ServerSort => (s === "new" ? "recent" : "like");
 
   const fetchProducts = useCallback(async () => {
     if (!keyword.trim()) return;
@@ -38,28 +37,29 @@ export default function KeywordResultScreen() {
       setLoading(true);
       setError(null);
 
-      // TODO: 실제 API로 교체하세요.
-      // 예: const res = await fetch(`${API}/products?keyword=${encodeURIComponent(keyword)}&sort=${sort}`);
-      // const data = await res.json();
+      abortRef.current?.abort();
+      const ac = new AbortController();
+      abortRef.current = ac;
 
-      // 데모용 목업 데이터
-      const mock: ProductItem[] = Array.from({ length: 12 }).map((_, i) => ({
-        id: i + 1,
-        title: `${keyword} 상품명 ABCDE`,
-        price: 99000,
-        // ProductCard에서 요구하는 필드를 맞춰주세요.
-        // 예: thumbnail: "https://picsum.photos/seed/"+(i+1)+"/300/300"
-        thumbnail: undefined,
+      // ✅ 서버에서 리스트 받아오기
+      const list = await getProductsByKeywordList({
+        keyword,
+        sort: toServerSort(sort),
+        page: 0, // 필요하면 상태로 관리해 페이징 구현
+        signal: ac.signal,
+      });
+
+      // ✅ 서버 DTO → UI 모델(ProductItem) 매핑
+      const mapped: ProductItem[] = list.map((p) => ({
+        id: p.productId,
+        title: p.title,
+        price: p.price,
+        thumbnail: p.imageUrl || undefined,
       }));
 
-      // 정렬 데모 (서버가 정렬해 주면 불필요)
-      const sorted =
-        sort === "popular"
-          ? mock.slice().reverse()
-          : mock;
-
-      setProducts(sorted);
+      setProducts(mapped);
     } catch (e: any) {
+      if (e?.name === "CanceledError" || e?.message === "canceled") return;
       setError(e?.message ?? "알 수 없는 오류");
     } finally {
       setLoading(false);
@@ -68,17 +68,19 @@ export default function KeywordResultScreen() {
 
   useEffect(() => {
     fetchProducts();
+    return () => abortRef.current?.abort();
   }, [fetchProducts]);
 
   const handleChangeSort = useCallback((s: SortKey) => {
-    setSort(s);
-    // 서버 정렬이면 여기서만 상태 바꾸고 fetchProducts에서 반영
+    setSort(s); // sort 바뀌면 fetchProducts가 다시 호출됨
   }, []);
 
-  const handlePressProduct = useCallback((id: number) => {
-    // 상품 상세로 이동
-    router.push({ pathname: "/product/[id]", params: { id: String(id) } });
-  }, [router]);
+  const handlePressProduct = useCallback(
+    (id: number) => {
+      router.push({ pathname: "/product/[id]", params: { id: String(id) } });
+    },
+    [router]
+  );
 
   if (!keyword.trim()) {
     return (
@@ -108,7 +110,9 @@ export default function KeywordResultScreen() {
               </View>
             ) : (
                 <>
-              <SearchBar/>
+              <SearchBar
+              onTrigger={() => router.push("/(productSearch)")}
+              />
 
               <ProductGrid
               //   title={keyword}                 // 헤더 타이틀에 검색어 표시

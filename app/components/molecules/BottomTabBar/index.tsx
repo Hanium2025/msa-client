@@ -43,8 +43,15 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
       router.push(chatListPath);
       return;
     }
+<<<<<<< HEAD
     // 필요하면 나머지 탭도 라우팅 규칙을 추가
     // if (name === 'home') router.replace('/'); ...
+=======
+    if (name === "home") {
+      router.replace("/(home)"); 
+      return;
+    }
+>>>>>>> 2e5d375f078c790526acb3172ba7cf31df84e983
   };
   return (
     <View style={styles.container}>

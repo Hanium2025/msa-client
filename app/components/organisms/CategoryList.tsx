@@ -29,6 +29,6 @@ export function CategoryList({ items, onPressItem }: Props) {
 }
 
 export const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC", paddingTop: 24 },
+  container: { flex: 1, backgroundColor: "#fff", paddingTop: 24 },
   title: {  fontFamily: "SF Pro", fontSize: 28, fontWeight: "700", paddingHorizontal: 16, marginBottom: 8, color: "#0B0C0F" },
 });

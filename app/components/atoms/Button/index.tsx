@@ -27,7 +27,9 @@ interface ButtonProps {
     | "login"
     | "socialLogin"
     | "registerItem"
-    | "reportSubmit";
+    | "reportSubmit"
+    | "reportToProduct"
+    | "reportToHome";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -127,6 +129,16 @@ const Button: React.FC<ButtonProps> = ({
           styles.socialButton,
           { backgroundColor: backgroundColor ?? "#eee" },
         ];
+      case "reportToProduct":
+        return [
+          styles.reportToProductButton,
+          disabled && styles.reportToProductDisabled,
+        ];
+      case "reportToHome":
+        return [
+          styles.reportToHomeButton,
+          disabled && styles.reportToHomeDisabled,
+        ];
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -144,6 +156,10 @@ const Button: React.FC<ButtonProps> = ({
         return styles.loginText;
       case "socialLogin":
         return [styles.socialText, { color: textColor ?? "#000" }];
+      case "reportToProduct":
+        return styles.reportToProductText;
+      case "reportToHome":
+        return styles.reportToHomeText;
       default:
         return styles.actionText;
     }

@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, FlatList } from "react-native";
+import { View, Text, Pressable, FlatList } from "react-native";
 import { SearchKeyword } from "../../atoms/SearchKeyword";
+import { styles } from "./SearchHistoryList.style";
 
 interface SearchHistoryListProps {
     histories : string[];
@@ -39,32 +40,3 @@ export default function SearchHistoryList({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  title: {
-    color: "#000",
-    fontSize: 15,
-    fontStyle: "normal",
-    fontWeight: "500",
-    lineHeight: 21,
-    letterSpacing: -0.32,
-  },
-  delte: {
-    color: "rgba(0, 0, 0, 0.60)",
-    fontSize: 13,
-    fontStyle: "normal",
-    fontWeight: "100",
-    lineHeight: 21,
-    letterSpacing: -0.32,
-  },
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: 345,
-    marginHorizontal: "auto",
-  },
-  wrap: {
-    marginTop: 29,
-  }
-});

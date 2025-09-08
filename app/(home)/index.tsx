@@ -1,138 +1,96 @@
 // home.tsx
 import React, { useCallback, useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform, ActivityIndicator,
-  Text, } from 'react-native';
+import { SafeAreaView, ScrollView, StatusBar, View, StyleSheet, Platform, ActivityIndicator, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SearchBar } from '../components/atoms/SearchBar';
 import RegisterItemButton from '../components/atoms/Button';
 import NewProductsSection from '../components/organisms/NewProductsSection';
 import CategorySection from '../components/organisms/CategorySection';
-import BottomTabBar from '../components/molecules/BottomTabBar';   // 하단 탭바
+import BottomTabBar from '../components/molecules/BottomTabBar';
 import { tokenStore } from '../auth/tokenStore';
-import { categoryIcons } from '../../assets/categoryIcons';
-import { useHomeProducts } from "../hooks/useHomeProduct";
-import { fetchProductDetail } from "../lib/api/product";
+import { useHomeProducts } from "../hooks/useHomeProduct"; 
+import { useFocusEffect } from "@react-navigation/native";
+import { CATEGORIES } from "../constants/categories";
 
-
+const TITLE_TO_SLUG = Object.fromEntries(CATEGORIES.map(c => [c.title, c.slug])) as Record<string, string>;
 const PHONE_WIDTH = 390;
-
-function getUserIdFromToken(token: string): number | null {
-  try {
-    const part = token.split(".")[1];
-    if (!part) return null;
-    const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
-
-    const hasAtob = typeof atob === "function";
-    // @ts-ignore
-    const hasBuffer = typeof Buffer !== "undefined";
-
-    const binary = hasAtob
-      ? atob(base64)
-      : hasBuffer
-      // @ts-ignore
-      ? Buffer.from(base64, "base64").toString("binary")
-      : null;
-
-    if (!binary) return null;
-
-    const json = decodeURIComponent(
-      Array.from(binary)
-        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
-        .join("")
-    );
-    const payload = JSON.parse(json);
-
-    const raw = payload.memberId ?? payload.userId ?? payload.id ?? payload.sub;
-    const n = Number(raw);
-    return Number.isFinite(n) ? n : null;
-  } catch {
-    return null;
-  }
-}
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('home'); // 홈
+  const [activeTab, setActiveTab] = useState('home');
 
-  const { data: products, isLoading, error } = useHomeProducts();
+  const { data, isLoading, error, refetch } = useHomeProducts();
+
+  useFocusEffect(React.useCallback(() => { refetch(); }, [refetch]));
+
+  const products = data?.products ?? [];
+  const recentCategories = data?.categories ?? [];
+
+  // 1) 서버에서 온 카테고리 → slug 매핑
+  const mappedRecents = recentCategories.map((c: { name: string }, idx: number) => ({
+    id: `r-${idx}`,
+    name: c.name,
+    slug: TITLE_TO_SLUG[c.name] ?? "OTHER",
+  }));
+
+  // 2) 최근이 비어있거나 4개 미만이면 CATEGORIES로 채워서 4개 보장 (중복 방지)
+  const ensureFour = (seed: Array<{ id: string; name: string; slug: string }>) => {
+    const out = [...seed];
+    const seen = new Set(out.map(it => it.slug));
+    for (const cat of CATEGORIES) {
+      if (out.length >= 4) break;
+      if (seen.has(cat.slug)) continue;
+      out.push({
+        id: `d-${cat.slug}`,
+        name: cat.title,
+        slug: cat.slug,
+      });
+      seen.add(cat.slug);
+    }
+    return out.slice(0, 4);
+  };
+
+  const categoriesForSection = ensureFour(mappedRecents);
+
+  const recentCategoriesForSection = recentCategories.slice(0, 4).map((c, idx) => ({
+    id: String(idx),
+    name: c.name,
+    slug: TITLE_TO_SLUG[c.name] ?? 'OTHER',
+  }));
 
   const handleRegisterPress = useCallback(async () => {
     const token = await tokenStore.get();
     if (!token) router.push('/(login)');
     else router.push('/(addProduct)');
-  }, []);
+  }, [router]);
 
-  const goSearch = () => {
-  // (productSearch)/index.tsx 로 이동
-  // 폴더가 app/(productSearch)/index.tsx 라면 아래 둘 중 하나로 이동 가능
-  router.push("/(productSearch)");          // 폴더 인덱스
-  // 또는 라우트 별칭이 /product/search 라면: router.push("/product/search");
-  };
-
-
-  // 상세 조회
   const handlePressProduct = useCallback(
     async (id: string) => {
       const productId = Number(id);
-      const token = await tokenStore.get();
-
-      // 비로그인: 상세로
-      if (!token) {
-        router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
-        return;
-      }
-
-      // 내 ID 파싱 시도 (실패해도 상세로 fallback)
-      const myId = getUserIdFromToken(token);
-
-      try {
-        const detail = await fetchProductDetail(productId, token);
-        const sellerId = Number(detail?.sellerId);
-
-        if (myId && sellerId === myId) {
-          router.push(`/(addProduct)/owner/${productId}`);
-        } else {
-          router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
-        }
-      } catch {
-        // 상세 조회 실패 시에도 일반 상세로
-        router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
-      }
+      router.push({ pathname: "/(addProduct)/detail", params: { productId: String(productId) } });
     },
     [router]
   );
 
-  const categories = [
-    { id: '1', name: '옷, 잡화, 장신구', icon: categoryIcons.clothes },
-    { id: '2', name: 'IT, 전자제품',     icon: categoryIcons.electronics },
-    { id: '3', name: '도서, 학습 용품',   icon: categoryIcons.books },
-    { id: '4', name: '기타',             icon: categoryIcons.etc },
-  ];
-
-  const onTabPress = (tab: string) => {
-    setActiveTab(tab);
-    // 필요하면 라우팅 연결
-    // if (tab === 'profile') router.push('/(me)');
-  };
+  const onTabPress = (tab: string) => setActiveTab(tab);
 
   return (
     <View style={styles.webRoot}>
       <SafeAreaView style={styles.phoneFrame}>
         <StatusBar barStyle="dark-content" />
 
-        {/* 스크롤 영역 */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 12 }} // 탭바와 살짝 간격
+          contentContainerStyle={{ paddingBottom: 12 }}
           showsVerticalScrollIndicator={false}
         >
-          <SearchBar onTrigger={goSearch} />
+          <SearchBar />
           <RegisterItemButton
             variant="registerItem"
             text="내 물품 등록하기"
             onPress={handleRegisterPress}
           />
-          {/* 상품 섹션만 API로 교체 */}
+
           {isLoading ? (
             <View style={{ paddingVertical: 24, alignItems: "center" }}>
               <ActivityIndicator />
@@ -142,12 +100,20 @@ export default function HomeScreen() {
               <Text>상품을 불러오지 못했습니다.</Text>
             </View>
           ) : (
-             <NewProductsSection products={products ?? []} onPress={handlePressProduct} />
+            <NewProductsSection products={products} onPress={handlePressProduct} />
           )}
-          <CategorySection categories={categories} />
+
+          {/* 로딩 중에도 자리 유지하고 싶으면 이 섹션은 항상 렌더 */}
+          <CategorySection
+            categories={categoriesForSection}
+            loading={isLoading}
+            onPressHeaderRight={() => router.push("/(category)")} // /(category)/index.tsx
+            onPressCategory={(slug) =>
+              router.push({ pathname: "/(category)/[slug]", params: { slug } })
+            }
+          />
         </ScrollView>
 
-        {/* 고정 하단 탭바 (스크롤 밖) */}
         <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
     </View>

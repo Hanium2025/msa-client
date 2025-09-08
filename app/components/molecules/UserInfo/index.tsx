@@ -1,16 +1,20 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, ImageProps } from 'react-native';
 
 interface Props {
   nickname: string;
   postedAt: string;
+  avatar?: ImageProps["source"]; 
 }
 
-export default function UserInfo({ nickname, postedAt }: Props) {
+const DEFAULT_AVATAR = require("../../../../assets/images/default_profile.png");
+
+export default function UserInfo({ nickname, postedAt, avatar }: Props) {
+  const source = avatar ?? DEFAULT_AVATAR;
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../../../assets/images/image-placeholder.png')}
+        source={source}
         style={styles.image}
       />
       <View>
