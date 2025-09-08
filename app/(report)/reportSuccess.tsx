@@ -1,15 +1,24 @@
 import React from "react";
 import { SafeAreaView, View, Text, StyleSheet, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../components/atoms/Button";
 
 const PHONE_WIDTH = 390;
 
 export default function ReportCompleteScreen() {
   const router = useRouter();
+  const { productId } = useLocalSearchParams<{ productId?: string }>();
 
   const backToProduct = () => {
-    router.back();
+    if (productId) {
+      router.replace({
+        pathname: "/(addProduct)/detail",
+        params: { productId},
+      });
+    } else {
+      // productId가 없으면 홈으로
+      router.replace("/(home)");
+    }
   };
 
   const goHome = () => {
