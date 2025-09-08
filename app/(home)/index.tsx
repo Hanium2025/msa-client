@@ -15,6 +15,41 @@ import { CATEGORIES } from "../constants/categories";
 const TITLE_TO_SLUG = Object.fromEntries(CATEGORIES.map(c => [c.title, c.slug])) as Record<string, string>;
 const PHONE_WIDTH = 390;
 
+function getUserIdFromToken(token: string): number | null {
+  try {
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
+
+    const hasAtob = typeof atob === "function";
+    // @ts-ignore
+    const hasBuffer = typeof Buffer !== "undefined";
+
+    const binary = hasAtob
+      ? atob(base64)
+      : hasBuffer
+      // @ts-ignore
+      ? Buffer.from(base64, "base64").toString("binary")
+      : null;
+
+    if (!binary) return null;
+
+    const json = decodeURIComponent(
+      Array.from(binary)
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join("")
+    );
+    const payload = JSON.parse(json);
+
+    const raw = payload.memberId ?? payload.userId ?? payload.id ?? payload.sub;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+
 export default function HomeScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('home');
@@ -64,6 +99,13 @@ export default function HomeScreen() {
     else router.push('/(addProduct)');
   }, [router]);
 
+  const goSearch = () => {
+  // (productSearch)/index.tsx 로 이동
+  // 폴더가 app/(productSearch)/index.tsx 라면 아래 둘 중 하나로 이동 가능
+  router.push("/(productSearch)");          // 폴더 인덱스
+  // 또는 라우트 별칭이 /product/search 라면: router.push("/product/search");
+  };
+
   const handlePressProduct = useCallback(
     async (id: string) => {
       const productId = Number(id);
@@ -84,7 +126,7 @@ export default function HomeScreen() {
           contentContainerStyle={{ paddingBottom: 12 }}
           showsVerticalScrollIndicator={false}
         >
-          <SearchBar />
+          <SearchBar onTrigger={goSearch} />
           <RegisterItemButton
             variant="registerItem"
             text="내 물품 등록하기"
