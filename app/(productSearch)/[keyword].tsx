@@ -82,7 +82,10 @@ export default function KeywordResultScreen() {
 
   const handlePressProduct = useCallback(
     (id: number) => {
-      router.push({ pathname: "/product/[id]", params: { id: String(id) } });
+      router.push({
+      pathname: "/(addProduct)/detail",
+      params: { productId: String(id) },
+    });
     },
     [router]
   );
