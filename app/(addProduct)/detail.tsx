@@ -31,7 +31,7 @@ import { useDeleteProduct } from "../hooks/useDeleteProduct";
 
 const PHONE_WIDTH = 390;
 const TABBAR_SPACE = 90;
-
+const BACK_ICON = require("../../assets/images/back.png");
 const DEFAULT_AVATAR = require("../../assets/images/default_profile.png") as ImageSourcePropType;
 
 const showAlert = (title: string, message?: string) => {
@@ -241,6 +241,18 @@ function DetailContent({ id, token }: { id: number; token: string }) {
     <View style={styles.webRoot}>
       <SafeAreaView style={styles.phoneFrame}>
         <StatusBar barStyle="dark-content" />
+        <View style={styles.header}>
+    <Pressable
+      onPress={() => router.back()}
+      hitSlop={10}
+      style={[styles.backBtn, Platform.OS === "web" && ({ cursor: "pointer" } as any)]}
+      accessibilityRole="button"
+      accessibilityLabel="뒤로 가기"
+    >
+      <Image source={BACK_ICON} style={styles.backIcon} resizeMode="contain" />
+    </Pressable>
+    <View style={{ width: 24 }} />
+  </View>
         <ScrollView
           contentContainerStyle={[styles.scrollContainer, { paddingBottom: TABBAR_SPACE }]}
           showsVerticalScrollIndicator={false}
@@ -413,4 +425,15 @@ const styles = StyleSheet.create({
   },
   alertCancel: { color: "#0A84FF" },
   alertDestructive: { color: "#FF3B30" },
+
+  header: {
+  height: 48,
+  paddingHorizontal: 12,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  backgroundColor: "#FFFFFF",
+},
+backBtn: { paddingVertical: 6, paddingRight: 6 },
+backIcon: { width: 16, height: 16 },
 });
