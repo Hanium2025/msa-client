@@ -7,8 +7,8 @@ import type { ProductItem } from "../molecules/ProductCard"
 type SortKey = "new" | "popular";
 
 type Props = {
-  title: string;
-  iconSource: ImageSourcePropType; 
+  title?: string;
+  iconSource?: ImageSourcePropType; 
   sort: SortKey;
   onChangeSort: (s: SortKey) => void;
   products: ProductItem[]; 
@@ -18,11 +18,15 @@ type Props = {
 export function ProductGrid({
   title, iconSource, sort, onChangeSort, products, onPressProduct
 }: Props) {
+  const showHeader = !!title || !!iconSource;
+  
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <Image source={iconSource} style={{ width: 40, height: 40, marginRight: 8 }} />
-        <Text style={s.title}>{title}</Text>
+        {iconSource && (
+          <Image source={iconSource} style={{ width: 40, height: 40, marginRight: 8 }} />
+        )}
+        {title && <Text style={s.title}>{title}</Text>}
       </View>
 
       <View style={s.tabsWrap}>

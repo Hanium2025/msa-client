@@ -26,7 +26,10 @@ interface ButtonProps {
     | "check"
     | "login"
     | "socialLogin"
-    | "registerItem";
+    | "registerItem"
+    | "reportSubmit"
+    | "reportToProduct"
+    | "reportToHome";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -82,6 +85,28 @@ const Button: React.FC<ButtonProps> = ({
     );
   }
 
+  if (variant === "reportSubmit") {
+    return (
+      <TouchableOpacity
+        style={styles.reportSubmitButton}
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={disabled}
+        activeOpacity={0.85}
+      >
+        <View style={styles.reportSubmitContent}>
+          <Image
+            source={require("../../../../assets/images/report-image.svg")} // ← 여기 경로 확인
+            style={styles.reportSubmitImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.reportSubmitText}>{text}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
   const getContainerStyle = () => {
     switch (variant) {
       case "submit":
@@ -104,6 +129,16 @@ const Button: React.FC<ButtonProps> = ({
           styles.socialButton,
           { backgroundColor: backgroundColor ?? "#eee" },
         ];
+      case "reportToProduct":
+        return [
+          styles.reportToProductButton,
+          disabled && styles.reportToProductDisabled,
+        ];
+      case "reportToHome":
+        return [
+          styles.reportToHomeButton,
+          disabled && styles.reportToHomeDisabled,
+        ];
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -121,6 +156,10 @@ const Button: React.FC<ButtonProps> = ({
         return styles.loginText;
       case "socialLogin":
         return [styles.socialText, { color: textColor ?? "#000" }];
+      case "reportToProduct":
+        return styles.reportToProductText;
+      case "reportToHome":
+        return styles.reportToHomeText;
       default:
         return styles.actionText;
     }
