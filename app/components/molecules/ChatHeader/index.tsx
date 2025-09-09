@@ -1,14 +1,16 @@
 // components/molecules/ChatHeader/index.tsx
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Image as RNImage } from "react-native";
 import { styles } from "./ChatHeader.style";
 
 export type ChatHeaderProps = {
-  title: string; // "상대발닉네임 / 상품명ABC"
-  subtitle?: string; // 상태, 마지막 접속 등
+  title: string;
+  subtitle?: string;
   onBack?: () => void;
-  onMenuPress?: () => void; // 우측 ⋮
+  onMenuPress?: () => void;
 };
+
+const BACK_ICON = require("../../../../assets/images/back.png");
 
 export const ChatHeader = ({ title, onBack, onMenuPress }: ChatHeaderProps) => {
   return (
@@ -17,7 +19,11 @@ export const ChatHeader = ({ title, onBack, onMenuPress }: ChatHeaderProps) => {
         onPress={onBack}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Text style={styles.icon}>{"‹"}</Text>
+        <RNImage
+          source={BACK_ICON}
+          style={styles.backIcon} // ← 잊지 말기
+          resizeMode="contain"
+        />
       </TouchableOpacity>
 
       <View style={styles.titleBox}>

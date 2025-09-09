@@ -239,19 +239,19 @@ function DetailContent({ id, token }: { id: number; token: string }) {
     });
   };
 
-  const handleChat = () => {
-    if (!sellerId) {
-      showAlert("오류", "판매자 정보가 없어 채팅을 시작할 수 없습니다.");
-      return;
-    }
-    router.push({
-      pathname: "/(chatroomList)",
-      params: {
-        productId: String(id),
-        receiverId: String(sellerId),
-      },
-    });
-  };
+  // const handleChat = () => {
+  //   if (!sellerId) {
+  //     showAlert("오류", "판매자 정보가 없어 채팅을 시작할 수 없습니다.");
+  //     return;
+  //   }
+  //   // router.push({
+  //   //   pathname: "/(chatroomList)",
+  //   //   params: {
+  //   //     productId: String(id),
+  //   //     receiverId: String(sellerId),
+  //   //   },
+  //   // });
+  // };
 
   return (
     <View style={styles.webRoot}>
@@ -316,7 +316,12 @@ function DetailContent({ id, token }: { id: number; token: string }) {
           {isOwner ? (
             <ProductOwnerActions onEdit={handleEdit} onDelete={handleDelete} />
           ) : (
-            <BottomButtonGroup status={product.status} onChat={handleChat} />
+            <BottomButtonGroup
+              status={product.status}
+              productId={data.productId}
+              receiverId={data.sellerId}
+              token={token}
+            />
           )}
         </ScrollView>
 

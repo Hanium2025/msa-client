@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   Text,
   StyleSheet,
+  Image as RNImage,
 } from "react-native";
 import { useRouter, useNavigation } from "expo-router";
 import ChatList from "../components/organisms/ChatList";
