@@ -61,7 +61,7 @@ const pickImagesWeb = (): Promise<File[]> =>
 // 로컬/에뮬레이터 환경 주의: 물리 기기라면 localhost 대신 PC LAN IP로 교체
 const WS_BASE = __DEV__
   ? "ws://localhost:8000/ws/chat"
-  : "wss://api.my-service.com/ws/chat";
+  : "wss://api.haniumpicky.click/wss/chat";
 
 type Message = {
   id: string | number;
@@ -242,8 +242,9 @@ export default function ChatScreen() {
       console.warn("WS token missing. Skip connect.");
       return;
     }
-
-    const url = `${WS_BASE}?token=${encodeURIComponent(wsToken)}`;
+    //WS_BASE = __DEV__;
+    //const url = `${WS_BASE}?token=${encodeURIComponent(wsToken)}`;
+    const url = `ws://localhost:8000/ws/chat?token=${encodeURIComponent(wsToken)}`;
 
     const ws = new WebSocket(url);
 
@@ -470,6 +471,7 @@ export default function ChatScreen() {
     () => "https://dummyimage.com/80x80/ddd/000.jpg&text=U",
     []
   );
+  const router = useRouter();
 
   return (
     <KeyboardAvoidingView
@@ -479,7 +481,7 @@ export default function ChatScreen() {
       <View style={styles.container}>
         <ChatHeader
           title={roomName ?? `채팅방 #${chatroomId}`}
-          onMenuPress={() => {}}
+          onBack={() => router.back()}
         />
 
         <ChatMessageList
