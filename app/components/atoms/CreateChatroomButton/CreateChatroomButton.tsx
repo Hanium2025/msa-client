@@ -33,6 +33,11 @@ export default function CreateChatroomButton({
     if (loading) return;
     try {
       setLoading(true);
+      const { chatroomId } = await createChatroom(
+        { productId, receiverId },
+        token
+      );
+
       router.push("/(chatroomList)");
     } catch (e: any) {
       Alert.alert("실패", e?.message ?? "채팅방 생성에 실패했어요.");
