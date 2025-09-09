@@ -7,7 +7,6 @@ type Props = {
   value?: string;
   onChangeText?: (t: string) => void;
   onSubmit?: () => void; // 엔터/아이콘 클릭 시 실행
-
   onTrigger?: () => void;
 };
 
@@ -21,6 +20,7 @@ export const SearchBar = ({
     return (
       <View style={styles.wrapper}>
         <Pressable style={styles.container} onPress={onTrigger} hitSlop={8}>
+          <View style={{ flex: 1 }} />
           <Ionicons name="search" size={20} color="#999" />
         </Pressable>
       </View>

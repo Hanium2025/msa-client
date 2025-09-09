@@ -32,6 +32,7 @@ import { useDeleteProduct } from "../hooks/useDeleteProduct";
 const PHONE_WIDTH = 390;
 const TABBAR_SPACE = 90;
 const BACK_ICON = require("../../assets/images/back.png");
+
 const DEFAULT_AVATAR =
   require("../../assets/images/default_profile.png") as ImageSourcePropType;
 
@@ -275,6 +276,7 @@ function DetailContent({ id, token }: { id: number; token: string }) {
           </Pressable>
           <View style={{ width: 24 }} />
         </View>
+
         <ScrollView
           contentContainerStyle={[
             styles.scrollContainer,
@@ -357,6 +359,7 @@ function DetailContent({ id, token }: { id: number; token: string }) {
                   style={styles.alertBtn}
                   onPress={() => {
                     setReportOpen(false);
+
                     router.push({
                       pathname: "/(report)",
                       params: { productId: String(id) },

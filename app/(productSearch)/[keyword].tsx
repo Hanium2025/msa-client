@@ -4,11 +4,14 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ProductGrid } from "../components/organisms/ProductGrid";
 import type { ProductItem } from "../components/molecules/ProductCard"
 import { SearchBar } from "../components/atoms/SearchBar";
-import BottomTabBar from '../components/molecules/BottomTabBar'; 
+import BottomTabBar from '../components/molecules/BottomTabBar';
 import { getProductsByKeywordList, ServerSort } from "../lib/api/product-search";
 
 type SortKey = "new" | "popular";
 const PHONE_WIDTH = 390;
+const IMAGE_BASE = "https://msa-image-bucket.s3.ap-northeast-2.amazonaws.com";
+const toAbsoluteUrl = (u?: string) =>
+  !u ? undefined : /^https?:\/\//i.test(u) ? u : `${IMAGE_BASE}${u.startsWith("/") ? "" : "/"}${u}`;
 
 export default function KeywordResultScreen() {
   const router = useRouter();
@@ -41,20 +44,22 @@ export default function KeywordResultScreen() {
       const ac = new AbortController();
       abortRef.current = ac;
 
-      // ✅ 서버에서 리스트 받아오기
-      const list = await getProductsByKeywordList({
+
+      const result = await getProductsByKeywordList({
         keyword,
         sort: toServerSort(sort),
-        page: 0, // 필요하면 상태로 관리해 페이징 구현
+        page: 0,
         signal: ac.signal,
       });
 
-      // ✅ 서버 DTO → UI 모델(ProductItem) 매핑
-      const mapped: ProductItem[] = list.map((p) => ({
+      // getProductsByKeywordList가 배열/ApiResponse 모두 대비
+      const list = Array.isArray(result) ? result : (result?.data ?? result?.data?.data ?? []);
+
+      const mapped: ProductItem[] = list.map((p: any) => ({
         id: p.productId,
         title: p.title,
         price: p.price,
-        thumbnail: p.imageUrl || undefined,
+        imageUrl: toAbsoluteUrl(p.imageUrl),
       }));
 
       setProducts(mapped);
@@ -77,7 +82,10 @@ export default function KeywordResultScreen() {
 
   const handlePressProduct = useCallback(
     (id: number) => {
-      router.push({ pathname: "/product/[id]", params: { id: String(id) } });
+      router.push({
+      pathname: "/(addProduct)/detail",
+      params: { productId: String(id) },
+    });
     },
     [router]
   );
@@ -96,36 +104,36 @@ export default function KeywordResultScreen() {
     <View style={styles.webRoot}>
       <SafeAreaView style={styles.phoneFrame}>
         <StatusBar barStyle="dark-content" />
-            {loading && products.length === 0 ? (
-              <View style={styles.center}>
-                <ActivityIndicator />
-              </View>
-            ) : error ? (
-              <View style={styles.center}>
-                <Text>오류가 발생했어요: {error}</Text>
-              </View>
-            ) : products.length === 0 ? (
-              <View style={styles.center}>
-                <Text>‘{keyword}’에 대한 결과가 없어요.</Text>
-              </View>
-            ) : (
-                <>
-              <SearchBar
+        {loading && products.length === 0 ? (
+          <View style={styles.center}>
+            <ActivityIndicator />
+          </View>
+        ) : error ? (
+          <View style={styles.center}>
+            <Text>오류가 발생했어요: {error}</Text>
+          </View>
+        ) : products.length === 0 ? (
+          <View style={styles.center}>
+            <Text>‘{keyword}’에 대한 결과가 없어요.</Text>
+          </View>
+        ) : (
+          <>
+            <SearchBar
               onTrigger={() => router.push("/(productSearch)")}
-              />
+            />
 
-              <ProductGrid
+            <ProductGrid
               //   title={keyword}                 // 헤더 타이틀에 검색어 표시
               //   iconSource={iconSource}         // 상단 아이콘
               sort={sort}                     // 현재 정렬 상태
               onChangeSort={handleChangeSort} // 탭 전환 시
               products={products}             // 목록 데이터
               onPressProduct={handlePressProduct}
-              />
-              </>
-            )}
-            
-            
+            />
+          </>
+        )}
+
+
         <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
     </View>
@@ -134,24 +142,24 @@ export default function KeywordResultScreen() {
 
 const styles = StyleSheet.create({
   webRoot: {
-      flex: 1,
-      backgroundColor: Platform.OS === 'web' ? '#F5F6F7' : '#fff',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-    },
-    phoneFrame: {
-      flex: 1,
-      backgroundColor: '#fff',
-      maxWidth: Platform.OS === 'web' ? PHONE_WIDTH : undefined,
-      width: Platform.OS === 'web' ? PHONE_WIDTH : undefined,
-      alignSelf: 'center',
-      borderRadius: Platform.OS === 'web' ? 24 : 0,
-      shadowColor: '#000',
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 4 },
-      overflow: Platform.OS === 'web' ? 'hidden' : 'visible',
-    },
+    flex: 1,
+    backgroundColor: Platform.OS === 'web' ? '#F5F6F7' : '#fff',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  phoneFrame: {
+    flex: 1,
+    backgroundColor: '#fff',
+    maxWidth: Platform.OS === 'web' ? PHONE_WIDTH : undefined,
+    width: Platform.OS === 'web' ? PHONE_WIDTH : undefined,
+    alignSelf: 'center',
+    borderRadius: Platform.OS === 'web' ? 24 : 0,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    overflow: Platform.OS === 'web' ? 'hidden' : 'visible',
+  },
   root: { flex: 1, backgroundColor: "#fff" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

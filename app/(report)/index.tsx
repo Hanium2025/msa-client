@@ -1,29 +1,16 @@
-// screens/ReportScreen.tsx
+// app/(report)/index.tsx (또는 현재 파일)
 import React, { useState } from "react";
 import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Platform,
-  Alert,
-  Pressable,
-  Image,
+  SafeAreaView, View, Text, StyleSheet, ScrollView,
+  Platform, Alert, Pressable, Image
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../components/atoms/Button";
 import { ReportForm } from "../components/organisms/ReportForm";
-import axios from "axios";
-import { tokenStore } from "../auth/tokenStore";
-import { useReportProduct } from "../hooks/useReportProduct";
+import { useReportProduct } from "../hooks/useReportProduct"; 
 
 const PHONE_WIDTH = 390;
 const BACK_ICON = require("../../assets/images/back.png");
-
-async function getAccessToken(): Promise<string> {
-  return "tokenStore";
-}
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -33,7 +20,6 @@ const showAlert = (title: string, message?: string) => {
 
 export default function ReportScreen() {
   const router = useRouter();
-  // URL이 /product/[productId]/report 라면 여기로 넘어옵니다.
   const { productId } = useLocalSearchParams<{ productId?: string }>();
 
   const [reason, setReason] = useState("");
@@ -52,14 +38,9 @@ export default function ReportScreen() {
         reasonDisplay: reason,
         details: detail,
       });
-
       if (res?.code === 200) {
-        router.push({
-          pathname: "/reportSuccess",
-          params: { reason, detail },
-        });
+        router.push({ pathname: "/reportSuccess", params: { reason, detail,productId: String(productId) } });
       } else {
-        console.log("실패");
         showAlert("신고 실패", res?.message ?? "잠시 후 다시 시도해주세요.");
       }
     } catch (e: any) {
@@ -69,42 +50,28 @@ export default function ReportScreen() {
         (status === 400
           ? "입력할 수 있는 신고 사유 범위가 아닙니다."
           : status === 404
-            ? "해당하는 상품을 찾을 수 없습니다."
-            : "잠시 후 다시 시도해주세요.");
-      console.log("실패");
+          ? "해당하는 상품을 찾을 수 없습니다."
+          : "잠시 후 다시 시도해주세요.");
       showAlert("신고 실패", msg);
     }
   };
+
   return (
     <SafeAreaView style={s.phoneFrame}>
       <View style={s.header}>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          style={[
-            s.backBtn,
-            Platform.OS === "web" && ({ cursor: "pointer" } as any),
-          ]}
-        >
+        <Pressable onPress={() => router.back()} hitSlop={10} style={s.backBtn}>
           <Image source={BACK_ICON} style={s.backIcon} resizeMode="contain" />
         </Pressable>
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 24 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={s.card}>
           <Text style={s.title}>보시는 상품에 문제가 있나요?</Text>
           <Text style={s.desc}>
-            해당 상품이 서비스의 이용 규칙이나 공공 질서에 어긋난다고 판단되는
-            경우, 신고를 통해 알려주세요. 신고가 누적된 상품 판매자는 서비스
-            이용에 제재를 가할 수 있습니다.
+            해당 상품이 서비스의 이용 규칙이나 공공 질서에 어긋난다고 판단되는 경우, 신고를 통해 알려주세요. 신고가 누적된 상품 판매자는 서비스 이용에 제재를 가할 수 있습니다.
           </Text>
 
-          {/* 폼에 상태/업데이트 함수를 명확한 prop 이름으로 전달 */}
           <ReportForm
             reason={reason}
             onChangeReason={setReason}
@@ -113,7 +80,6 @@ export default function ReportScreen() {
           />
         </View>
 
-        {/* 버튼은 스크린에 유지 */}
         <View style={{ alignItems: "center" }}>
           <Button
             variant="reportSubmit"
@@ -168,11 +134,5 @@ const s = StyleSheet.create({
     marginBottom: 24,
   },
   title: { fontSize: 18, fontWeight: "700", color: "#000", marginBottom: 6 },
-  desc: {
-    fontSize: 12,
-    fontWeight: "400",
-    color: "#000",
-    lineHeight: 18,
-    marginTop: 12,
-  },
+  desc: { fontSize: 12, fontWeight: "400", color: "#000", lineHeight: 18, marginTop: 12 },
 });
