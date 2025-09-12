@@ -13,5 +13,7 @@ export default StyleSheet.create({
     padding: 12,
     backgroundColor: "#fff",
     marginTop: 12,
+    fontSize: 13,
+    fontWeight: 200,
   },
 });

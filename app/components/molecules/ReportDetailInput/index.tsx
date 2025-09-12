@@ -17,6 +17,7 @@ export const ReportDetailInput: React.FC<Props> = ({ value, onChange }) => {
         onChangeText={onChange}
         multiline
         placeholder="신고 사유를 입력해주세요."
+        placeholderTextColor="#B9B4BB"
       />
     </View>
   );

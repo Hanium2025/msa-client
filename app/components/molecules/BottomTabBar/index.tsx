@@ -43,8 +43,9 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
       router.push(chatListPath);
       return;
     }
+
     if (name === "home") {
-      router.replace("/(home)"); 
+      router.replace("/(home)");
       return;
     }
   };
