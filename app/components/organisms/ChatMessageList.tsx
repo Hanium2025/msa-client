@@ -6,8 +6,12 @@ import {
   ViewStyle,
   StyleProp,
   ListRenderItemInfo,
+  Text,
+  Pressable,
 } from "react-native";
 import { ChatMessage } from "../molecules/ChatMessage";
+
+export type NoticeKind = "DIRECT" | "PARCEL";
 
 export type BaseMessage = {
   id: string | number;
@@ -16,8 +20,15 @@ export type BaseMessage = {
   senderId: number;
   receiverId?: number;
   avatarUrl?: string;
-  type?: "TEXT" | "IMAGE";
+  type?: "TEXT" | "IMAGE" | "SYSTEM";
   imageUrls?: string[];
+
+  // SYSTEM 공지 전용 메타
+  systemNotice?: {
+    kind: NoticeKind;     // "DIRECT" | "PARCEL"
+    ctaLabel?: string;    // 기본 "확인하기"
+    ctaVisible?: boolean; // 판매자일 때만 true
+  };
 };
 
 export type ChatMessageListProps<T extends BaseMessage = BaseMessage> = {
@@ -31,6 +42,9 @@ export type ChatMessageListProps<T extends BaseMessage = BaseMessage> = {
   containerStyle?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   inverted?: boolean;
+
+  // SYSTEM 공지의 CTA(확인하기) 눌렀을 때 호출
+  onPressSystemNotice?: (kind: NoticeKind) => void;
 };
 
 export const ChatMessageList = <T extends BaseMessage>({
@@ -44,11 +58,51 @@ export const ChatMessageList = <T extends BaseMessage>({
   containerStyle,
   contentContainerStyle,
   inverted = true,
+  onPressSystemNotice,
 }: ChatMessageListProps<T>) => {
   const listRef = useRef<FlatList<T>>(null);
   const data = useMemo(() => messages, [messages]);
 
+  const renderSystemNotice = (item: T) => {
+    const notice = item.systemNotice;
+    const ctaVisible = !!notice?.ctaVisible;
+    const ctaLabel = notice?.ctaLabel ?? "확인하기";
+
+    return (
+      <View
+        style={{
+          alignSelf: "center",
+          paddingVertical: 6,
+          paddingHorizontal: 10,
+        }}
+      >
+        <Text style={{ color: "#374151", fontSize: 13, textAlign: "center" }}>
+          {item.content}
+          {ctaVisible ? (
+            <>
+              <Text>{` `}</Text>
+              <Text
+                onPress={() =>
+                  notice?.kind && onPressSystemNotice?.(notice.kind)
+                }
+                style={{ color: "#1D4ED8", fontWeight: "600" }}
+              >
+                {ctaLabel}
+              </Text>
+            </>
+          ) : null}
+        </Text>
+      </View>
+    );
+  };
+
   const renderItem = ({ item }: ListRenderItemInfo<T>) => {
+    // SYSTEM 공지 처리
+    if (item.type === "SYSTEM" && item.systemNotice) {
+      return renderSystemNotice(item);
+    }
+
+    // 일반 메시지 처리
     const isSender = item.senderId === myUserId;
     return (
       <ChatMessage
@@ -64,8 +118,8 @@ export const ChatMessageList = <T extends BaseMessage>({
             : undefined
         }
         onLongPress={onLongPressMessage}
-        type={(item as any).type}
-        imageUrls={(item as any).imageUrls}
+        type={item.type as any}
+        imageUrls={item.imageUrls}
       />
     );
   };

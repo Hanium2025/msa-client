@@ -24,6 +24,9 @@ import { decodeJwt, extractUserId } from "../auth/jwt";
 import { getChatMessagesByRoomId, ChatMessageDTO } from "../lib/api/chat";
 import * as ImagePicker from "expo-image-picker";
 import { createPresignedUrls, putToS3 } from "../lib/api/chat-upload";
+import {requestDirectTrade, requestParcelTrade,
+         acceptDirectTrade, 
+         acceptParcelTrade} from "../lib/api/trade";
 
 // ---------- DEV/PROD 주소 유틸 ----------
 function resolveDevHost() {
@@ -47,6 +50,9 @@ const PING_INTERVAL_MS = 30000; // 30초마다 ping
 const RECONNECT_BASE_MS = 800;  // 지수 백오프 시작 지연(ms)
 let reconnectAttempts = 0;
 
+
+type NoticeKind = "DIRECT" | "PARCEL";
+
 // ---------- 타입 ----------
 type Message = {
   id: string | number;
@@ -54,10 +60,19 @@ type Message = {
   timestamp: number | string | Date;
   senderId: number;
   avatarUrl?: string;
-  type?: string;
+  type?: "TEXT" | "IMAGE" | "SYSTEM";
   imageUrls?: string[]; // 이미지 메시지
   receiverNickname?: string;
+  // ✅ 시스템 공지 전용 메타 (SYSTEM일 때만 사용)
+  systemNotice?: {
+    kind: NoticeKind;           // "DIRECT" | "PARCEL"
+    ctaLabel?: string;          // 기본: "확인하기"
+    ctaVisible?: boolean; 
+  };
+  
 };
+
+ 
 
 type OpponentMeta = {
   id?: string | number | null;
@@ -83,13 +98,31 @@ const pickImagesWeb = (): Promise<File[]> =>
     input.click();
   });
 
+
 // ---------- 컴포넌트 ----------
 export default function ChatScreen() {
+
+  
+
+  // 거래 모달 상태
+type TradeModalState =
+  | { kind: "DIRECT"; visible: true }   // 직거래 요청 수신
+  | { kind: "PARCEL"; visible: true }   // 택배 거래 요청 수신
+  | null;
+
+const [tradeModal, setTradeModal] = useState<TradeModalState>(null);
+
+// 공지에서 CTA 눌렀을 때 호출
+const openTradeModal = useCallback((k: NoticeKind) => {
+  setTradeModal({ kind: k, visible: true });
+}, []);
+
   const { chatroomId } = useLocalSearchParams<{ chatroomId: string }>();
   const route = useRoute();
-  const { opponent, roomName } = (route.params ?? {}) as {
+  const { opponent, roomName, sellerId  } = (route.params ?? {}) as {
     opponent?: OpponentMeta;
     roomName?: string;
+    sellerId?: number; 
   };
 
   const roomId = chatroomId ? Number(chatroomId) : null;
@@ -103,6 +136,11 @@ export default function ChatScreen() {
   const [wsReady, setWsReady] = useState<
     "idle" | "connecting" | "open" | "closed" | "error"
   >("idle");
+
+  const amIBuyer =
+  myUserId != null &&
+  sellerId != null &&
+  myUserId !== sellerId;
 
   // 중복방지 키 저장소
   const seenRef = useRef<Set<string>>(new Set());
@@ -251,6 +289,34 @@ export default function ChatScreen() {
           const raw = JSON.parse(String(ev.data));
           // 서버에서 PONG/시스템 메시지 내려줄 수도 있음
           if (raw?.type === "PONG") return;
+
+              // --- [공지 이벤트 → 시스템 메시지로 추가] ---
+    // 서버가 아래 필드를 내려준다고 가정:
+    //  - type: "DIRECT_TRADE_REQUEST" | "PARCEL_TRADE_REQUEST" | ...
+    //  - receiverId: 요청을 받은 사용자(=판매자)의 userId
+    //  - optional: noticeText (없으면 기본 문구 사용)
+    if (raw?.type === "DIRECT_REQUEST" || raw?.type === "PARCEL_REQUEST"|| raw?.type ==="DIRECT_ACCEPT" ||raw?.type ==="PARCEL_ACCEPT" ) {
+      const isDirect = raw.type === "DIRECT_REQUEST";
+      const ts = Date.now();
+
+      // 공지는 모두에게 보여주되, ctaVisible은 판매자(=receiverId)에게만 true
+      const sys = {
+        id: `sys-${ts}`,
+        content: raw.noticeText ??
+          (isDirect ? "직거래 요청이 들어왔어요." : "택배 거래 요청이 들어왔어요."),
+        timestamp: ts,
+        senderId: 0,
+        type: "SYSTEM",
+        systemNotice: {
+          kind: isDirect ? "DIRECT" : "PARCEL",
+          ctaLabel: "확인하기",
+          ctaVisible: (myUserId != null && raw.receiverId === myUserId), // ✅ 판매자만 버튼 표시
+        },
+      } as Message;
+
+      setMessages((prev) => [sys, ...prev]);
+      return; // 공지로만 처리하고 일반 버블 추가는 종료
+    }
 
           const ui = toUi(raw);
 
@@ -425,6 +491,48 @@ export default function ChatScreen() {
     }
   }, [roomId, wsToken, myUserId, receiverId]);
 
+
+//직거래 요청  
+  const handleRequestMeetup = useCallback(async ()=>{
+    if(!roomId) return;
+    if(!wsToken){
+
+      Alert.alert("로그인 필요","다시 로그인해주세요.");
+      return;
+
+    }
+    try{
+      const {sellerId: sellerIdFromServerllerId, message} = await requestDirectTrade(roomId, wsToken);
+      Alert.alert("직거래 요청", message || "직거래 요청을 보냈습니다.");
+
+    }catch(e:any){
+      console.warn("direct-trade 실패",e);
+      const msg = e?.response?.data?.message || 
+      "직거래 요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.";
+      Alert.alert("직거래 요청 실패", msg);
+    }
+  },[roomId, wsToken]);
+
+  //택배거래 요청
+  const handleRequestParcel = useCallback(async () => {
+  if (!roomId || !wsToken) return;
+  try {
+    const { message } = await requestParcelTrade(roomId, wsToken);
+    Alert.alert("택배 거래 요청", message || "택배 거래 요청을 보냈어요.");
+  } catch (e: any) {
+    Alert.alert("실패", e?.response?.data?.message ?? "요청을 처리하지 못했어요.");
+  }
+}, [roomId, wsToken]);
+
+// 판매자: 수락 핸들러 (모달에서 사용)
+const acceptDirect = useCallback(async () => {
+  if (!roomId || !wsToken) return;
+  const msg = await acceptDirectTrade(roomId, wsToken);
+  Alert.alert("직거래 수락", msg);
+  setTradeModal(null);
+}, [roomId, wsToken]);
+
+
   const otherAvatar = useMemo(
     () => "https://dummyimage.com/80x80/ddd/000.jpg&text=U",
     []
@@ -456,6 +564,8 @@ export default function ChatScreen() {
           onSend={handleSend}
           disabled={!wsToken || wsReady !== "open"}
           onPickImage={handlePickImage}
+          onRequestMeetup={amIBuyer ? handleRequestMeetup : undefined}   // ✅ 구매자만
+          onRequestDelivery={amIBuyer ? handleRequestParcel : undefined} // ✅ 구매자만
           containerStyle={styles.footer}
           attachButtonStyle={styles.attachBtn}
           sendButtonStyle={styles.sendBtn}
