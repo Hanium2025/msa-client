@@ -31,7 +31,7 @@ export default function PaymentWidget({
   failUrl = process.env.EXPO_PUBLIC_TOSS_FAIL_URL ?? `${location.origin}/payments/fail`,
 }: Props) {
 
-  const insets = useSafeAreaInsets(); // { top, bottom, left, right }
+  const insets = useSafeAreaInsets();
   const safeBottom = (insets?.bottom ?? 0) + 8;
 
   if (Platform.OS !== "web") return null;
@@ -63,7 +63,7 @@ export default function PaymentWidget({
 
         paymentWidgetRef.current = pw;
 
-        // 결제수단/약관 위젯 렌더 (DOM 선택자 사용)
+        // 결제수단/약관 위젯 렌더
         const pm = await pw.renderPaymentMethods(
           `#${methodsId}`,
           { value: amount },
@@ -106,7 +106,6 @@ export default function PaymentWidget({
         successUrl,
         failUrl,
       });
-      // 리다이렉트 되므로 아래 로직은 대개 실행되지 않습니다.
     } catch (err: any) {
       console.error(err);
       Alert.alert("결제 요청 실패", String(err?.message ?? err));
@@ -139,7 +138,6 @@ export default function PaymentWidget({
         </View>
       )}
 
-      {/* DOM 컨테이너: nativeID가 브라우저의 id 속성으로 내려갑니다 */}
       <View nativeID={methodsId} style={styles.methods} />
       <View nativeID={agreementId} style={styles.agreement} />
 
