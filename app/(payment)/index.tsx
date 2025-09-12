@@ -21,18 +21,25 @@ const showAlert = (title: string, message?: string) => {
   else Alert.alert(title, message);
 };
 
+type Option = "existing" | "new";
+
 export default function PaymentScreen() {
+  const [shippingTab, setShippingTab] = useState<Option>("existing");
   return (
     <SafeAreaView
       style={{ width: 393, alignSelf: "center", marginVertical: 20 }}
     >
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.shippingInfo}>
-          <ShippingInfo />
+          <ShippingInfo onTabChange={setShippingTab} />
         </View>
-        <OrderInfo />
-        <PaymentWidget />
+        {shippingTab === "existing" && (
+          <>
+            <OrderInfo />
+            <PaymentWidget />
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -47,7 +54,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 40,
     flexShrink: 0,
-    marginTop: 40,
+    //marginTop: 40,
   },
   shippingInfo: {
     display: "flex",
