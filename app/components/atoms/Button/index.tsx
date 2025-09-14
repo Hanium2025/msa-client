@@ -7,6 +7,7 @@ import {
   Image,
   StyleProp,
   ViewStyle,
+  ImageSourcePropType, 
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,10 +30,15 @@ interface ButtonProps {
     | "registerItem"
     | "reportSubmit"
     | "reportToProduct"
-    | "reportToHome";
+    | "reportToHome"
+    | "profilePrimary"
+    | "profileOutline"
+    | "profileEditCircle";
   checked?: boolean;
   disabled?: boolean;
-  icon?: React.ReactNode;
+  icon?: React.ReactNode;iconSource?: ImageSourcePropType;
+  iconName?: string;  // Ionicons 이름 (기본 pencil)
+  iconSize?: number;  // 아이콘 크기
   backgroundColor?: string;
   textColor?: string;
 }
@@ -48,6 +54,9 @@ const Button: React.FC<ButtonProps> = ({
   checked = false,
   disabled = false,
   icon,
+  iconSource,             
+  iconName = "create",   
+  iconSize = 18,
   backgroundColor,
   textColor,
 }) => {
@@ -107,6 +116,31 @@ const Button: React.FC<ButtonProps> = ({
     );
   }
 
+  if (variant === "profileEditCircle") {
+    return (
+      <TouchableOpacity
+        style={[styles.profileEditCircleButton, style]}
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={text || "프로필 이미지 수정"}
+      >
+        {iconSource ? (
+          <Image
+            source={iconSource}
+            style={styles.profileEditCircleIcon} 
+            resizeMode="contain"
+          />
+        ) : (
+          // 이미지가 안 넘어오면 기존 Ionicons로 폴백
+          <Ionicons name={iconName as any} size={iconSize} color="#FFF" />
+        )}
+      </TouchableOpacity>
+    );
+  }
+
   const getContainerStyle = () => {
     switch (variant) {
       case "submit":
@@ -139,6 +173,10 @@ const Button: React.FC<ButtonProps> = ({
           styles.reportToHomeButton,
           disabled && styles.reportToHomeDisabled,
         ];
+      case "profilePrimary":
+        return [styles.profilePrimaryButton];
+      case "profileOutline":
+        return [styles.profileOutlineButton];
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -160,6 +198,10 @@ const Button: React.FC<ButtonProps> = ({
         return styles.reportToProductText;
       case "reportToHome":
         return styles.reportToHomeText;
+      case "profilePrimary":
+        return styles.profilePrimaryText;
+      case "profileOutline":
+        return styles.profileOutlineText;
       default:
         return styles.actionText;
     }

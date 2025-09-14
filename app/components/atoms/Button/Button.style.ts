@@ -295,4 +295,54 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: -0.3,
   },
+
+  profilePrimaryButton: {
+    width: 219,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#084C63",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  profilePrimaryText: {
+    color: "#FFF",
+    fontFamily: "SF Pro",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.32,
+  },
+
+  // 왼쪽 "이전"
+  profileOutlineButton: {
+    width: 113,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "rgba(217,217,217,0.70)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileOutlineText: {
+    color: "#000",
+    fontFamily: "SF Pro",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.32,
+  },
+
+  // 아바타 수정 원형 버튼
+  profileEditCircleButton: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  profileEditCircleIcon: {
+
+  },
 });
