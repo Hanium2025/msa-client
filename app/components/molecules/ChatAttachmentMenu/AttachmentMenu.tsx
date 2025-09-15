@@ -18,6 +18,7 @@ type AttachmentMenuProps = {
   onPickImage?: () => void;        // 옵션
   onRequestMeetup?: () => void;    //옵션
   onRequestDelivery?: () => void;  // 옵션
+  onTradeComplete?:()=>void;
 };
 
 type Action = {
@@ -32,6 +33,7 @@ export function AttachmentMenu({
   onPickImage,
   onRequestMeetup,
   onRequestDelivery,
+  onTradeComplete,
   anchor,
 }: AttachmentMenuProps) {
   // 전달된 핸들러만 actions에 포함
@@ -39,6 +41,7 @@ export function AttachmentMenu({
     onPickImage && { label: "사진 전송", icon: "image-outline", onPress: onPickImage },
     onRequestMeetup && { label: "직거래 요청", icon: "location-outline", onPress: onRequestMeetup },
     onRequestDelivery && { label: "택배 거래 요청", icon: "cube-outline", onPress: onRequestDelivery },
+    onTradeComplete && { label: "거래 완료하기", icon: "cube-outline",onPress: onTradeComplete},
   ].filter(Boolean) as Action[];
 
   const { width: W, height: H } = Dimensions.get("window");
