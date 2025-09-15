@@ -78,8 +78,6 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
         })}
       </View>
 
-      {/* 홈 인디케이터 */}
-      <View style={styles.homeIndicator} />
     </View>
   );
 };
@@ -115,15 +113,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1F2F4", // 선택 시 회색 배경
   },
   icon: { width: 22, height: 22 },
-  homeIndicator: {
-    width: 134,
-    height: 5,
-    backgroundColor: "#000",
-    borderRadius: 2.5,
-    alignSelf: "center",
-    marginTop: 8,
-    marginBottom: 8,
-  },
 });
 
 export default BottomTabBar;
