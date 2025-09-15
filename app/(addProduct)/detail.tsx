@@ -32,7 +32,9 @@ import { useDeleteProduct } from "../hooks/useDeleteProduct";
 const PHONE_WIDTH = 390;
 const TABBAR_SPACE = 90;
 const BACK_ICON = require("../../assets/images/back.png");
-const DEFAULT_AVATAR = require("../../assets/images/default_profile.png") as ImageSourcePropType;
+
+const DEFAULT_AVATAR =
+  require("../../assets/images/default_profile.png") as ImageSourcePropType;
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -73,7 +75,10 @@ function getUserIdFromToken(token: string): number | null {
     if (!part) return null;
     const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
     // @ts-ignore
-    const bin = typeof atob === "function" ? atob(base64) : Buffer.from(base64, "base64").toString("binary");
+    const bin =
+      typeof atob === "function"
+        ? atob(base64)
+        : Buffer.from(base64, "base64").toString("binary");
     const json = decodeURIComponent(
       Array.from(bin)
         .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
@@ -90,7 +95,9 @@ function getUserIdFromToken(token: string): number | null {
 
 export default function UnifiedDetailScreen() {
   const router = useRouter();
-  const { productId } = useLocalSearchParams<{ productId?: string | string[] }>();
+  const { productId } = useLocalSearchParams<{
+    productId?: string | string[];
+  }>();
   const id = Number(Array.isArray(productId) ? productId[0] : productId);
 
   const [token, setToken] = useState<string | null>(null);
@@ -131,8 +138,9 @@ export default function UnifiedDetailScreen() {
 
 function DetailContent({ id, token }: { id: number; token: string }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] =
-    useState<"notifications" | "chat" | "home" | "community" | "profile">("home");
+  const [activeTab, setActiveTab] = useState<
+    "notifications" | "chat" | "home" | "community" | "profile"
+  >("home");
   const onTabPress = (tab: string) => setActiveTab(tab as any);
   const myId = getUserIdFromToken(token);
   const [reportOpen, setReportOpen] = useState(false);
@@ -141,6 +149,12 @@ function DetailContent({ id, token }: { id: number; token: string }) {
   const { data, isLoading, error, refetch } = useProductDetail(id, token);
   const toggleLike = useToggleLike(id, token);
   const { mutate: deleteProduct } = useDeleteProduct();
+
+  const productTitle = (data?.title ?? "").trim();
+  const sellerName = (
+    data?.sellerNickname ??
+    (data?.sellerId != null ? `판매자 #${data.sellerId}` : "")
+  ).trim();
 
   useFocusEffect(
     useCallback(() => {
@@ -156,7 +170,10 @@ function DetailContent({ id, token }: { id: number; token: string }) {
     );
   }
   if (error || !data) {
-    showAlert("오류", (error as any)?.message ?? "상품 정보를 불러오지 못했습니다.");
+    showAlert(
+      "오류",
+      (error as any)?.message ?? "상품 정보를 불러오지 못했습니다."
+    );
     return (
       <View style={styles.center}>
         <Text style={{ color: "red" }}>
@@ -199,8 +216,10 @@ function DetailContent({ id, token }: { id: number; token: string }) {
     likeCount: Number(data.likeCount ?? 0),
   };
 
-  const isOwner = data.seller === true || (myId != null && Number(data.sellerId) === myId);
-  const sellerId: number | undefined = (data as any).sellerId ?? (data as any).seller?.id;
+  const isOwner =
+    data.seller === true || (myId != null && Number(data.sellerId) === myId);
+  const sellerId: number | undefined =
+    (data as any).sellerId ?? (data as any).seller?.id;
 
   // ---- 핸들러 ----
   const handleEdit = () => {
@@ -217,50 +236,70 @@ function DetailContent({ id, token }: { id: number; token: string }) {
         router.replace("/(home)");
       },
       onError: (e: any) => {
-        const msg = e?.response?.data?.message || e?.message || "상품 삭제 중 오류가 발생했습니다.";
+        const msg =
+          e?.response?.data?.message ||
+          e?.message ||
+          "상품 삭제 중 오류가 발생했습니다.";
         showAlert("오류", msg);
       },
     });
   };
 
-  const handleChat = () => {
-    if (!sellerId) {
-      showAlert("오류", "판매자 정보가 없어 채팅을 시작할 수 없습니다.");
-      return;
-    }
-    router.push({
-      pathname: "/(chatroomList)",
-      params: {
-        productId: String(id),
-        receiverId: String(sellerId),
-      },
-    });
-  };
+  // const handleChat = () => {
+  //   if (!sellerId) {
+  //     showAlert("오류", "판매자 정보가 없어 채팅을 시작할 수 없습니다.");
+  //     return;
+  //   }
+  //   // router.push({
+  //   //   pathname: "/(chatroomList)",
+  //   //   params: {
+  //   //     productId: String(id),
+  //   //     receiverId: String(sellerId),
+  //   //   },
+  //   // });
+  // };
 
   return (
     <View style={styles.webRoot}>
       <SafeAreaView style={styles.phoneFrame}>
         <StatusBar barStyle="dark-content" />
         <View style={styles.header}>
-    <Pressable
-      onPress={() => router.back()}
-      hitSlop={10}
-      style={[styles.backBtn, Platform.OS === "web" && ({ cursor: "pointer" } as any)]}
-      accessibilityRole="button"
-      accessibilityLabel="뒤로 가기"
-    >
-      <Image source={BACK_ICON} style={styles.backIcon} resizeMode="contain" />
-    </Pressable>
-    <View style={{ width: 24 }} />
-  </View>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={[
+              styles.backBtn,
+              Platform.OS === "web" && ({ cursor: "pointer" } as any),
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="뒤로 가기"
+          >
+            <Image
+              source={BACK_ICON}
+              style={styles.backIcon}
+              resizeMode="contain"
+            />
+          </Pressable>
+          <View style={{ width: 24 }} />
+        </View>
+
         <ScrollView
-          contentContainerStyle={[styles.scrollContainer, { paddingBottom: TABBAR_SPACE }]}
+          contentContainerStyle={[
+            styles.scrollContainer,
+            { paddingBottom: TABBAR_SPACE },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <View style={{ position: "relative" }}>
             <ProductCard
               product={product}
-              onToggleLike={isOwner ? undefined : async () => { await toggleLike.mutateAsync(); }}
+              onToggleLike={
+                isOwner
+                  ? undefined
+                  : async () => {
+                      await toggleLike.mutateAsync();
+                    }
+              }
             />
 
             {!isOwner && (
@@ -271,7 +310,11 @@ function DetailContent({ id, token }: { id: number; token: string }) {
                 accessibilityRole="button"
                 accessibilityLabel="상품 신고하기"
               >
-                <Image source={REPORT_ICON} style={styles.reportIcon} resizeMode="contain" />
+                <Image
+                  source={REPORT_ICON}
+                  style={styles.reportIcon}
+                  resizeMode="contain"
+                />
               </Pressable>
             )}
           </View>
@@ -279,7 +322,12 @@ function DetailContent({ id, token }: { id: number; token: string }) {
           {isOwner ? (
             <ProductOwnerActions onEdit={handleEdit} onDelete={handleDelete} />
           ) : (
-            <BottomButtonGroup status={product.status} onChat={handleChat} />
+            <BottomButtonGroup
+              status={product.status}
+              productId={data.productId}
+              receiverId={data.sellerId}
+              token={token}
+            />
           )}
         </ScrollView>
 
@@ -298,10 +346,20 @@ function DetailContent({ id, token }: { id: number; token: string }) {
               </Text>
 
               <View style={styles.alertActions}>
-                <Pressable style={styles.alertBtn} onPress={() => setReportOpen(false)}>
+                <Pressable
+                  style={styles.alertBtn}
+                  onPress={() => setReportOpen(false)}
+                >
                   {({ pressed }) => (
-                    <View style={[styles.alertBtnInner, pressed && styles.alertBtnPressed]}>
-                      <Text style={[styles.alertBtnText, styles.alertCancel]}>취소</Text>
+                    <View
+                      style={[
+                        styles.alertBtnInner,
+                        pressed && styles.alertBtnPressed,
+                      ]}
+                    >
+                      <Text style={[styles.alertBtnText, styles.alertCancel]}>
+                        취소
+                      </Text>
                     </View>
                   )}
                 </Pressable>
@@ -312,12 +370,29 @@ function DetailContent({ id, token }: { id: number; token: string }) {
                   style={styles.alertBtn}
                   onPress={() => {
                     setReportOpen(false);
-                    router.push({ pathname: "/(report)", params: { productId: String(id) } });
+
+                    router.push({
+                      pathname: "/(report)",
+                      params: {
+                        productId: String(id),
+                        productTitle,
+                        sellerName,
+                      },
+                    });
                   }}
                 >
                   {({ pressed }) => (
-                    <View style={[styles.alertBtnInner, pressed && styles.alertBtnPressed]}>
-                      <Text style={[styles.alertBtnText, styles.alertDestructive]}>신고</Text>
+                    <View
+                      style={[
+                        styles.alertBtnInner,
+                        pressed && styles.alertBtnPressed,
+                      ]}
+                    >
+                      <Text
+                        style={[styles.alertBtnText, styles.alertDestructive]}
+                      >
+                        신고
+                      </Text>
                     </View>
                   )}
                 </Pressable>
@@ -427,13 +502,13 @@ const styles = StyleSheet.create({
   alertDestructive: { color: "#FF3B30" },
 
   header: {
-  height: 48,
-  paddingHorizontal: 12,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  backgroundColor: "#FFFFFF",
-},
-backBtn: { paddingVertical: 6, paddingRight: 6 },
-backIcon: { width: 16, height: 16 },
+    height: 48,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+  },
+  backBtn: { paddingVertical: 6, paddingRight: 6 },
+  backIcon: { width: 16, height: 16 },
 });

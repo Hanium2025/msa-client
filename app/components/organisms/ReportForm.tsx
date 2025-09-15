@@ -8,7 +8,8 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { ReportInfoRow } from "../atoms/ReportInfoRow"; // 입력용 TextInput 아톰
+// ⬇️ 입력용이 아니라 텍스트 전용 컴포넌트를 사용
+import { ReportInfoRow } from "../atoms/ReportInfoRow"; // barrel에서 export 하도록 해두세요
 import { ReportDetailInput } from "../molecules/ReportDetailInput";
 
 const REASONS = [
@@ -21,6 +22,8 @@ const REASONS = [
 ];
 
 type Props = {
+  productTitle: string; // ⬅️ 상세에서 전달받음
+  sellerName: string; // ⬅️ 상세에서 전달받음
   reason: string;
   onChangeReason: (v: string) => void;
   detail: string;
@@ -28,15 +31,13 @@ type Props = {
 };
 
 export const ReportForm: React.FC<Props> = ({
+  productTitle,
+  sellerName,
   reason,
   onChangeReason,
   detail,
   onChangeDetail,
 }) => {
-  // 입력 상태 추가
-  const [productName, setProductName] = useState("");
-  const [seller, setSeller] = useState("");
-
   // 드롭다운 위치/열림 상태
   const [menuOpen, setMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ y: number; height: number }>({
@@ -51,21 +52,8 @@ export const ReportForm: React.FC<Props> = ({
 
   return (
     <View style={s.container}>
-      {/* ✅ 입력 가능 */}
-      <ReportInfoRow
-        label="상품명"
-        value={productName}
-        onChangeText={setProductName}
-        placeholder="게시글 제목 가나다"
-        textColor="#084C63"
-      />
-      <ReportInfoRow
-        label="판매자"
-        value={seller}
-        onChangeText={setSeller}
-        placeholder="홍길동"
-        textColor="#084C63"
-      />
+      <ReportInfoRow label="상품명" value={productTitle} />
+      <ReportInfoRow label="판매자" value={sellerName} />
 
       {/* 신고 사유 버튼형 드롭다운 */}
       <View
@@ -152,7 +140,7 @@ const s = StyleSheet.create({
   selectWrap: { flexDirection: "row", alignItems: "center", maxWidth: "70%" },
   selectText: { fontSize: 14, fontWeight: "500", textAlign: "right" },
   selectTextActive: { color: "#084C63" },
-  selectTextPlaceholder: { color: "#084C63" },
+  selectTextPlaceholder: { color: "#94A3B8" }, // placeholder 색 살짝 다르게
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: "#E5E7EB" },
   dropdown: {
     position: "absolute",
