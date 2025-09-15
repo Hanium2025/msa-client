@@ -33,12 +33,15 @@ interface ButtonProps {
     | "reportToHome"
     | "profilePrimary"
     | "profileOutline"
-    | "profileEditCircle";
+    | "profileEditCircle"
+    | "waybillPrimary"
+    | "waybillSelect";
   checked?: boolean;
   disabled?: boolean;
-  icon?: React.ReactNode;iconSource?: ImageSourcePropType;
-  iconName?: string;  // Ionicons 이름 (기본 pencil)
-  iconSize?: number;  // 아이콘 크기
+  icon?: React.ReactNode;
+  iconSource?: ImageSourcePropType;
+  iconName?: string;  
+  iconSize?: number;  
   backgroundColor?: string;
   textColor?: string;
 }
@@ -83,7 +86,7 @@ const Button: React.FC<ButtonProps> = ({
             disabled={disabled}
           >
             <Image
-              source={require("../../../../assets/images/add-circle.png")} // ← 여기 경로 확인
+              source={require("../../../../assets/images/add-circle.png")} 
               style={styles.registerImage}
               resizeMode="contain"
             />
@@ -106,7 +109,7 @@ const Button: React.FC<ButtonProps> = ({
       >
         <View style={styles.reportSubmitContent}>
           <Image
-            source={require("../../../../assets/images/report-image.svg")} // ← 여기 경로 확인
+            source={require("../../../../assets/images/report-image.svg")} 
             style={styles.reportSubmitImage}
             resizeMode="contain"
           />
@@ -134,7 +137,6 @@ const Button: React.FC<ButtonProps> = ({
             resizeMode="contain"
           />
         ) : (
-          // 이미지가 안 넘어오면 기존 Ionicons로 폴백
           <Ionicons name={iconName as any} size={iconSize} color="#FFF" />
         )}
       </TouchableOpacity>
@@ -177,6 +179,10 @@ const Button: React.FC<ButtonProps> = ({
         return [styles.profilePrimaryButton];
       case "profileOutline":
         return [styles.profileOutlineButton];
+      case "waybillPrimary":
+        return [styles.waybillPrimaryButton];
+      case "waybillSelect":
+        return [styles.waybillSelectButton];
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -202,6 +208,10 @@ const Button: React.FC<ButtonProps> = ({
         return styles.profilePrimaryText;
       case "profileOutline":
         return styles.profileOutlineText;
+      case "waybillPrimary":
+        return styles.waybillPrimaryText;
+      case "waybillSelect":
+        return styles.waybillSelectText;
       default:
         return styles.actionText;
     }
@@ -214,6 +224,7 @@ const Button: React.FC<ButtonProps> = ({
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       disabled={disabled}
+      activeOpacity={0.85}
     >
       {variant === "socialLogin" && icon && (
         <View style={styles.socialIcon}>{icon}</View>
@@ -232,6 +243,24 @@ const Button: React.FC<ButtonProps> = ({
             style={styles.checkIcon}
           />
           <Text style={getTextStyle()}>{text}</Text>
+        </View>
+      ) : variant === "waybillPrimary" ? (
+        // 송장등록 아이콘 + 텍스트 가로 배치
+        <View style={styles.row}>
+          {iconSource ? (
+            <Image source={iconSource} style={styles.waybillPrimaryIcon} />
+          ) : null}
+          <Text style={getTextStyle()}>{text}</Text>
+        </View>
+      ) : variant === "waybillSelect" ? (
+        // “선택” 작은 텍스트 버튼
+        <View style={styles.row}>
+          <Text style={getTextStyle()}>{text}</Text>
+          {iconSource ? (
+            <Image source={iconSource} style={styles.waybillSelectIcon} />
+          ) : (
+            <Ionicons name="chevron-down" size={16} color="#8A8A8A" />
+          )}
         </View>
       ) : (
         <Text style={getTextStyle()}>{text}</Text>
