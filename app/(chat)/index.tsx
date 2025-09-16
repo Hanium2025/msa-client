@@ -28,7 +28,8 @@ import {requestDirectTrade, requestParcelTrade,
          acceptDirectTrade, 
          acceptParcelTrade} from "../lib/api/trade";
 import ConfirmModal from "../components/molecules/Modal/index";
-import {getTradeStatus} from "../lib/api/trade";
+import {getTradeStatus,completeTrade} from "../lib/api/trade";
+
 
 // ---------- DEV/PROD 주소 유틸 ----------
 function resolveDevHost() {
@@ -54,7 +55,7 @@ let reconnectAttempts = 0;
 
 
 type NoticeKind = "DIRECT" | "PARCEL";
-type SystemActionId = "ACCEPT" | "COMPLETE" | "REQUEST_PAYMENT";
+type SystemActionId = "ACCEPT" | "COMPLETE" | "REQUEST_PAYMENT"| "REVIEW";
 
 
 // ---------- 타입 ----------
@@ -160,6 +161,8 @@ const isSeller =
   loading:boolean;
 }>({visible: false, kind:null, loading:false});
 
+
+const [tradeId, setTradeId] = useState<number | null>(null);
 //확인하기를 눌렀을 때 모달 열기
 const openAcceptModal = useCallback((kind: NoticeKind) => {
   setConfirm({ visible: true, kind, loading: false });
@@ -294,13 +297,18 @@ const handleConfirmAccept = useCallback(async () => {
       } else {
         actions.push({ id: "REQUEST_PAYMENT", label: "결제 요청하기", visible: isSeller }); // 판매자만
       }
+
       systemNotice = {
         kind: isDirect ? "DIRECT" : "PARCEL",
         actions,
       };
     } else if (isComplete) {
-      // 완료는 버튼 없음
-      systemNotice = { kind: isDirect ? "DIRECT" : "PARCEL" };
+      const actions: NonNullable<Message["systemNotice"]>["actions"] = [
+    { id: "REVIEW", label: "거래 평가하러 가기", visible: true },];
+      systemNotice = {
+        kind: isDirect ? "DIRECT" : "PARCEL",
+        actions, // ✅ 반드시 systemNotice에 actions를 포함
+      };
     } else {
       systemNotice = { kind: isDirect ? "DIRECT" : "PARCEL" };
     }
@@ -499,6 +507,29 @@ const handleConfirmAccept = useCallback(async () => {
 
     return;
   }
+// 완료 이벤트 수신 시, 양쪽 모두에게 "거래 평가하러 가기" 버튼 노출
+if (raw?.type === "TRADE_COMPLETE") {
+  const ts = Date.now();
+  if (raw?.tradeId) setTradeId(raw.tradeId); // 서버가 tradeId 내려주면 보관
+
+  const sys: Message = {
+    id: `sys-${ts}`,
+    content: raw.content ?? "거래가 완료되었어요.",
+    timestamp: ts,
+    senderId: 0,
+    type: "SYSTEM",
+    systemNotice: {
+      // kind는 상황에 맞게; 모르면 생략 가능
+      actions: [
+        { id: "REVIEW", label: "거래 평가하러 가기", visible: true }, //  모두에게 보이게
+      ],
+    },
+  };
+  setMessages(prev => [sys, ...prev]);
+  return;
+}
+
+
 
           const ui = toUi(raw);
 
@@ -721,12 +752,15 @@ setTradeComplete(true);
     }
 }, [roomId, wsToken]);
 
+//거래 완료
 const handleTradeComplete = useCallback(async () => {
   if (!roomId || !wsToken) return;
   try {
     // TODO: 실제 거래 완료 API 호출
-    // await completeDirectTrade(roomId, wsToken);
+     const response = await completeTrade(roomId, wsToken);
+     setTradeId(response);
     Alert.alert("거래 완료", "거래를 완료 처리했습니다.");
+
   } catch (e: any) {
     Alert.alert("실패", e?.response?.data?.message ?? "거래 완료 처리 실패");
   }
@@ -738,7 +772,17 @@ const handleTradeComplete = useCallback(async () => {
     []
   );
   const router = useRouter();
-
+//리뷰페이지 이동 핸들러
+ const goToReview = useCallback(() => {
+  if (!tradeId) {
+    Alert.alert("평가", "거래 ID를 찾을 수 없어요. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+  router.push({
+    pathname: "/(review)", // 프로젝트 라우트에 맞게 변경
+    params: { tradeId: String(tradeId), chatroomId: String(roomId ?? "") },
+  });
+}, [tradeId, roomId, router]);
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -770,6 +814,8 @@ const handleTradeComplete = useCallback(async () => {
     } else if (actionId === "ACCEPT") {
       // (필요 시) 확인하기를 actions로도 쓸 수 있음
       setConfirm({ visible: true, kind: "DIRECT", loading: false });
+    } else if (actionId === "REVIEW") {
+      goToReview(); 
     }
   }}
         />

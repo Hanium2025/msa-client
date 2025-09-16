@@ -24,7 +24,7 @@ export async function acceptDirectTrade(chatroomId: number, token: string) {
    return {buyerId: res.data.data, message: res.data.message};
 }
 
-//거래 완료
+//거래 진행 상태 조회
 export async function getTradeStatus(chatroomId: number, token:string){
   const res = await api.get<ApiResponse<String>>(`/trade/status/chatroom/${chatroomId}`,
     {headers: {Authorization: `Bearer ${token}`}}
@@ -32,6 +32,13 @@ export async function getTradeStatus(chatroomId: number, token:string){
   return String(res.data?.data ??"")
 }
 
+//거래 완료 
+export async function completeTrade(chatroomId: number, token:string){
+  const res = await api.post<ApiResponse<number>>(`/trade/complete/chatroom/${chatroomId}`,
+    {headers : {Authorization: `Bearer ${token}`}}
+  )
+  return res.data?.data ??""
+}
 //택배 거래 요청
 export async function requestParcelTrade(chatroomId: number, token: string) {
   const res = await api.post<ApiResponse<number>>(
