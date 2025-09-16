@@ -150,6 +150,12 @@ function DetailContent({ id, token }: { id: number; token: string }) {
   const toggleLike = useToggleLike(id, token);
   const { mutate: deleteProduct } = useDeleteProduct();
 
+  const productTitle = (data?.title ?? "").trim();
+  const sellerName = (
+    data?.sellerNickname ??
+    (data?.sellerId != null ? `판매자 #${data.sellerId}` : "")
+  ).trim();
+
   useFocusEffect(
     useCallback(() => {
       refetch();
@@ -367,7 +373,11 @@ function DetailContent({ id, token }: { id: number; token: string }) {
 
                     router.push({
                       pathname: "/(report)",
-                      params: { productId: String(id) },
+                      params: {
+                        productId: String(id),
+                        productTitle,
+                        sellerName,
+                      },
                     });
                   }}
                 >

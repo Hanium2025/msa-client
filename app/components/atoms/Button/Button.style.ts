@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform} from "react-native";
 
 export const styles = StyleSheet.create({
   // 공통 base
@@ -294,5 +294,115 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     letterSpacing: -0.3,
+  },
+
+  profilePrimaryButton: {
+    width: 219,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#084C63",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  profilePrimaryText: {
+    color: "#FFF",
+    fontFamily: "SF Pro",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.32,
+  },
+
+  // 왼쪽 "이전"
+  profileOutlineButton: {
+    width: 113,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "rgba(217,217,217,0.70)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileOutlineText: {
+    color: "#000",
+    fontFamily: "SF Pro",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.32,
+  },
+
+  // 아바타 수정 원형 버튼
+  profileEditCircleButton: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  profileEditCircleIcon: {
+
+  },
+  // 송장등록 버튼
+  waybillPrimaryButton: {
+    width: 219,          // 필요 시 부모에서 덮어쓰기
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#084C63",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    shadowColor: "#D9D9D9B2",
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow: "0px 6px 12px rgba(0,0,0,0.15)",
+      },
+    }),
+  },
+  waybillPrimaryText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontFamily: "SF Pro",
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  waybillPrimaryIcon: {
+    marginRight: 8,
+    resizeMode: "contain",
+  },
+
+  waybillSelectIcon: {
+  marginLeft: 4,
+  marginTop: 2,
+  resizeMode: "contain",
+},
+
+  // 필드 우측 “선택”
+  waybillSelectButton: {
+    backgroundColor: "transparent",
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  waybillSelectText: {
+    color: "#084C63", 
+    fontSize: 15,
+    fontWeight: "500",
   },
 });

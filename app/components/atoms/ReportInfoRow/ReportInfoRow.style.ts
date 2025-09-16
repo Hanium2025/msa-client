@@ -13,16 +13,13 @@ export const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "400",
   },
-  input: {
-    fontSize: 14,
+  value: {
+    fontSize: 15,
     fontWeight: "500",
     textAlign: "right",
-    padding: 0,
-    // 폭/축소 이슈로 입력이 안 보이는 것 방지
-    minWidth: 80,
-    maxWidth: "70%",
+    color: "#084C63", // 읽기 전용 텍스트니까 고정
     flexShrink: 1,
-    minHeight: 20,
+    maxWidth: "70%",
   },
   divider: {
     height: StyleSheet.hairlineWidth,

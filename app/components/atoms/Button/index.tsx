@@ -7,6 +7,7 @@ import {
   Image,
   StyleProp,
   ViewStyle,
+  ImageSourcePropType, 
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,10 +30,18 @@ interface ButtonProps {
     | "registerItem"
     | "reportSubmit"
     | "reportToProduct"
-    | "reportToHome";
+    | "reportToHome"
+    | "profilePrimary"
+    | "profileOutline"
+    | "profileEditCircle"
+    | "waybillPrimary"
+    | "waybillSelect";
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
+  iconSource?: ImageSourcePropType;
+  iconName?: string;  
+  iconSize?: number;  
   backgroundColor?: string;
   textColor?: string;
 }
@@ -48,6 +57,9 @@ const Button: React.FC<ButtonProps> = ({
   checked = false,
   disabled = false,
   icon,
+  iconSource,             
+  iconName = "create",   
+  iconSize = 18,
   backgroundColor,
   textColor,
 }) => {
@@ -74,7 +86,7 @@ const Button: React.FC<ButtonProps> = ({
             disabled={disabled}
           >
             <Image
-              source={require("../../../../assets/images/add-circle.png")} // ← 여기 경로 확인
+              source={require("../../../../assets/images/add-circle.png")} 
               style={styles.registerImage}
               resizeMode="contain"
             />
@@ -97,12 +109,36 @@ const Button: React.FC<ButtonProps> = ({
       >
         <View style={styles.reportSubmitContent}>
           <Image
-            source={require("../../../../assets/images/report-image.svg")} // ← 여기 경로 확인
+            source={require("../../../../assets/images/report-image.svg")} 
             style={styles.reportSubmitImage}
             resizeMode="contain"
           />
           <Text style={styles.reportSubmitText}>{text}</Text>
         </View>
+      </TouchableOpacity>
+    );
+  }
+
+  if (variant === "profileEditCircle") {
+    return (
+      <TouchableOpacity
+        style={[styles.profileEditCircleButton, style]}
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={text || "프로필 이미지 수정"}
+      >
+        {iconSource ? (
+          <Image
+            source={iconSource}
+            style={styles.profileEditCircleIcon} 
+            resizeMode="contain"
+          />
+        ) : (
+          <Ionicons name={iconName as any} size={iconSize} color="#FFF" />
+        )}
       </TouchableOpacity>
     );
   }
@@ -139,6 +175,14 @@ const Button: React.FC<ButtonProps> = ({
           styles.reportToHomeButton,
           disabled && styles.reportToHomeDisabled,
         ];
+      case "profilePrimary":
+        return [styles.profilePrimaryButton];
+      case "profileOutline":
+        return [styles.profileOutlineButton];
+      case "waybillPrimary":
+        return [styles.waybillPrimaryButton];
+      case "waybillSelect":
+        return [styles.waybillSelectButton];
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -160,6 +204,14 @@ const Button: React.FC<ButtonProps> = ({
         return styles.reportToProductText;
       case "reportToHome":
         return styles.reportToHomeText;
+      case "profilePrimary":
+        return styles.profilePrimaryText;
+      case "profileOutline":
+        return styles.profileOutlineText;
+      case "waybillPrimary":
+        return styles.waybillPrimaryText;
+      case "waybillSelect":
+        return styles.waybillSelectText;
       default:
         return styles.actionText;
     }
@@ -172,6 +224,7 @@ const Button: React.FC<ButtonProps> = ({
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       disabled={disabled}
+      activeOpacity={0.85}
     >
       {variant === "socialLogin" && icon && (
         <View style={styles.socialIcon}>{icon}</View>
@@ -190,6 +243,24 @@ const Button: React.FC<ButtonProps> = ({
             style={styles.checkIcon}
           />
           <Text style={getTextStyle()}>{text}</Text>
+        </View>
+      ) : variant === "waybillPrimary" ? (
+        // 송장등록 아이콘 + 텍스트 가로 배치
+        <View style={styles.row}>
+          {iconSource ? (
+            <Image source={iconSource} style={styles.waybillPrimaryIcon} />
+          ) : null}
+          <Text style={getTextStyle()}>{text}</Text>
+        </View>
+      ) : variant === "waybillSelect" ? (
+        // “선택” 작은 텍스트 버튼
+        <View style={styles.row}>
+          <Text style={getTextStyle()}>{text}</Text>
+          {iconSource ? (
+            <Image source={iconSource} style={styles.waybillSelectIcon} />
+          ) : (
+            <Ionicons name="chevron-down" size={16} color="#8A8A8A" />
+          )}
         </View>
       ) : (
         <Text style={getTextStyle()}>{text}</Text>
