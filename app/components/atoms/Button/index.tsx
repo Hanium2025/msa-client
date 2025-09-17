@@ -35,7 +35,8 @@ interface ButtonProps {
     | "profileOutline"
     | "profileEditCircle"
     | "waybillPrimary"
-    | "waybillSelect";
+    | "waybillSelect"
+    | "paymentRetry"; 
   checked?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -183,6 +184,8 @@ const Button: React.FC<ButtonProps> = ({
         return [styles.waybillPrimaryButton];
       case "waybillSelect":
         return [styles.waybillSelectButton];
+      case "paymentRetry":        
+      return [styles.paymentRetryButton, isPressed && styles.paymentRetryPressed, disabled && styles.paymentRetryDisabled];
       default:
         return [styles.baseButton, styles.actionButton];
     }
@@ -212,6 +215,8 @@ const Button: React.FC<ButtonProps> = ({
         return styles.waybillPrimaryText;
       case "waybillSelect":
         return styles.waybillSelectText;
+      case "paymentRetry":       
+      return styles.paymentRetryText;
       default:
         return styles.actionText;
     }
