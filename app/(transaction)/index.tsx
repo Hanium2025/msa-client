@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,16 +7,14 @@ import {
   ScrollView,
   Platform,
   Alert,
-  Pressable,
-  Image,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../components/atoms/Button";
 import { TransactionReviewForm } from "../components/organisms/TransactionReviewForm";
 import { ConfirmModal } from "../components/molecules/Modal";
+import { useTradeReview } from "../hooks/useTradeReview";
 
 const PHONE_WIDTH = 390;
-const BACK_ICON = require("../../assets/images/back.png");
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -26,31 +24,62 @@ const showAlert = (title: string, message?: string) => {
 
 export default function TransactionReviewScreen() {
   const router = useRouter();
+  const { tradeId } = useLocalSearchParams<{ tradeId?: string }>();
 
-  // 별점/상세평가 로컬 상태 (연동 X)
+  // 별점/상세평가 로컬 상태
   const [rating, setRating] = useState<number>(0);
   const [detail, setDetail] = useState<string>("");
 
-  const handleSubmit = () => {
-    if (!rating) {
-      showAlert("안내", "별점을 선택해주세요.");
-      return;
-    }
-    if (!detail.trim()) {
-      showAlert("안내", "상세 평가를 작성해주세요.");
-      return;
-    }
-    showAlert("평가 제출", "소중한 평가 감사합니다!");
-    router.back(); // 필요 시 완료 화면으로 이동하도록 교체
-  };
+  // 거래평가 API 훅 (전역 토큰 자동 사용)
+  const { submit, loading, error, successMessage, reset } = useTradeReview();
 
   // 모달창
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const doSubmit = () => {
+  // 제출 버튼 → 확인 모달 → 실제 제출
+  const doSubmit = async () => {
+    if (!tradeId) {
+      showAlert("오류", "유효하지 않은 거래입니다. (tradeId가 없습니다)");
+      setConfirmOpen(false);
+      return;
+    }
+    if (!rating) {
+      showAlert("안내", "별점을 선택해주세요.");
+      setConfirmOpen(false);
+      return;
+    }
+    if (!detail.trim()) {
+      showAlert("안내", "상세 평가를 작성해주세요.");
+      setConfirmOpen(false);
+      return;
+    }
+
     setConfirmOpen(false);
-    // router.push('/reviewSuccess') 등
+    reset();
+
+    // tradeId 타입 안전 처리
+    const id = Number(tradeId);
+    if (!Number.isFinite(id)) {
+      showAlert("오류", "tradeId가 올바르지 않습니다.");
+      return;
+    }
+
+    await submit(id, { rating, comment: detail });
   };
+
+  // 성공/실패 결과 알림 및 이동은 상태 변화 감지로 처리
+  useEffect(() => {
+    if (error) {
+      showAlert("오류", error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (successMessage) {
+      showAlert("완료", successMessage);
+      router.back(); // 필요 시 완료 화면으로 이동하도록 교체 가능
+    }
+  }, [successMessage, router]);
 
   return (
     <SafeAreaView style={s.phoneFrame}>
@@ -73,31 +102,27 @@ export default function TransactionReviewScreen() {
             onChangeRating={setRating}
             detail={detail}
             onChangeDetail={setDetail}
-            // 필요 시 상품명/상대방을 외부에서 제어하려면 아래 props도 넘기세요.
-            // productName="상품명 가나다"
-            // onChangeProductName={(v) => {}}
-            // seller="홍길동"
-            // onChangeSeller={(v) => {}}
           />
         </View>
 
         {/* 제출 버튼 */}
         <View style={{ alignItems: "center" }}>
           <Button
-            variant="reportSubmit" // 동일 스타일 재사용
-            text="평가 제출"
+            variant="reportSubmit"
+            text={loading ? "제출 중..." : "평가 제출"}
             onPress={() => setConfirmOpen(true)}
-            disabled={!rating || !detail.trim()}
+            disabled={!rating || !detail.trim() || loading}
             style={{ width: 219 }}
           />
         </View>
+
         <ConfirmModal
           visible={confirmOpen}
           title="평가를 제출할까요?"
           cancelText="취소"
-          confirmText="제출"
-          onClose={() => setConfirmOpen(false)}
-          onConfirm={doSubmit}
+          confirmText={loading ? "제출 중..." : "제출"}
+          onClose={() => !loading && setConfirmOpen(false)}
+          onConfirm={loading ? () => {} : doSubmit}
         />
       </ScrollView>
     </SafeAreaView>
