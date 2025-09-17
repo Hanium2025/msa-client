@@ -6,13 +6,22 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_BASE": "http://192.168.0.35:8000",
+        "EXPO_PUBLIC_WS_BASE": "ws://192.168.0.35:8000/ws/chat",
+        "EXPO_PUBLIC_DEV_HOST": "192.168.0.35"
+      }
     },
     "preview": {
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_BASE": "https://api.haniumpicky.click",
+        "EXPO_PUBLIC_WS_BASE": "wss://api.haniumpicky.click/wss/chat"
+      }
     }
   },
   "submit": {
