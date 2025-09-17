@@ -48,6 +48,11 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
       router.replace("/(home)");
       return;
     }
+
+    if (name === "profile") {
+      router.replace("/(mypage)");
+      return;
+    }
   };
   return (
     <View style={styles.container}>
@@ -77,7 +82,6 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({
           );
         })}
       </View>
-
     </View>
   );
 };
