@@ -783,6 +783,21 @@ const handleTradeComplete = useCallback(async () => {
     params: { tradeId: String(tradeId), chatroomId: String(roomId ?? "") },
   });
 }, [tradeId, roomId, router]);
+
+// 결제하러 가기
+const goToPayment = useCallback(() => {
+  if (!amIBuyer) {
+    Alert.alert("결제", "구매자만 결제를 진행할 수 있어요.");
+    return;
+  }
+  router.push({
+    pathname: "/(payment)",
+    params: {
+      chatroomId: String(roomId ?? ""),
+      tradeId: tradeId ? String(tradeId) : "", // 아직 없을 수 있어도 OK
+    },
+  });
+}, [router, amIBuyer, roomId, tradeId]);
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -810,7 +825,7 @@ const handleTradeComplete = useCallback(async () => {
       // 거래 완료
       //openCompleteModal(); // 또는 바로 API 호출
     } else if (actionId === "REQUEST_PAYMENT") {
-     // openPaymentRequestModal(); // 또는 바로 API 호출
+      goToPayment(); 
     } else if (actionId === "ACCEPT") {
       // (필요 시) 확인하기를 actions로도 쓸 수 있음
       setConfirm({ visible: true, kind: "DIRECT", loading: false });
