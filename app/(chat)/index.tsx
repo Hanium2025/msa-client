@@ -295,7 +295,7 @@ const handleConfirmAccept = useCallback(async () => {
       if (isDirect) {
         actions.push({ id: "COMPLETE", label: "거래 완료하기", visible: true }); // 모두 보임
       } else {
-        actions.push({ id: "REQUEST_PAYMENT", label: "결제 요청하기", visible: isSeller }); // 판매자만
+        actions.push({ id: "REQUEST_PAYMENT", label: "결제하기", visible: amIBuyer }); // 판매자만
       }
 
       systemNotice = {
@@ -488,7 +488,7 @@ const handleConfirmAccept = useCallback(async () => {
     const actions =
       isDirect
         ? [{ id: "COMPLETE" as const, label: "거래 완료하기", visible: true }]
-        : [{ id: "REQUEST_PAYMENT" as const, label: "결제 요청하기", visible: isSeller }];
+        : [{ id: "REQUEST_PAYMENT" as const, label: "결제하기", visible: amIBuyer }];
 
     const sys: Message = {
       id: `sys-${ts}`,
@@ -730,7 +730,7 @@ if (raw?.type === "TRADE_COMPLETE") {
   const handleRequestParcel = useCallback(async () => {
   if (!roomId || !wsToken) return;
   try {
-    const { message } = await requestParcelTrade(roomId, wsToken);
+     const {sellerId: sellerIdFromServer, message} =  await requestParcelTrade(roomId, wsToken);
     Alert.alert("택배 거래 요청", message || "택배 거래 요청을 보냈어요.");
   } catch (e: any) {
     Alert.alert("실패", e?.response?.data?.message ?? "요청을 처리하지 못했어요.");
