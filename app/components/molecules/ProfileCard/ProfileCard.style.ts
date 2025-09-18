@@ -1,0 +1,55 @@
+import { StyleSheet } from "react-native";
+
+export default StyleSheet.create({
+  card: {
+    flexDirection: "row",
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  pressed: { opacity: 0.8 },
+  left: { marginRight: 12 },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: "#E5E7EB",
+  },
+  right: { flex: 1 },
+  name: { fontSize: 20, fontWeight: "900", color: "#084C63" },
+  catRow: { marginTop: 6 },
+  catLabel: { fontSize: 11, color: "#000", fontWeight: "400" },
+  catValue: { marginTop: 2, fontSize: 12, color: "#111827" },
+  trustRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
+  trustLabel: {
+    fontSize: 13,
+    color: "#000",
+    fontWeight: "400",
+    marginRight: -110,
+  },
+  scoreBoard: {
+    width: 150,
+    height: 21,
+    flexDirection: "row",
+    marginTop: 2,
+  },
+  trustBar: { flex: 1, marginLeft: -70 },
+  trustScore: {
+    fontSize: 14,
+    color: "#084C63",
+    fontWeight: "700",
+    width: 40,
+    textAlign: "right",
+    marginLeft: 90,
+  },
+  scoreText: {
+    fontSize: 13,
+    color: "#000",
+    fontWeight: "400",
+  },
+});
