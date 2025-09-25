@@ -6,8 +6,14 @@ import {
   ViewStyle,
   StyleProp,
   ListRenderItemInfo,
+  Text,
+  Pressable,
 } from "react-native";
 import { ChatMessage } from "../molecules/ChatMessage";
+
+export type NoticeKind = "DIRECT" | "PARCEL";
+export type SystemActionId = "ACCEPT" | "COMPLETE" | "REQUEST_PAYMENT";
+
 
 export type BaseMessage = {
   id: string | number;
@@ -16,8 +22,21 @@ export type BaseMessage = {
   senderId: number;
   receiverId?: number;
   avatarUrl?: string;
-  type?: "TEXT" | "IMAGE";
+  type?: "TEXT" | "IMAGE" | "SYSTEM";
   imageUrls?: string[];
+
+  // SYSTEM 공지 전용 메타
+  systemNotice?: {
+    kind: NoticeKind;     // "DIRECT" | "PARCEL"
+    ctaLabel?: string;    // 기본 "확인하기"
+    ctaVisible?: boolean; // 판매자일 때만 true
+     // ✅ 추가: 수락 이후 액션 버튼들
+    actions?: Array<{
+      id: SystemActionId;
+      label: string;
+      visible: boolean;
+    }>;
+  };
 };
 
 export type ChatMessageListProps<T extends BaseMessage = BaseMessage> = {
@@ -31,6 +50,10 @@ export type ChatMessageListProps<T extends BaseMessage = BaseMessage> = {
   containerStyle?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   inverted?: boolean;
+
+  // SYSTEM 공지의 CTA(확인하기) 눌렀을 때 호출
+  onPressSystemNotice?: (kind: NoticeKind) => void;
+  onPressSystemAction?: (actionId: SystemActionId, item: T) => void; // (추가)
 };
 
 export const ChatMessageList = <T extends BaseMessage>({
@@ -44,11 +67,55 @@ export const ChatMessageList = <T extends BaseMessage>({
   containerStyle,
   contentContainerStyle,
   inverted = true,
+  onPressSystemNotice,
+  onPressSystemAction,
 }: ChatMessageListProps<T>) => {
   const listRef = useRef<FlatList<T>>(null);
   const data = useMemo(() => messages, [messages]);
 
+  const renderSystemNotice = (item: T) => {
+    const notice = item.systemNotice;
+    const ctaVisible = !!notice?.ctaVisible;
+    const ctaLabel = notice?.ctaLabel ?? "확인하기";
+    const actions = notice?.actions?.filter(a => a.visible) ?? [];
+
+      return (
+    <View style={{ alignSelf: "center", paddingVertical: 6, paddingHorizontal: 10 }}>
+      {/* 본문 문구 */}
+      <Text style={{ color: "#374151", fontSize: 13, textAlign: "center" }}>
+        {item.content}
+      </Text>
+
+      {/* 확인하기 (판매자만 노출 등) */}
+      {ctaVisible && (
+        <Text
+          onPress={() => notice?.kind && onPressSystemNotice?.(notice.kind)}
+          style={{ color: "#1D4ED8", fontWeight: "600", textAlign: "center", marginTop: 4 }}
+        >
+          {ctaLabel}
+        </Text>
+      )}
+
+      {/* 수락 이후 액션들 (ctaVisible 여부와 무관) */}
+      {actions.length > 0 && (
+        <View style={{ flexDirection: "row", justifyContent: "center", gap: 12, marginTop: 6 }}>
+          {actions.map((a, idx) => (
+            <Pressable key={idx} onPress={() => onPressSystemAction?.(a.id, item)}>
+              <Text style={{ color: "#1D4ED8", fontWeight: "600" }}>{a.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
   const renderItem = ({ item }: ListRenderItemInfo<T>) => {
+    // SYSTEM 공지 처리
+    if (item.type === "SYSTEM" && item.systemNotice) {
+      return renderSystemNotice(item);
+    }
+
+    // 일반 메시지 처리
     const isSender = item.senderId === myUserId;
     return (
       <ChatMessage
@@ -64,8 +131,8 @@ export const ChatMessageList = <T extends BaseMessage>({
             : undefined
         }
         onLongPress={onLongPressMessage}
-        type={(item as any).type}
-        imageUrls={(item as any).imageUrls}
+        type={item.type as any}
+        imageUrls={item.imageUrls}
       />
     );
   };

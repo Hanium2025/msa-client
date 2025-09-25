@@ -34,7 +34,7 @@ export default function ChatListScreen() {
         const token =
           "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJBY2Nlc3NUb2tlbiIsImlkIjoyLCJleHAiOjE3NTU3NjI3MTgsImVtYWlsIjoiaGVsbG8yQGVtYWlsLmNvbSJ9.N74ydEAoNwPUPq9yz68OLrbp1t0BDPRUOLWduwJLwrEyci0HVfN8C2qODWIiq1Mkdx2UQaMvWdhUtQS9z8-sUg";
         const list = await getMyChatroomList(token);
-        console.log("flfflf: ", list);
+        console.log("채팅방 리스트: ", list);
         setData(list);
       } catch (e: any) {
         setError(e?.message ?? "채팅방 목록을 불러오지 못했습니다.");
@@ -87,6 +87,7 @@ export default function ChatListScreen() {
                   profileUrl: item?.opponentProfileUrl ?? "",
                 },
                 roomName: rn ?? "",
+                sellerId:item.sellerId,
               } as never
             );
           }}

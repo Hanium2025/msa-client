@@ -14,11 +14,17 @@ import { Ionicons } from "@expo/vector-icons";
 type AttachmentMenuProps = {
   visible: boolean;
   onClose: () => void;
-  onPickImage: () => void;
-  onRequestMeetup: () => void;
-  onRequestDelivery: () => void;
-  // (선택) +버튼 위치(화면 좌표). 주면 거기에 맞춰 뜸. 안 주면 좌하단 근처 기본 위치.
   anchor?: { x: number; y: number; w: number; h: number } | null;
+  onPickImage?: () => void;        // 옵션
+  onRequestMeetup?: () => void;    //옵션
+  onRequestDelivery?: () => void;  // 옵션
+  onTradeComplete?:()=>void;
+};
+
+type Action = {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
 };
 
 export function AttachmentMenu({
@@ -27,60 +33,40 @@ export function AttachmentMenu({
   onPickImage,
   onRequestMeetup,
   onRequestDelivery,
+  onTradeComplete,
   anchor,
 }: AttachmentMenuProps) {
-  const { width: W, height: H } = Dimensions.get("window");
+  // 전달된 핸들러만 actions에 포함
+  const actions: Action[] = [
+    onPickImage && { label: "사진 전송", icon: "image-outline", onPress: onPickImage },
+    onRequestMeetup && { label: "직거래 요청", icon: "location-outline", onPress: onRequestMeetup },
+    onRequestDelivery && { label: "택배 거래 요청", icon: "cube-outline", onPress: onRequestDelivery },
+    onTradeComplete && { label: "거래 완료하기", icon: "cube-outline",onPress: onTradeComplete},
+  ].filter(Boolean) as Action[];
 
+  const { width: W, height: H } = Dimensions.get("window");
   const MENU_WIDTH = 220;
   const BTN_W = anchor?.w ?? 36;
   const anchorX = anchor?.x ?? 16;
-  const anchorY = anchor?.y ?? H - 64; // 대략 키보드/풋터 위
-  const menuLeft = Math.max(
-    8,
-    Math.min(anchorX - (MENU_WIDTH - BTN_W), W - MENU_WIDTH - 8)
-  );
-  // + 버튼 바로 위로 살짝 띄워서
+  const anchorY = anchor?.y ?? H - 64;
+  const menuLeft = Math.max(8, Math.min(anchorX - (MENU_WIDTH - BTN_W), W - MENU_WIDTH - 8));
   const menuBottom = Math.max(72, H - (anchorY + (anchor?.h ?? 36)) + 8);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      {/* 바깥을 탭하면 닫힘 */}
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <View
-          style={[
-            styles.menu,
-            { left: menuLeft, bottom: menuBottom, width: MENU_WIDTH },
-          ]}
-        >
-          <MenuItem
-            label="사진 전송"
-            rightIcon="image-outline"
-            onPress={() => {
-              onClose();
-              onPickImage();
-            }}
-          />
-          <MenuItem
-            label="직거래 요청"
-            rightIcon="location-outline"
-            onPress={() => {
-              onClose();
-              onRequestMeetup();
-            }}
-          />
-          <MenuItem
-            label="택배 거래 요청"
-            rightIcon="cube-outline" // Ionicons에 트럭이 없어 cube로 대체(택배 느낌)
-            onPress={() => {
-              onClose();
-              onRequestDelivery();
-            }}
-          />
+        <View style={[styles.menu, { left: menuLeft, bottom: menuBottom, width: MENU_WIDTH }]}>
+          {actions.map((a, idx) => (
+            <MenuItem
+              key={idx}
+              label={a.label}
+              rightIcon={a.icon}
+              onPress={() => {
+                onClose();
+                a.onPress(); // 존재하는 핸들러만 호출
+              }}
+            />
+          ))}
         </View>
       </Pressable>
     </Modal>
@@ -93,16 +79,13 @@ function MenuItem({
   onPress,
 }: {
   label: string;
-  rightIcon: keyof typeof Ionicons.glyphMap | string;
+  rightIcon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
-    >
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}>
       <Text style={styles.itemLabel}>{label}</Text>
-      <Ionicons name={rightIcon as any} size={18} color="#111827" />
+      <Ionicons name={rightIcon} size={18} color="#111827" />
     </Pressable>
   );
 }
@@ -111,13 +94,9 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: "transparent" },
   menu: {
     position: "absolute",
-    backgroundColor: Platform.select({
-      ios: "rgba(255,255,255,0.94)",
-      android: "#FFFFFF",
-    }),
+    backgroundColor: Platform.select({ ios: "rgba(255,255,255,0.96)", android: "#FFFFFF" }),
     borderRadius: 16,
     paddingVertical: 6,
-    // shadow
     shadowColor: "#000",
     shadowOpacity: 0.18,
     shadowRadius: 16,

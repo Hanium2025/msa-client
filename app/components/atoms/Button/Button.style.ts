@@ -1,5 +1,11 @@
 import { StyleSheet, Platform} from "react-native";
 
+const COLOR = {
+  primary: "#0F5564",
+  white: "#FFFFFF",
+  shadow: "#0B3140",
+};
+
 export const styles = StyleSheet.create({
   // 공통 base
   baseButton: {
@@ -404,5 +410,33 @@ export const styles = StyleSheet.create({
     color: "#084C63", 
     fontSize: 15,
     fontWeight: "500",
+  },
+
+  paymentRetryButton: {
+    backgroundColor: COLOR.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 260,            // 스샷처럼 넉넉한 폭
+    alignSelf: "center",
+    shadowColor: COLOR.shadow,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  paymentRetryText: {
+    color: COLOR.white,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  paymentRetryPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
+  },
+  paymentRetryDisabled: {
+    opacity: 0.5,
   },
 });
