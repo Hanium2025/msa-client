@@ -19,6 +19,7 @@ export type ChatFooterProps = {
   maxLength?: number;
   onRequestMeetup?: () => void;
   onRequestDelivery?: () => void;
+   tradeComplete?: () => void; 
 
   /** 스타일 주입 props */
   containerStyle?: StyleProp<ViewStyle>;
@@ -35,12 +36,12 @@ export const ChatFooter = ({
   onPickImage,
   onRequestMeetup,
   onRequestDelivery,
-  maxLength,
+  tradeComplete,
   containerStyle,
   attachButtonStyle,
   sendButtonStyle,
   sendDisabledStyle,
-}: ChatFooterProps) => {
+maxLength, }: ChatFooterProps) => {
   const [text, setText] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState<{
@@ -61,7 +62,7 @@ export const ChatFooter = ({
   const disabledSend = disabled || sending || text.trim().length === 0;
 
   const hasAttachmentActions = Boolean(
-    onPickImage || onRequestMeetup || onRequestDelivery
+    onPickImage || onRequestMeetup || onRequestDelivery || tradeComplete
   );
 
   const openMenu = () => {
@@ -87,7 +88,7 @@ export const ChatFooter = ({
           ref={attachRef}
           style={attachButtonStyle}
           onPress={openMenu}
-          disabled={disabled || sending}
+          disabled={sending}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           activeOpacity={0.7}
         >
@@ -146,6 +147,7 @@ export const ChatFooter = ({
               }
             : undefined
         }
+         onTradeComplete={tradeComplete ? () => { closeMenu(); tradeComplete(); } : undefined} 
       />
     </View>
   );
