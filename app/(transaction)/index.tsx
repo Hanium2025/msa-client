@@ -77,7 +77,9 @@ export default function TransactionReviewScreen() {
   useEffect(() => {
     if (successMessage) {
       showAlert("완료", successMessage);
-      router.back(); // 필요 시 완료 화면으로 이동하도록 교체 가능
+      router.push({
+        pathname: "/(home)",
+      })
     }
   }, [successMessage, router]);
 
