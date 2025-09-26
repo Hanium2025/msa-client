@@ -28,3 +28,5 @@ export const tokenStore = {
     }
   },
 };
+
+export default tokenStore;

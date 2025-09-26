@@ -9,18 +9,19 @@ import {
   Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTempSavePayment } from "../../hooks/useTempSavePayment";
+import { useVerifyPayment } from "../../hooks/useVerifyPayment";
 
 type Props = {
-  amount?: number;              
-  customerKey?: string;         
-  orderId?: string;             
-  orderName?: string;           
-  successUrl?: string;          
-  failUrl?: string;            
+  amount?: number;               // 결제 금액(원)
+  customerKey?: string;          // 고객 식별자
+  orderId?: string;              // 주문번호(없으면 내부에서 생성하여 고정)
+  orderName?: string;            // 주문명
+  successUrl?: string;           // 결제 성공 리다이렉트 URL
+  failUrl?: string;              // 결제 실패/취소 리다이렉트 URL
 };
 
 const PRIMARY = "#0F5965";
-
 
 export default function PaymentWidget({
   amount = 50_000,
@@ -30,13 +31,27 @@ export default function PaymentWidget({
   successUrl = process.env.EXPO_PUBLIC_TOSS_SUCCESS_URL ?? `${location.origin}/payments/success`,
   failUrl = process.env.EXPO_PUBLIC_TOSS_FAIL_URL ?? `${location.origin}/payments/fail`,
 }: Props) {
+  // 웹이 아니면 렌더하지 않음
+  if (Platform.OS !== "web") return null;
 
   const insets = useSafeAreaInsets();
   const safeBottom = (insets?.bottom ?? 0) + 8;
 
-  if (Platform.OS !== "web") return null;
-
   const clientKey = process.env.EXPO_PUBLIC_TOSS_CLIENT_KEY;
+
+  // ✅ API 베이스 URL (여러 키 지원)
+  const apiBaseUrl =
+    process.env.EXPO_PUBLIC_API_BASE_URL ??
+    process.env.EXPO_PUBLIC_API_URL ??
+    process.env.EXPO_PUBLIC_API_BASE;
+
+  // ✅ 임시 저장 / 검증 훅
+  const { mutateAsync: tempSave, loading: saving } = useTempSavePayment({ baseUrl: apiBaseUrl });
+  const { mutateAsync: verify, loading: verifying } = useVerifyPayment({ baseUrl: apiBaseUrl });
+
+  // ✅ orderId는 최초 한 번만 생성/고정
+  const orderRef = useRef<string>(orderId ?? `ORDER-${Date.now()}`);
+
   const methodsId = "toss-payment-methods";
   const agreementId = "toss-payment-agreement";
 
@@ -46,24 +61,31 @@ export default function PaymentWidget({
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // 최초 로딩: 위젯 로드 + 렌더
   useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
-        if (!clientKey) {
-          throw new Error("EXPO_PUBLIC_TOSS_CLIENT_KEY 가 설정되지 않았습니다.");
-        }
+        if (!clientKey) throw new Error("EXPO_PUBLIC_TOSS_CLIENT_KEY 가 설정되지 않았습니다.");
 
-        // 웹 SDK 동적 로드
         const { loadPaymentWidget } = await import("@tosspayments/payment-widget-sdk");
+
+        // ✅ DOM이 실제로 붙은 다음 실행(한 프레임 대기)
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+        // ✅ RN Web에서 id가 보장되도록 강제로 DOM id도 지정해두는 게 안전
+        const methodsEl = document.querySelector(`#${methodsId}`);
+        const agreementEl = document.querySelector(`#${agreementId}`);
+        if (!methodsEl || !agreementEl) {
+          throw new Error("결제 컨테이너 DOM(#toss-payment-*)를 찾지 못했습니다.");
+        }
 
         const pw = await loadPaymentWidget(clientKey, customerKey);
         if (!mounted) return;
 
         paymentWidgetRef.current = pw;
 
-        // 결제수단/약관 위젯 렌더
         const pm = await pw.renderPaymentMethods(
           `#${methodsId}`,
           { value: amount },
@@ -86,7 +108,23 @@ export default function PaymentWidget({
     return () => {
       mounted = false;
     };
+    // clientKey / customerKey 변경 시만 재로딩
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientKey, customerKey]);
+
+  // 금액 변경 시 위젯 금액 업데이트 (updateAmount가 Promise 아닐 수 있어 안전 처리)
+  useEffect(() => {
+    if (!pmControl) return;
+    try {
+      const ret = pmControl.updateAmount(amount);
+      if (ret && typeof (ret as any).catch === "function") {
+        (ret as any).catch((e: any) => console.warn("updateAmount error:", e));
+      }
+      // 또는: Promise.resolve(ret).catch(...)
+    } catch (e) {
+      console.warn("updateAmount threw:", e);
+    }
+  }, [amount, pmControl]);
 
   const handleRequestPay = async () => {
     try {
@@ -94,24 +132,35 @@ export default function PaymentWidget({
         Alert.alert("주문 정보가 초기화되지 않았습니다.");
         return;
       }
+
       const agreement = await agControl.getAgreementStatus();
       if (!agreement?.agreedRequiredTerms) {
         Alert.alert("약관에 동의하지 않았습니다.");
         return;
       }
 
+      const resolvedOrderId = orderRef.current;     // ✅ temp-save/verify 동일 값 사용
+      const amt = Number(amount ?? 0);              // ✅ 숫자 보장
+
+      // 1) 임시 저장
+      await tempSave({ orderId: resolvedOrderId, amount: amt });
+
+      // 2) 검증
+      await verify({ orderId: resolvedOrderId, amount: amt });
+
+      // 3) 결제 요청
       await paymentWidgetRef.current.requestPayment({
-        orderId: orderId ?? `ORDER-${Date.now()}`,
+        orderId: resolvedOrderId,
         orderName,
         successUrl,
         failUrl,
       });
-    } catch (err: any) {
-      console.error(err);
-      Alert.alert("결제 요청 실패", String(err?.message ?? err));
+    } catch (e: any) {
+      Alert.alert("결제 요청 실패", String(e?.message ?? e));
     }
   };
 
+  // (옵션) 디버깅용
   const handleShowSelected = async () => {
     if (!pmControl) {
       Alert.alert("주문 정보가 초기화되지 않았습니다.");
@@ -119,15 +168,6 @@ export default function PaymentWidget({
     }
     const selected = await pmControl.getSelectedPaymentMethod();
     Alert.alert(`선택된 결제수단: ${JSON.stringify(selected)}`);
-  };
-
-  const handleUpdateAmount = async () => {
-    if (!pmControl) {
-      Alert.alert("주문 정보가 초기화되지 않았습니다.");
-      return;
-    }
-    await pmControl.updateAmount(100_000);
-    Alert.alert("결제 금액이 100000원으로 변경되었습니다.");
   };
 
   return (
@@ -138,22 +178,32 @@ export default function PaymentWidget({
         </View>
       )}
 
-      <View nativeID={methodsId} style={styles.methods} />
-      <View nativeID={agreementId} style={styles.agreement} />
+      {/* ✅ DOM id와 nativeID를 모두 지정 */}
+      {/* @ts-ignore */}
+      <View id={methodsId} nativeID={methodsId} style={styles.methods} />
+      {/* @ts-ignore */}
+      <View id={agreementId} nativeID={agreementId} style={styles.agreement} />
 
       <View style={[styles.footer, { paddingBottom: safeBottom }]}>
         <Pressable
           onPress={handleRequestPay}
-          disabled={!ready}
+          disabled={!ready || saving || verifying}
           style={({ pressed }) => [
             styles.primaryBtn,
-            !ready && { opacity: 0.5 },
+            (!ready || saving || verifying) && { opacity: 0.5 },
             pressed && { transform: [{ translateY: 1 }] },
           ]}
         >
-          <Text style={styles.primaryText}>결제하기</Text>
+          {saving || verifying ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.primaryText}>결제하기</Text>
+          )}
         </Pressable>
       </View>
+
+      {/* 하단 잘림 방지용 스페이서 */}
+      <View style={{ height: 12 }} />
     </View>
   );
 }
@@ -164,19 +214,19 @@ const styles = StyleSheet.create({
   methods: {
     minHeight: 420,
     width: "100%",
-    position: "relative", 
+    position: "relative",
     zIndex: 1,
   },
   agreement: {
-    //minHeight: 140,
     width: "100%",
     marginTop: 16,
     position: "relative",
-    zIndex: 1, 
+    zIndex: 1,
   },
   footer: {
-    position: "relative", 
-    zIndex: 10, 
+    position: "relative",
+    zIndex: 10,
+    marginTop: 12,
   },
   primaryBtn: {
     height: 56,

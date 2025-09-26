@@ -1,19 +1,22 @@
-import React, { useState } from "react";
+// app/(payment)/index.tsx
+import React, { useState, useMemo } from "react";
 import {
   SafeAreaView,
   ScrollView,
   StatusBar,
   View,
-  Text,
   Alert,
   Platform,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import ShippingInfo from "../components/organisms/ShippingInfo";
 import OrderInfo from "../components/molecules/OrderInfo";
 import PaymentWidget from "../components/organisms/PaymentWidget";
+import { useProductDetail } from "../hooks/useProductDetail"; 
 
-const PHONE_WIDTH = 390; // iPhone width
+type Option = "existing" | "new";
 
 const showAlert = (title: string, message?: string) => {
   const text = [title, message].filter(Boolean).join("\n");
@@ -21,45 +24,82 @@ const showAlert = (title: string, message?: string) => {
   else Alert.alert(title, message);
 };
 
-type Option = "existing" | "new";
-
 export default function PaymentScreen() {
   const [shippingTab, setShippingTab] = useState<Option>("existing");
-  return (
-    <SafeAreaView
-      style={{ width: 393, alignSelf: "center", marginVertical: 20 }}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.shippingInfo}>
-          <ShippingInfo onTabChange={setShippingTab} />
+
+  // URL 예: /(payment)?productId=123
+  const { productId: pid } = useLocalSearchParams<{ productId?: string }>();
+  const productId = useMemo(() => (pid ? Number(pid) : NaN), [pid]);
+
+  const { data: product, isLoading, error } = useProductDetail(productId);
+  const [amount, setAmount] = useState(0); // OrderInfo에서 총액을 올려줌
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+          <ActivityIndicator />
         </View>
-        {shippingTab === "existing" && (
-          <>
-            <OrderInfo />
-            <PaymentWidget />
-          </>
-        )}
-      </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={[styles.container, { justifyContent: "center", padding: 24 }]}>
+          {showAlert("상품을 불러오지 못했습니다.", error?.message)}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.shippingInfo}>
+            <ShippingInfo onTabChange={setShippingTab} />
+          </View>
+
+          {shippingTab === "existing" && (
+            <>
+              <OrderInfo
+                title={product.title}
+                price={product.price}
+                shippingFee={0} // 서버에 배송비 있으면 넣어줘
+                image={
+                  product.images?.[0]?.imageUrl
+                    ? { uri: product.images[0].imageUrl }
+                    : undefined
+                }
+                sellerNickname={product.sellerNickname ?? ""}
+                onAmountChange={setAmount} // 총액을 PaymentWidget으로 전달
+              />
+
+              <PaymentWidget amount={amount} orderName={product.title} />
+            </>
+          )}
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, width: "100%", maxWidth: 393, alignSelf: "center" },
+  scroll: { flex: 1 },
   content: {
-    display: "flex",
-    width: 380,
-    height: 900,
-    flexDirection: "column",
     alignItems: "center",
+    paddingTop: 40,
+    paddingBottom: 180, // 버튼(56) + 여유
     gap: 40,
-    flexShrink: 0,
-    //marginTop: 40,
   },
-  shippingInfo: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 30,
-  },
+  shippingInfo: { alignItems: "center", width: "100%", gap: 30 },
 });
