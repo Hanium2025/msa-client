@@ -14,6 +14,7 @@ export type ApiResponse<T = unknown> = {
 export type TradeStatus = {
   tradeId?: number | null;
   status: string; 
+  productId?: number | null;
 }
 
 //직거래 요청: 성공 시 상대방(판매자) ID가 data로 옴
@@ -40,7 +41,7 @@ export async function acceptDirectTrade(chatroomId: number, token: string) {
 
 //거래 진행 상태 조회
 export async function getTradeStatus(chatroomId: number, token:string){
-  const res = await api.get<ApiResponse<{ tradeId: number | null; status: string }>>(`/trade/status/chatroom/${chatroomId}`,
+  const res = await api.get<ApiResponse<TradeStatus>>(`/trade/status/chatroom/${chatroomId}`,
     {headers: {Authorization: `Bearer ${token}`}}
   );
   return res.data.data; 

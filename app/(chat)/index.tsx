@@ -172,6 +172,7 @@ const isSeller =
 
 
 const [tradeId, setTradeId] = useState<number | null>(null);
+const [productId, setProductId] = useState<number | null>(null);
 //확인하기를 눌렀을 때 모달 열기
 const openAcceptModal = useCallback((kind: NoticeKind) => {
   setConfirm({ visible: true, kind, loading: false });
@@ -188,8 +189,10 @@ const [tradeComplete, setTradeComplete] = useState(false);
 const fetchTradeStatus = useCallback(async () => {
   if (!roomId || !wsToken) return; // 준비 안 됐으면 스킵
   try {
-   const { tradeId, status } = await getTradeStatus(roomId, wsToken);
+   const { tradeId, status, productId: pid } = await getTradeStatus(roomId, wsToken);
  if (tradeId != null) setTradeId(tradeId); 
+if (pid != null) setProductId(pid);
+
    const s = String(status).trim().toUpperCase();
    setTradeComplete(s === "ACCEPTED" || s === "PAID" || s === "COMPLETED");
   } catch (e: any) {
@@ -808,6 +811,7 @@ const goToPayment = useCallback(() => {
     params: {
       chatroomId: String(roomId ?? ""),
       tradeId: tradeId ? String(tradeId) : "", // 아직 없을 수 있어도 OK
+      productId: productId ? String(productId) : "",
     },
   });
 }, [router, amIBuyer, roomId, tradeId]);
