@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   SafeAreaView,
   View,
@@ -25,6 +25,34 @@ const showAlert = (title: string, message?: string) => {
 export default function TransactionReviewScreen() {
   const router = useRouter();
   const { tradeId } = useLocalSearchParams<{ tradeId?: string }>();
+
+  // 상세 페이지에서 넘겨준 값들: productId, productTitle, sellerName
+  const params = useLocalSearchParams<{
+    productId?: string | string[];
+    productTitle?: string | string[];
+    sellerName?: string | string[];
+  }>();
+
+  const productId = useMemo(() => {
+    const raw = Array.isArray(params.productId)
+      ? params.productId[0]
+      : params.productId;
+    return raw ? String(raw) : "";
+  }, [params.productId]);
+
+  const productTitle = useMemo(() => {
+    const raw = Array.isArray(params.productTitle)
+      ? params.productTitle[0]
+      : params.productTitle;
+    return (raw ?? "").toString().trim();
+  }, [params.productTitle]);
+
+  const sellerName = useMemo(() => {
+    const raw = Array.isArray(params.sellerName)
+      ? params.sellerName[0]
+      : params.sellerName;
+    return (raw ?? "").toString().trim();
+  }, [params.sellerName]);
 
   // 별점/상세평가 로컬 상태
   const [rating, setRating] = useState<number>(0);
@@ -77,7 +105,7 @@ export default function TransactionReviewScreen() {
   useEffect(() => {
     if (successMessage) {
       showAlert("완료", successMessage);
-      router.back(); // 필요 시 완료 화면으로 이동하도록 교체 가능
+      router.replace("/(home)"); // 필요 시 완료 화면으로 이동하도록 교체 가능
     }
   }, [successMessage, router]);
 
@@ -102,6 +130,8 @@ export default function TransactionReviewScreen() {
             onChangeRating={setRating}
             detail={detail}
             onChangeDetail={setDetail}
+            productName={productTitle}
+            seller={sellerName}
           />
         </View>
 

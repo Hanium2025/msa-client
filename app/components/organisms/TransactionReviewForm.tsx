@@ -103,24 +103,29 @@ export const TransactionReviewForm: React.FC<Props> = ({
   const sellerValue = seller ?? sellerLocal;
   const detailValue = detail ?? detailLocal;
 
+  const ReadonlyRow = ({ label, value }: { label: string; value: string }) => (
+    <View style={s.row}>
+      <Text style={s.label}>{label}</Text>
+      <Text style={{ fontSize: 14, color: "#084C63", fontWeight: "600" }}>
+        {value || "-"}
+      </Text>
+    </View>
+  );
+
   return (
     <View style={s.container}>
       {/* 거래 상품 / 상대방 */}
-      <ReportInfoRow
-        label="거래 상품"
-        value={productValue}
-        onChangeText={handleChangeProduct}
-        placeholder="상품명 가나다"
-        textColor="#084C63"
-      />
-      <ReportInfoRow
-        label="상대방"
-        value={sellerValue}
-        onChangeText={handleChangeSeller}
-        placeholder="홍길동"
-        textColor="#084C63"
-      />
+      {onChangeProductName ? (
+        <ReportInfoRow label="거래 상품" value={productValue} />
+      ) : (
+        <ReadonlyRow label="거래 상품" value={productValue} />
+      )}
 
+      {onChangeSeller ? (
+        <ReportInfoRow label="상대방" value={sellerValue} />
+      ) : (
+        <ReadonlyRow label="상대방" value={sellerValue} />
+      )}
       {/* 별점 (개별 토글) */}
       <View style={s.row}>
         <Text style={s.label}>별점</Text>

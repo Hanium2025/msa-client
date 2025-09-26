@@ -31,22 +31,31 @@ import ConfirmModal from "../components/molecules/Modal/index";
 import {getTradeStatus,completeTrade} from "../lib/api/trade";
 
 
-// ---------- DEV/PROD 주소 유틸 ----------
-function resolveDevHost() {
-  const envHost = process.env.EXPO_PUBLIC_DEV_HOST?.trim();
-  if (envHost) return envHost;
+function buildWsBase() {
+  // 1) .env가 있으면 그것을 최우선 (명확함이 최고)
+  const fromEnv = process.env.EXPO_PUBLIC_WS_BASE?.trim();
+  if (fromEnv) return fromEnv;
 
-  if (Platform.OS === "android") return "10.0.2.2"; // Android 에뮬레이터
-  if (Platform.OS === "ios") return "localhost";    // iOS 시뮬레이터
-  return "localhost";
+  // 2) 웹(브라우저)은 현재 페이지의 프로토콜/호스트/포트를 따라감
+  //    이렇게 하면 172.30.x.x 같은 WSL 가상 IP로 새는 걸 차단
+  if (Platform.OS === "web") {
+    const scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const host = window.location.hostname; // localhost나 192.168.x.x 등
+    const port = "8000";                   // 네 서버 포트
+    return `${scheme}://${host}:${port}/ws/chat`;
+  }
+
+  // 3) 네이티브(실기기/에뮬레이터)는 LAN IP나 특수 호스트 써야 함
+  const host =
+    process.env.EXPO_PUBLIC_DEV_HOST?.trim()
+      || (Platform.OS === "android" ? "10.0.2.2" : "localhost");
+  const port = "8000";
+  return `ws://${host}:${port}/ws/chat`;
 }
 
-// 환경변수 최우선 → 없으면 dev/prod 분기
-const WS_BASE =
-  process.env.EXPO_PUBLIC_WS_BASE?.trim()
-    ?? (__DEV__
-        ? `ws://${resolveDevHost()}:8000/ws/chat`
-        : `wss://api.haniumpicky.click/wss/chat`);
+export const WS_BASE = __DEV__
+  ? buildWsBase()  // 개발 모드: 자동 계산
+  : (process.env.EXPO_PUBLIC_WS_BASE?.trim() || "wss://api.haniumpicky.click/wss/chat"); // 운영
 
 // 안정성 설정
 const PING_INTERVAL_MS = 30000; // 30초마다 ping
@@ -163,6 +172,7 @@ const isSeller =
 
 
 const [tradeId, setTradeId] = useState<number | null>(null);
+const [productId, setProductId] = useState<number | null>(null);
 //확인하기를 눌렀을 때 모달 열기
 const openAcceptModal = useCallback((kind: NoticeKind) => {
   setConfirm({ visible: true, kind, loading: false });
@@ -179,9 +189,12 @@ const [tradeComplete, setTradeComplete] = useState(false);
 const fetchTradeStatus = useCallback(async () => {
   if (!roomId || !wsToken) return; // 준비 안 됐으면 스킵
   try {
-    const raw = await getTradeStatus(roomId, wsToken); // { data: "ACCEPTED" } 가정
-    const status = String(raw).trim().toUpperCase();
-    setTradeComplete(status === "ACCEPTED" || status === "PAID");
+   const { tradeId, status, productId: pid } = await getTradeStatus(roomId, wsToken);
+ if (tradeId != null) setTradeId(tradeId); 
+if (pid != null) setProductId(pid);
+
+   const s = String(status).trim().toUpperCase();
+   setTradeComplete(s === "ACCEPTED" || s === "PAID" || s === "COMPLETED");
   } catch (e: any) {
     if (e?.name !== "CanceledError" && e?.message !== "canceled") {
       console.warn("[trade-status] fetch failed:", e);
@@ -424,8 +437,11 @@ const handleConfirmAccept = useCallback(async () => {
     const connect = () => {
       setWsReady("connecting");
       const url = `${WS_BASE}?token=${encodeURIComponent(wsToken)}&roomId=${roomId}`;
+      
       const ws = new WebSocket(url);
       wsRef.current = ws;
+console.log("[WS_BASE]", WS_BASE);
+console.log("[WS URL]", url, { protocol: Platform.OS === "web" ? window.location.protocol : "native" });
 
       ws.onopen = () => {
         if (!alive) return;
@@ -779,10 +795,10 @@ const handleTradeComplete = useCallback(async () => {
     return;
   }
   router.push({
-    pathname: "/(review)", // 프로젝트 라우트에 맞게 변경
-    params: { tradeId: String(tradeId), chatroomId: String(roomId ?? "") },
+    pathname: "/(transaction)", // 프로젝트 라우트에 맞게 변경
+    params: { tradeId: String(tradeId) },
   });
-}, [tradeId, roomId, router]);
+}, [tradeId, router]);
 
 // 결제하러 가기
 const goToPayment = useCallback(() => {
@@ -795,6 +811,7 @@ const goToPayment = useCallback(() => {
     params: {
       chatroomId: String(roomId ?? ""),
       tradeId: tradeId ? String(tradeId) : "", // 아직 없을 수 있어도 OK
+      productId: productId ? String(productId) : "",
     },
   });
 }, [router, amIBuyer, roomId, tradeId]);

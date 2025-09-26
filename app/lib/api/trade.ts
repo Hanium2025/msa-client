@@ -1,6 +1,21 @@
 import {api} from "../api";
 
-type ApiResponse<T> = {code: number; message:string; data:T};
+export type SubmitTradeReviewRequest = {
+  rating: number;
+  comment: string;
+};
+
+export type ApiResponse<T = unknown> = {
+  code: number;
+  message: string;
+  data?: T;
+};
+
+export type TradeStatus = {
+  tradeId?: number | null;
+  status: string; 
+  productId?: number | null;
+}
 
 //직거래 요청: 성공 시 상대방(판매자) ID가 data로 옴
 export async function requestDirectTrade(chatroomId: number, token: string){
@@ -26,10 +41,10 @@ export async function acceptDirectTrade(chatroomId: number, token: string) {
 
 //거래 진행 상태 조회
 export async function getTradeStatus(chatroomId: number, token:string){
-  const res = await api.get<ApiResponse<String>>(`/trade/status/chatroom/${chatroomId}`,
+  const res = await api.get<ApiResponse<TradeStatus>>(`/trade/status/chatroom/${chatroomId}`,
     {headers: {Authorization: `Bearer ${token}`}}
   );
-  return String(res.data?.data ??"")
+  return res.data.data; 
 }
 
 //거래 완료 
@@ -56,4 +71,13 @@ export async function acceptParcelTrade(chatroomId: number, token: string) {
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return res.data.message ?? "택배 거래 요청을 수락했어요.";
+}
+
+export async function submitTradeReview(
+  tradeId: number | string,
+  payload: SubmitTradeReviewRequest
+): Promise<ApiResponse> {
+  // 여기서 Authorization 헤더는 전역 axios(api)에서 이미 세팅됨
+  const res = await api.post<ApiResponse>(`/trade/review/${tradeId}`, payload);
+  return res.data;
 }
