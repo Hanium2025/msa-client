@@ -72,7 +72,7 @@ export default function PaymentScreen() {
               <OrderInfo
                 title={product.title}
                 price={product.price}
-                shippingFee={0} // 서버에 배송비 있으면 넣어줘
+                shippingFee={0} 
                 image={
                   product.images?.[0]?.imageUrl
                     ? { uri: product.images[0].imageUrl }
