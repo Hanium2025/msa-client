@@ -1,15 +1,8 @@
-import React from "react";
-import {
-  FlatList,
-  View,
-  Image,
-  Text,
-  Pressable,
-  StyleSheet,
-  ListRenderItemInfo,
-} from "react-native";
+import React, { useMemo } from "react";
+import { FlatList, View, StyleSheet, ListRenderItemInfo } from "react-native";
+import { TradeProductCard } from "../molecules/TradeProductCard";
 
-export type TradeProduct = {
+export type TradeItem = {
   id: number;
   title: string;
   price: number | string;
@@ -17,73 +10,47 @@ export type TradeProduct = {
 };
 
 type Props = {
-  items: TradeProduct[];
+  items: TradeItem[];
   onPressItem?: (id: number) => void;
   onEndReached?: () => void;
-  ListFooterComponent?: React.ReactNode;
+  ListFooterComponent?: React.ReactElement | null;
 };
 
-export function TradeProductsGrid({
+export const TradeProductsGrid: React.FC<Props> = ({
   items,
   onPressItem,
   onEndReached,
   ListFooterComponent,
-}: Props) {
-  const renderItem = ({ item }: ListRenderItemInfo<TradeProduct>) => (
-    <Pressable onPress={() => onPressItem?.(item.id)} style={s.card}>
-      <View style={s.thumb}>
-        {item.imageUrl ? (
-          <Image source={{ uri: item.imageUrl }} style={s.img} />
-        ) : (
-          <View style={s.imgPlaceholder} />
-        )}
-      </View>
-      <View style={s.meta}>
-        <Text numberOfLines={1} style={s.title}>
-          {item.title}
-        </Text>
-        <Text style={s.price}>
-          {typeof item.price === "number"
-            ? item.price.toLocaleString() + "원"
-            : item.price}
-        </Text>
-      </View>
-    </Pressable>
+}) => {
+  const data = useMemo(() => items, [items]);
+
+  const renderItem = ({ item }: ListRenderItemInfo<TradeItem>) => (
+    <View style={s.itemWrap}>
+      <TradeProductCard item={item} onPress={onPressItem} />
+    </View>
   );
 
   return (
-    <FlatList
-      data={items}
-      keyExtractor={(it) => String(it.id)}
-      renderItem={renderItem}
-      numColumns={2}
-      columnWrapperStyle={{ gap: 12 }}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, gap: 12 }}
-      onEndReachedThreshold={0.3}
-      onEndReached={onEndReached}
-      ListFooterComponent={ListFooterComponent}
-      showsVerticalScrollIndicator={false}
-    />
+    <View style={s.container}>
+      <FlatList
+        data={data}
+        keyExtractor={(it) => String(it.id)}
+        numColumns={2}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={s.content}
+        columnWrapperStyle={s.row}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.6}
+        ListFooterComponent={ListFooterComponent}
+      />
+    </View>
   );
-}
+};
 
 const s = StyleSheet.create({
-  card: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-    height: 164,
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  thumb: { height: 96, backgroundColor: "#F1F2F4" },
-  img: { width: "100%", height: "100%" },
-  imgPlaceholder: { flex: 1, backgroundColor: "#E9EBEF" },
-  meta: { paddingHorizontal: 10, paddingVertical: 8, gap: 2 },
-  title: { fontSize: 13, fontWeight: "500" },
-  price: { fontSize: 13, fontWeight: "700" },
+  container: { flex: 1 },
+  content: { paddingHorizontal: 12, paddingBottom: 24 },
+  row: { justifyContent: "space-between", marginBottom: 16 },
+  itemWrap: { width: "48%" },
 });
