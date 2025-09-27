@@ -13,6 +13,7 @@ import Button from "../components/atoms/Button";
 import { TransactionReviewForm } from "../components/organisms/TransactionReviewForm";
 import { ConfirmModal } from "../components/molecules/Modal";
 import { useTradeReview } from "../hooks/useTradeReview";
+import { getReviewContext } from "../lib/api/trade";
 
 const PHONE_WIDTH = 390;
 
@@ -53,6 +54,22 @@ export default function TransactionReviewScreen() {
       : params.sellerName;
     return (raw ?? "").toString().trim();
   }, [params.sellerName]);
+
+  const [resolvedProductTitle, setResolvedProductTitle] =
+    useState(productTitle);
+  const [resolvedSellerName, setResolvedSellerName] = useState(sellerName);
+
+  useEffect(() => {
+    if (tradeId && (!productTitle || !sellerName)) {
+      getReviewContext(tradeId)
+        .then((ctx) => {
+          // 서버 응답 ctx: { nickname, title }
+          setResolvedProductTitle(ctx.title); // 상품명
+          setResolvedSellerName(ctx.nickname); // 판매자 닉네임
+        })
+        .catch((e) => showAlert("오류", e.message));
+    }
+  }, [tradeId, productTitle, sellerName]);
 
   // 별점/상세평가 로컬 상태
   const [rating, setRating] = useState<number>(0);
@@ -130,8 +147,8 @@ export default function TransactionReviewScreen() {
             onChangeRating={setRating}
             detail={detail}
             onChangeDetail={setDetail}
-            productName={productTitle}
-            seller={sellerName}
+            productName={resolvedProductTitle}
+            seller={resolvedSellerName}
           />
         </View>
 

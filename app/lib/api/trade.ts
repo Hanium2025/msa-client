@@ -1,5 +1,6 @@
-import {api} from "../api";
+import { api } from "../api";
 
+// 거래 평가
 export type SubmitTradeReviewRequest = {
   rating: number;
   comment: string;
@@ -13,20 +14,38 @@ export type ApiResponse<T = unknown> = {
 
 export type TradeStatus = {
   tradeId?: number | null;
-  status: string; 
+  status: string;
   productId?: number | null;
+};
+
+export type ReviewContext = {
+  productId: number;
+  title: string;
+  nickname: string;
+};
+
+export async function getReviewContext(tradeId: number | string) {
+  const id = Number(tradeId);
+  if (!Number.isFinite(id)) throw new Error("유효하지 않은 tradeId");
+
+  const res = await api.get<ApiResponse<ReviewContext>>(
+    `/trade/review/${tradeId}`
+  );
+  if (!res.data || res.data.code >= 400 || !res.data.data) {
+    throw new Error(res.data?.message ?? "리뷰 정보 조회에 실패했습니다.");
+  }
+  return res.data.data;
 }
 
 //직거래 요청: 성공 시 상대방(판매자) ID가 data로 옴
-export async function requestDirectTrade(chatroomId: number, token: string){
-    const res = await api.post<ApiResponse<number>>(
-        `/trade/direct-request/chatroom/${chatroomId}`,
-        {},
-        {headers: {Authorization: `Bearer ${token}`}}
-
-    );
-    //data = sellerId
-    return {sellerId: res.data.data, message: res.data.message};
+export async function requestDirectTrade(chatroomId: number, token: string) {
+  const res = await api.post<ApiResponse<number>>(
+    `/trade/direct-request/chatroom/${chatroomId}`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  //data = sellerId
+  return { sellerId: res.data.data, message: res.data.message };
 }
 
 //직거래 수락/거절(판매자 전용)
@@ -36,23 +55,25 @@ export async function acceptDirectTrade(chatroomId: number, token: string) {
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
-   return {buyerId: res.data.data, message: res.data.message};
+  return { buyerId: res.data.data, message: res.data.message };
 }
 
 //거래 진행 상태 조회
-export async function getTradeStatus(chatroomId: number, token:string){
-  const res = await api.get<ApiResponse<TradeStatus>>(`/trade/status/chatroom/${chatroomId}`,
-    {headers: {Authorization: `Bearer ${token}`}}
+export async function getTradeStatus(chatroomId: number, token: string) {
+  const res = await api.get<ApiResponse<TradeStatus>>(
+    `/trade/status/chatroom/${chatroomId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
   );
-  return res.data.data; 
+  return res.data.data;
 }
 
-//거래 완료 
-export async function completeTrade(chatroomId: number, token:string){
-  const res = await api.post<ApiResponse<number>>(`/trade/complete/chatroom/${chatroomId}`,
-    {headers : {Authorization: `Bearer ${token}`}}
-  )
-  return res.data?.data ??""
+//거래 완료
+export async function completeTrade(chatroomId: number, token: string) {
+  const res = await api.post<ApiResponse<number>>(
+    `/trade/complete/chatroom/${chatroomId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data?.data ?? "";
 }
 //택배 거래 요청
 export async function requestParcelTrade(chatroomId: number, token: string) {
