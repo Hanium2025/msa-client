@@ -25,7 +25,7 @@ export default function SettingsToggleRow({
       right={
         <Switch
           value={value}
-          onValueChange={onValueChange}
+          onValueChange={(v) => onValueChange?.(v)}
           trackColor={{ false: "#FFF", true: "#C1F209" }}
           thumbColor={Platform.OS === "android" ? "#FFF" : undefined}
           ios_backgroundColor="#FFF"

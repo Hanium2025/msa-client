@@ -6,40 +6,36 @@ import {
   Text,
   StyleSheet,
   Platform,
+  Alert,
   Image,
 } from "react-native";
+import { router } from "expo-router";
 import ProfileCard from "../components/molecules/ProfileCard";
 import MyPageSections from "../components/organisms/MyPageSections";
+import { useMyPage } from "../hooks/useMypage";
+import { logout as apiLogout } from "../lib/api/user";
 
 const PHONE_WIDTH = 390;
 
 export default function MyPageScreen() {
-  // 실제 데이터는 API로 교체
-  const [marketingAgree, setMarketingAgree] = useState(true);
-  const [thirdAgree, setThirdAgree] = useState(true);
+  const {
+    profile,
+    loading,
+    error,
+    setMarketingAgree,
+    setThirdPartyAgree,
+    deleteAccount,
+  } = useMyPage();
 
-  const handlers = {
-    trade: {
-      onPressSales: () => {},
-      onPressPurchases: () => {},
-      onPressFavorites: () => {},
-    },
-    community: {
-      onPressMyPosts: () => {},
-      onPressMyComments: () => {},
-      onPressMyLikes: () => {},
-    },
-    account: {
-      onPressChangePassword: () => {},
-      onPressEditProfile: () => {},
-      onPressLogout: () => {},
-      onPressDeleteAccount: () => {},
-      marketingAgree,
-      onToggleMarketing: setMarketingAgree,
-      thirdPartyAgree: thirdAgree,
-      onToggleThirdParty: setThirdAgree,
-    },
-  };
+  // 에러 안내(있으면 한 번만)
+  if (error) {
+    Alert.alert("오류", error);
+  }
+
+  const name = profile?.nickname ?? "";
+  const categories = profile?.mainCategory ?? [];
+  const trust = profile?.score ?? 0;
+  const avatar = profile?.imageUrl;
 
   return (
     <SafeAreaView style={s.phoneFrame}>
@@ -53,19 +49,77 @@ export default function MyPageScreen() {
 
         <View style={s.cardWrap}>
           <ProfileCard
-            name="홍길동"
-            mainCategories={["수면·안전", "놀이·교육"]}
-            trustScore={70}
-            avatarSource={require("../../assets/images/default-avatar.png")}
+            name={profile?.nickname ?? ""}
+            mainCategories={profile?.mainCategory ?? []}
+            trustScore={profile?.score ?? 0}
+            avatarSource={
+              profile?.imageUrl ||
+              require("../../assets/images/default-avatar.png")
+            }
             onPressProfile={() => {}}
           />
         </View>
 
         <View style={s.sectionsWrap}>
           <MyPageSections
-            tradeHandlers={handlers.trade}
-            communityHandlers={handlers.community}
-            accountHandlers={handlers.account}
+            tradeHandlers={{
+              onPressSales: () => router.push("/(history)/sales"),
+              onPressPurchases: () => router.push("/(history)/purchases"),
+              onPressFavorites: () => router.push("/(favorites)"),
+            }}
+            communityHandlers={{
+              onPressMyPosts: () => router.push("/(community)/my-posts"),
+              onPressMyComments: () => router.push("/(community)/my-comments"),
+              onPressMyLikes: () => router.push("/(community)/my-likes"),
+            }}
+            accountHandlers={{
+              onPressChangePassword: () =>
+                router.push("/(profile)/change-password"),
+              onPressEditProfile: () => router.push("/(profile)/edit"),
+
+              // 로그아웃 → 토큰 정리 후 로그인 화면으로
+              onPressLogout: async () => {
+                try {
+                  await apiLogout();
+                } finally {
+                  router.replace("/(login)");
+                }
+              },
+
+              // 탈퇴 → 훅의 deleteAccount 실행 후 로그인 화면으로
+              onPressDeleteAccount: async () => {
+                try {
+                  await deleteAccount();
+                  Alert.alert("탈퇴 완료", "회원 탈퇴가 완료되었습니다.");
+                  router.replace("/(login)");
+                } catch (e: any) {
+                  Alert.alert(
+                    "오류",
+                    e?.response?.data?.message ??
+                      e?.message ??
+                      "회원 탈퇴 처리 중 오류가 발생했습니다."
+                  );
+                }
+              },
+
+              // 스위치 값/토글
+              marketingAgree: !!profile?.agreeMarketing,
+              onToggleMarketing: async (v) => {
+                try {
+                  await setMarketingAgree(v);
+                } catch (e: any) {
+                  /* Alert로 에러 표출 추천 */
+                }
+              },
+              thirdPartyAgree: !!profile?.agree3rdParty,
+              onToggleThirdParty: async (v) => {
+                try {
+                  await setThirdPartyAgree(v);
+                } catch (e: any) {
+                  /* 표출 */
+                }
+              },
+            }}
           />
         </View>
       </ScrollView>

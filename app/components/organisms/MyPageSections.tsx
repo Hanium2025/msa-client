@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { SectionTitle } from "../atoms/MyPageSectionTitle";
 import ListRow from "../molecules/ListRow";
 import SettingsToggleRow from "../molecules/SettingsToggleRow";
 import SectionBlock from "../molecules/SectionBlock";
+import ConfirmModal from "../molecules/Modal";
 import { router, useRouter } from "expo-router";
 
 type TradeMenuHandlers = {
@@ -22,7 +23,7 @@ type AccountMenuHandlers = {
   onPressChangePassword: () => void;
   onPressEditProfile: () => void;
   onPressLogout: () => void;
-  onPressDeleteAccount: () => void;
+  onPressDeleteAccount: () => void; // 탈퇴 처리
   marketingAgree: boolean;
   onToggleMarketing: (v: boolean) => void;
   thirdPartyAgree: boolean;
@@ -30,8 +31,16 @@ type AccountMenuHandlers = {
 };
 
 type Props = {
-  tradeHandlers: TradeMenuHandlers;
-  communityHandlers: CommunityMenuHandlers;
+  tradeHandlers: {
+    onPressSales: () => void;
+    onPressPurchases: () => void;
+    onPressFavorites: () => void;
+  };
+  communityHandlers: {
+    onPressMyPosts: () => void;
+    onPressMyComments: () => void;
+    onPressMyLikes: () => void;
+  };
   accountHandlers: AccountMenuHandlers;
 };
 
@@ -40,6 +49,8 @@ export default function MyPageSections({
   communityHandlers,
   accountHandlers,
 }: Props) {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   return (
     <View style={styles.container}>
       {/* 내 정보 수정 */}
@@ -118,15 +129,26 @@ export default function MyPageSections({
         <ListRow
           title="로그아웃"
           iconSource={require("../../../assets/images/logout.png")}
-          onPress={accountHandlers.onPressLogout}
+          onPress={() => router.push("/(login)")}
         />
         <ListRow
           title="회원 탈퇴"
           iconSource={require("../../../assets/images/signout.png")}
-          onPress={accountHandlers.onPressDeleteAccount}
+          onPress={() => setDeleteModalOpen(true)}
           showDivider={false}
         />
       </SectionBlock>
+      <ConfirmModal
+        visible={deleteModalOpen}
+        title="정말 탈퇴하시겠습니까?"
+        cancelText="취소"
+        confirmText="탈퇴"
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => {
+          setDeleteModalOpen(false);
+          accountHandlers.onPressDeleteAccount();
+        }}
+      />
     </View>
   );
 }

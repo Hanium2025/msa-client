@@ -22,6 +22,7 @@ export default StyleSheet.create({
   },
   right: { flex: 1 },
   name: { fontSize: 20, fontWeight: "900", color: "#084C63" },
+  name2: { fontSize: 20, fontWeight: "900", color: "#000", marginLeft: 4 },
   catRow: { marginTop: 6 },
   catLabel: { fontSize: 11, color: "#000", fontWeight: "400" },
   catValue: { marginTop: 2, fontSize: 12, color: "#111827" },
@@ -51,5 +52,27 @@ export default StyleSheet.create({
     fontSize: 13,
     color: "#000",
     fontWeight: "400",
+  },
+  catChips: {
+    flexDirection: "row",
+    gap: 8, // RN 0.71+ 지원. 낮은 버전이면 marginRight로 대체
+    flexWrap: "wrap",
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#d9d9d9",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2, // Android
+  },
+  chipText: {
+    fontSize: 11,
+    color: "#000",
   },
 });

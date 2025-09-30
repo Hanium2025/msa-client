@@ -2,6 +2,12 @@ import { api } from "../api";
 import { setAccessToken } from "../api";
 import { tokenStore } from "../../auth/tokenStore";
 
+type ApiEnvelope<T> = {
+  code: number;
+  message: string;
+  data: T;
+};
+
 // 회원가입
 export interface SignUpRequest {
   email: string;
@@ -139,6 +145,67 @@ export const naverLogin = async (code: String): Promise<LoginSuccess> => {
     accessToken: res.data.data?.accessToken,
   };
 };
+
+// 마이페이지
+export type MyProfile = {
+  memberId: number;
+  nickname: string;
+  imageUrl?: string;
+  score: number; // 신뢰도 점수
+  mainCategory: string[];
+  agreeMarketing: boolean;
+  agree3rdParty: boolean;
+};
+
+export const fetchMyProfile = async (): Promise<MyProfile> => {
+  const res = await api.get<ApiEnvelope<MyProfile>>("/profile");
+  if (!res.data || res.data.code >= 400 || !res.data.data) {
+    throw new Error(res.data?.message ?? "나의 프로필 조회 실패");
+  }
+  return res.data.data;
+};
+
+// 마케팅 동의 변경
+export const updateAgreements = async (
+  payload?: { agreeMarketing?: boolean } // 선택적
+): Promise<ApiMessage> => {
+  try {
+    // 1) 서버가 '토글'만 받는다면 바디 없이 호출
+    const res = await api.patch<ApiEnvelope<null>>(
+      "/profile/toggle/marketing",
+      payload ?? {} // 서버가 바디 필요하면 값 전달
+    );
+    return { code: res.data.code, message: res.data.message };
+  } catch (e: any) {
+    // 호출부에서 메시지를 볼 수 있게 던지기
+    const msg =
+      e?.response?.data?.message ?? e?.message ?? "마케팅 동의 변경 실패";
+    throw new Error(msg);
+  }
+};
+
+// 제3자 동의 변경
+export const updateThirdPartyAgreements = async (payload?: {
+  agree3rdParty?: boolean;
+}): Promise<ApiMessage> => {
+  try {
+    const res = await api.patch<ApiEnvelope<null>>(
+      "/profile/toggle/third-party",
+      payload ?? {}
+    );
+    return { code: res.data.code, message: res.data.message };
+  } catch (e: any) {
+    const msg =
+      e?.response?.data?.message ?? e?.message ?? "제 3자 동의 변경 실패";
+    throw new Error(msg);
+  }
+};
+
+// 회원 탈퇴
+/*export const deleteAccount = async (): Promise<ApiMessage> => {
+  const res = await api.delete<ApiEnvelope<null>>("/profile");
+  return { code: res.data.code, message: res.data.message };
+}; */
 
 // 토큰 저장
 const saveAccessToken = async (token: string) => {
