@@ -3,7 +3,7 @@ import { Image, ImageSourcePropType } from "react-native";
 import styles from "./AvatarCircle.style";
 
 const DEFAULT_AVATAR: ImageSourcePropType =
-  require("../../../../assets/images/default-avatar.png");
+  require("../../../../assets/images/app-icon.png");
 
 type Props = {
   uri?: string;
