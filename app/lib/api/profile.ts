@@ -74,3 +74,11 @@ export async function getMySellItem(): Promise<ProductApiItem[]> {
 
   return itemList;
 }
+
+// 마이페이지 구매 내역 조회
+export async function getMyPurchasedItem(): Promise<ProductApiItem[]> {
+  const res = await api.get<ApiResponse<ProductApiItem[]>>("/profile/trade/buy");
+  const itemList = res.data.data ?? [];
+
+  return itemList;
+}

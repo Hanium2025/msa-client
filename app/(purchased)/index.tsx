@@ -7,17 +7,15 @@ import {
   StyleSheet,
   StatusBar,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SortTabs } from "../components/molecules/SortTabs";
 import { TradeProductsGrid } from "../components/organisms/TradeProductsGrid";
 import BottomTabBar from "../components/molecules/BottomTabBar";
 
-// 목업 데이터 (연동 전)
-const mockItems = [
-  { id: 10, title: "기저귀 3팩", price: 29000, imageUrl: "" },
-  { id: 11, title: "아기욕조", price: 24000, imageUrl: "" },
-  { id: 12, title: "아기띠", price: 79000, imageUrl: "" },
-];
+import { useMyTradeItems } from "../hooks/useMyTradeItems";
+import { getMyPurchasedItem } from "../lib/api/profile";
+
 
 export type SortKey = "new" | "old";
 const PHONE_WIDTH = 390;
@@ -26,6 +24,10 @@ const TABBAR_SPACE = 90;
 export default function PurchasedPage() {
   const [sort, setSort] = useState<SortKey>("new");
   const router = useRouter();
+  const { items: purchaseItems, isLoading, isError, error } = useMyTradeItems(
+    ['myPurchaseItems'], // '구매 내역'을 위한 고유 캐시 키
+    getMyPurchasedItem    // '구매 내역'을 가져오는 API 함수
+  );
 
   const [activeTab, setActiveTab] =
     useState<"notifications" | "chat" | "home" | "community" | "profile">(
@@ -33,12 +35,26 @@ export default function PurchasedPage() {
     );
   const onTabPress = (tab: string) => setActiveTab(tab as any);
 
-  const [items] = useState(mockItems);
+  // const [items] = useState(mockItems);
 
-  const sorted = useMemo(() => {
-    if (sort === "new") return items;
-    return [...items].reverse();
-  }, [items, sort]);
+  const formattedItems = useMemo(() => {
+      const sortedItems = sort === "new" ? purchaseItems : [...purchaseItems].reverse();
+  
+      return sortedItems.map((item) => ({
+        id: item.productId,
+        title: item.title,
+        price: item.price,
+        imageUrl: item.imageUrl ?? undefined,
+      }));
+    }, [purchaseItems, sort]);
+  
+    if (isLoading) {
+      return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" />
+        </View>
+      );
+    }
 
   return (
     <View style={s.webRoot}>
@@ -50,13 +66,14 @@ export default function PurchasedPage() {
 
         <SortTabs<SortKey> value={sort} onChange={setSort} />
 
-        {!items.length ? (
+
+        {!purchaseItems.length ? (
           <View style={{ padding: 24, alignItems: "center" }}>
             <Text>구매한 상품이 없습니다.</Text>
           </View>
         ) : (
           <TradeProductsGrid
-            items={sorted}
+            items={formattedItems}
             onPressItem={(id) =>
               router.push({
                 pathname: "/(addProduct)/detail",
