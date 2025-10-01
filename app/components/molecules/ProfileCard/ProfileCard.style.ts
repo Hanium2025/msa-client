@@ -55,7 +55,7 @@ export default StyleSheet.create({
   },
   catChips: {
     flexDirection: "row",
-    gap: 8, // RN 0.71+ 지원. 낮은 버전이면 marginRight로 대체
+    gap: 8,
     flexWrap: "wrap",
   },
   chip: {
@@ -70,6 +70,8 @@ export default StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2, // Android
+    marginTop: 10,
+    marginLeft: -2,
   },
   chipText: {
     fontSize: 11,

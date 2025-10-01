@@ -25,9 +25,11 @@ type AccountMenuHandlers = {
   onPressLogout: () => void;
   onPressDeleteAccount: () => void; // 탈퇴 처리
   marketingAgree: boolean;
-  onToggleMarketing: (v: boolean) => void;
+  onToggleMarketing: (v: boolean) => void | Promise<void>;
+  marketingDisabled?: boolean;
   thirdPartyAgree: boolean;
-  onToggleThirdParty: (v: boolean) => void;
+  onToggleThirdParty: (v: boolean) => void | Promise<void>;
+  thirdPartyDisabled?: boolean;
 };
 
 type Props = {
@@ -119,12 +121,14 @@ export default function MyPageSections({
           iconSource={require("../../../assets/images/notifications.png")}
           value={accountHandlers.marketingAgree}
           onValueChange={accountHandlers.onToggleMarketing}
+          disabled={accountHandlers.marketingDisabled}
         />
         <SettingsToggleRow
           title="제 3자 정보 제공 동의"
           iconSource={require("../../../assets/images/outbox.png")}
           value={accountHandlers.thirdPartyAgree}
           onValueChange={accountHandlers.onToggleThirdParty}
+          disabled={accountHandlers.thirdPartyDisabled}
         />
         <ListRow
           title="로그아웃"
