@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import ProfileCard from "../components/molecules/ProfileCard";
+import BottomTabBar from "../components/molecules/BottomTabBar";
 import MyPageSections from "../components/organisms/MyPageSections";
 import { useMyPage } from "../hooks/useMypage";
 import { logout as apiLogout } from "../lib/api/user";
@@ -28,6 +29,9 @@ export default function MyPageScreen() {
     changingMarketing,
     changingThird,
   } = useMyPage();
+
+  const [activeTab, setActiveTab] = useState("profile");
+  const onTabPress = (tab: string) => setActiveTab(tab);
 
   // 에러 안내(있으면 한 번만)
   if (error) {
@@ -65,8 +69,8 @@ export default function MyPageScreen() {
         <View style={s.sectionsWrap}>
           <MyPageSections
             tradeHandlers={{
-              onPressSales: () => router.push("/(history)/sales"),
-              onPressPurchases: () => router.push("/(history)/purchases"),
+              onPressSales: () => router.push("/(sold)"),
+              onPressPurchases: () => router.push("/(purchased)"),
               onPressFavorites: () => router.push("/(favorites)"),
             }}
             communityHandlers={{
@@ -123,6 +127,7 @@ export default function MyPageScreen() {
           />
         </View>
       </ScrollView>
+      <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
     </SafeAreaView>
   );
 }

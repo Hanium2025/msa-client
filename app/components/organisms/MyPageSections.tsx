@@ -66,7 +66,7 @@ export default function MyPageSections({
         <ListRow
           title="활동 프로필 수정"
           iconSource={require("../../../assets/images/edit.png")}
-          onPress={() => router.push("/(profile)/edit")}
+          onPress={() => router.push("/(mypage)/edit")}
           showDivider={false}
         />
       </SectionBlock>
