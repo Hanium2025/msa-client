@@ -1,5 +1,4 @@
-// app/components/organisms/PaymentWidget.web.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Alert,
@@ -13,12 +12,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTempSavePayment } from "../../hooks/useTempSavePayment";
 
 type Props = {
-  amount?: number;        // 결제 금액(원)
-  customerKey?: string;   // 고객 식별자
-  orderId?: string;       // 주문번호(없으면 내부에서 생성하여 고정)
-  orderName?: string;     // 주문명
-  successUrl?: string;    // 결제 성공 리다이렉트 URL
-  failUrl?: string;       // 결제 실패/취소 리다이렉트 URL
+  amount?: number;        
+  customerKey?: string;  
+  orderId?: string;      
+  orderName?: string;     
+  successUrl?: string;     
+  tradeId?: number;      
 };
 
 const PRIMARY = "#0F5965";
@@ -28,8 +27,10 @@ export default function PaymentWidget({
   customerKey = "customer_123",
   orderId,
   orderName = "피키 유아용품",
+  successUrl: successUrlProp,
+  failUrl: failUrlProp,
+  tradeId,
 }: Props) {
-  // 웹이 아니면 렌더하지 않음
   if (Platform.OS !== "web") return null;
 
   const insets = useSafeAreaInsets();
@@ -37,21 +38,30 @@ export default function PaymentWidget({
 
   const clientKey = process.env.EXPO_PUBLIC_TOSS_CLIENT_KEY;
 
-  // API 베이스 URL (여러 키 지원)
   const apiBaseUrl =
     process.env.EXPO_PUBLIC_API_BASE_URL ??
     process.env.EXPO_PUBLIC_API_URL ??
     process.env.EXPO_PUBLIC_API_BASE;
-  // PaymentWidget.web.tsx
+
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const successUrl = process.env.EXPO_PUBLIC_TOSS_SUCCESS_URL ?? `${origin}/success`;
-  const failUrl = process.env.EXPO_PUBLIC_TOSS_FAIL_URL ?? `${origin}/fail`;
 
+  // base success/fail URL
+  const baseSuccess = successUrlProp ?? process.env.EXPO_PUBLIC_TOSS_SUCCESS_URL ?? `${origin}/success`;
+  const failUrl = failUrlProp ?? process.env.EXPO_PUBLIC_TOSS_FAIL_URL ?? `${origin}/fail`;
 
-  // temp-save 훅
+  const successUrl = useMemo(() => {
+    try {
+      const u = new URL(baseSuccess, origin);
+      if (tradeId != null) u.searchParams.set("tradeId", String(tradeId));
+      return u.toString();
+    } catch {
+      const sep = baseSuccess.includes("?") ? "&" : "?";
+      return tradeId != null ? `${baseSuccess}${sep}tradeId=${tradeId}` : baseSuccess;
+    }
+  }, [baseSuccess, tradeId, origin]);
+
   const { mutateAsync: tempSave } = useTempSavePayment({ baseUrl: apiBaseUrl });
 
-  // orderId는 최초 한 번만 생성/고정
   const orderRef = useRef<string>(orderId ?? `ORDER-${Date.now()}`);
 
   const methodsId = "toss-payment-methods";
@@ -63,20 +73,18 @@ export default function PaymentWidget({
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 위젯 로드 + 렌더
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        if (!clientKey) throw new Error("EXPO_PUBLIC_TOSS_CLIENT_KEY 가 설정되지 않았습니다.");
+        if (!clientKey) throw new Error("EXPO_PUBLIC_TOSS_CLIENT_KEY is not set.");
 
         const { loadPaymentWidget } = await import("@tosspayments/payment-widget-sdk");
 
-        // 한 프레임 대기하여 DOM 보장
         await new Promise((r) => requestAnimationFrame(() => r(null)));
 
         if (!document.querySelector(`#${methodsId}`) || !document.querySelector(`#${agreementId}`)) {
-          throw new Error("결제 컨테이너 DOM(#toss-payment-*)를 찾지 못했습니다.");
+          throw new Error("Cannot find widget containers (#toss-payment-*).");
         }
 
         const pw = await loadPaymentWidget(clientKey, customerKey);
@@ -102,15 +110,12 @@ export default function PaymentWidget({
         if (mounted) setLoading(false);
       }
     })();
-
     return () => {
       mounted = false;
     };
-    // clientKey / customerKey 변경 시만 재로딩
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [clientKey, customerKey]);
 
-  // 금액 변경 시 위젯 금액 업데이트
   useEffect(() => {
     if (!pmControl) return;
     try {
@@ -123,7 +128,6 @@ export default function PaymentWidget({
     }
   }, [amount, pmControl]);
 
-  // 페이지 로드/금액 변경 시 서버에 "임시 저장" (fire & forget)
   useEffect(() => {
     const oid = orderRef.current;
     const amt = Number(amount ?? 0);
@@ -133,20 +137,22 @@ export default function PaymentWidget({
     });
   }, [amount, tempSave]);
 
-  // 버튼 클릭 시엔 즉시 결제 요청만 호출 (user gesture 유지)
   const handleRequestPay = () => {
-
     if (!paymentWidgetRef.current) {
       Alert.alert("주문 정보가 초기화되지 않았습니다.");
       return;
     }
 
-    paymentWidgetRef.current.requestPayment({
-      orderId: orderRef.current,
-      orderName,
-      successUrl,
-      failUrl,
-    })
+    console.log("[requestPayment]",
+  { orderId: orderRef.current, amount, orderName, successUrl, failUrl }
+);
+    paymentWidgetRef.current
+      .requestPayment({
+        orderId: orderRef.current,
+        orderName,
+        successUrl,
+        failUrl,
+      })
       .catch((e: any) => {
         Alert.alert("결제 요청 실패", String(e?.message ?? e));
       });
@@ -160,14 +166,12 @@ export default function PaymentWidget({
         </View>
       )}
 
-      {/* RN Web에서 selector 인식 안정화를 위해 id/nativeID 모두 지정 */}
       {/* @ts-ignore */}
       <View id={methodsId} nativeID={methodsId} style={styles.methods} />
       {/* @ts-ignore */}
       <View id={agreementId} nativeID={agreementId} style={styles.agreement} />
 
       <View style={[styles.footer, { paddingBottom: safeBottom }]}>
-        {/* user gesture 유지: disabled는 ready만 기준 */}
         <Pressable
           onPress={handleRequestPay}
           disabled={!ready}
@@ -181,7 +185,6 @@ export default function PaymentWidget({
         </Pressable>
       </View>
 
-      {/* 하단 잘림 방지용 스페이서 */}
       <View style={{ height: 12 }} />
     </View>
   );

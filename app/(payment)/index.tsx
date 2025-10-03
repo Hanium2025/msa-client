@@ -14,7 +14,7 @@ import { useLocalSearchParams } from "expo-router";
 import ShippingInfo from "../components/organisms/ShippingInfo";
 import OrderInfo from "../components/molecules/OrderInfo";
 import PaymentWidget from "../components/organisms/PaymentWidget";
-import { useProductDetail } from "../hooks/useProductDetail"; 
+import { useProductDetail } from "../hooks/useProductDetail";
 
 type Option = "existing" | "new";
 
@@ -27,9 +27,14 @@ const showAlert = (title: string, message?: string) => {
 export default function PaymentScreen() {
   const [shippingTab, setShippingTab] = useState<Option>("existing");
 
-  // URL 예: /(payment)?productId=123
-  const { productId: pid } = useLocalSearchParams<{ productId?: string }>();
+  // URL 예: /(payment)?productId=123&tradeId=45
+  const { productId: pid, tradeId: tid } = useLocalSearchParams<{
+    productId?: string;
+    tradeId?: string;
+  }>();
+
   const productId = useMemo(() => (pid ? Number(pid) : NaN), [pid]);
+  const tradeId = useMemo(() => (tid ? Number(tid) : undefined), [tid]);
 
   const { data: product, isLoading, error } = useProductDetail(productId);
   const [amount, setAmount] = useState(0); // OrderInfo에서 총액을 올려줌
@@ -72,7 +77,7 @@ export default function PaymentScreen() {
               <OrderInfo
                 title={product.title}
                 price={product.price}
-                shippingFee={0} 
+                shippingFee={0}
                 image={
                   product.images?.[0]?.imageUrl
                     ? { uri: product.images[0].imageUrl }
@@ -82,7 +87,12 @@ export default function PaymentScreen() {
                 onAmountChange={setAmount} // 총액을 PaymentWidget으로 전달
               />
 
-              <PaymentWidget amount={amount} orderName={product.title} />
+              {/* tradeId 같이 넘겨서 success 페이지에서 confirm에 전달되게 함 */}
+              <PaymentWidget
+                amount={amount}
+                orderName={product.title}
+                tradeId={tradeId}
+              />
             </>
           )}
         </ScrollView>
@@ -98,7 +108,7 @@ const styles = StyleSheet.create({
   content: {
     alignItems: "center",
     paddingTop: 40,
-    paddingBottom: 180, // 버튼(56) + 여유
+    paddingBottom: 180, 
     gap: 40,
   },
   shippingInfo: { alignItems: "center", width: "100%", gap: 30 },
