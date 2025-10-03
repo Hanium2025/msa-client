@@ -145,5 +145,7 @@ export function useMyPage(): UseMyPage {
     setMarketingAgree,
     setThirdPartyAgree,
     deleteAccount,
+    changingMarketing,
+    changingThird,
   };
 }

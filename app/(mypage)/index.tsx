@@ -25,6 +25,8 @@ export default function MyPageScreen() {
     setMarketingAgree,
     setThirdPartyAgree,
     deleteAccount,
+    changingMarketing,
+    changingThird,
   } = useMyPage();
 
   // 에러 안내(있으면 한 번만)
@@ -107,18 +109,16 @@ export default function MyPageScreen() {
               onToggleMarketing: async (v) => {
                 try {
                   await setMarketingAgree(v);
-                } catch (e: any) {
-                  /* Alert로 에러 표출 추천 */
-                }
+                } catch {}
               },
+              marketingDisabled: changingMarketing,
               thirdPartyAgree: !!profile?.agree3rdParty,
               onToggleThirdParty: async (v) => {
                 try {
                   await setThirdPartyAgree(v);
-                } catch (e: any) {
-                  /* 표출 */
-                }
+                } catch {}
               },
+              thirdPartyDisabled: changingThird,
             }}
           />
         </View>
