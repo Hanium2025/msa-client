@@ -13,12 +13,8 @@ import { SortTabs } from "../components/molecules/SortTabs";
 import { TradeProductsGrid } from "../components/organisms/TradeProductsGrid"; 
 import BottomTabBar from "../components/molecules/BottomTabBar";
 
-// 목업 데이터 (연동 전용)
-const mockItems = [
-  { id: 1, title: "유모차", price: 99000, imageUrl: "" },
-  { id: 2, title: "아기침대", price: 159000, imageUrl: "" },
-  { id: 3, title: "보행기", price: 49000, imageUrl: "" },
-];
+import { useMyTradeItems } from "../hooks/useMyTradeItems";
+import { getMySellItem } from "../lib/api/profile";
 
 export type SortKey = "new" | "old";
 const PHONE_WIDTH = 390;
@@ -32,12 +28,29 @@ export default function SoldPage() {
     useState<"notifications" | "chat" | "home" | "community" | "profile">("home");
   const onTabPress = (tab: string) => setActiveTab(tab as any);
 
-  const [items, setItems] = useState(mockItems);
+   const { items: sellItems, isLoading, isError, error } = useMyTradeItems(
+    ['mySellItems'], // 판매 내역을 위한 고유 캐시 키
+    getMySellItem    // 판매 내역을 가져오는 API 함수
+  );
 
-  const sorted = useMemo(() => {
-    if (sort === "new") return items;
-    return [...items].reverse();
-  }, [items, sort]);
+  const formattedItems = useMemo(() => {
+    const sortedItems = sort === "new" ? sellItems : [...sellItems].reverse();
+
+    return sortedItems.map((item) => ({
+      id: item.productId,
+      title: item.title,
+      price: item.price,
+      imageUrl: item.imageUrl ?? undefined,
+    }));
+  }, [sellItems, sort]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={s.webRoot}>
@@ -49,15 +62,17 @@ export default function SoldPage() {
 
         <SortTabs<SortKey> value={sort} onChange={setSort} />
 
-        {!items.length ? (
+        {!sellItems.length ? (
           <View style={{ padding: 24, alignItems: "center" }}>
             <Text>판매한 상품이 없습니다.</Text>
           </View>
         ) : (
           <TradeProductsGrid
-  items={sorted}
-  onPressItem={(id) => router.push({ pathname: "/(addProduct)/detail", params: { productId: String(id) } })}
-/>
+            items={formattedItems} // 'sorted' 대신 새로 만든 'formattedItems'를 전달
+            onPressItem={(id) => // 콜백으로 받는 파라미터 이름도 'id'로 변경 (가독성)
+              router.push({ pathname: "/(addProduct)/detail", params: { productId: String(id) } })
+            }
+          />
         )}
         <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
       </SafeAreaView>
