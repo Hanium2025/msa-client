@@ -1,5 +1,5 @@
 // app/(payment)/index.tsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -9,6 +9,7 @@ import {
   Platform,
   StyleSheet,
   ActivityIndicator,
+  Text,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import ShippingInfo from "../components/organisms/ShippingInfo";
@@ -24,6 +25,13 @@ const showAlert = (title: string, message?: string) => {
   else Alert.alert(title, message);
 };
 
+function toIntPrice(v: number | string): number {
+  if (typeof v === "number") return Math.round(v);
+  const cleaned = String(v).replace(/[^\d]/g, "");
+  const n = parseInt(cleaned, 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default function PaymentScreen() {
   const [shippingTab, setShippingTab] = useState<Option>("existing");
 
@@ -34,15 +42,46 @@ export default function PaymentScreen() {
   }>();
 
   const productId = useMemo(() => (pid ? Number(pid) : NaN), [pid]);
-  const tradeId = useMemo(() => (tid ? Number(tid) : undefined), [tid]);
+  const tradeId = useMemo(() => (tid ? Number(tid) : NaN), [tid]);
 
   const { data: product, isLoading, error } = useProductDetail(productId);
-  const [amount, setAmount] = useState(0); // OrderInfo에서 총액을 올려줌
+
+  // 화면에 실제 결제할 금액(상품가 + 배송비 등)
+  const shippingFee = 0; // 서버에서 받는 구조면 해당 값으로 교체
+  const productPrice = useMemo(() => (product ? toIntPrice(product.price) : 0), [product]);
+  const computedAmount = useMemo(() => productPrice + shippingFee, [productPrice]);
+
+  const [amount, setAmount] = useState(0);
+
+  // 상품 정보를 받아오면 결제 금액 확정
+  useEffect(() => {
+    if (product) setAmount(computedAmount);
+  }, [product, computedAmount]);
+
+  // 필수 파라미터 가드
+  if (!pid || !Number.isFinite(productId)) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={[styles.container, styles.center]}>
+          <Text>잘못된 접근입니다. (productId 없음)</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  if (!tid || !Number.isFinite(tradeId)) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={[styles.container, styles.center]}>
+          <Text>거래 식별자(tradeId)가 없습니다. 결제를 시작할 수 없습니다.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <View style={[styles.container, styles.center]}>
           <ActivityIndicator />
         </View>
       </SafeAreaView>
@@ -52,7 +91,7 @@ export default function PaymentScreen() {
   if (error || !product) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={[styles.container, { justifyContent: "center", padding: 24 }]}>
+        <View style={[styles.container, styles.center]}>
           {showAlert("상품을 불러오지 못했습니다.", error?.message)}
         </View>
       </SafeAreaView>
@@ -76,22 +115,23 @@ export default function PaymentScreen() {
             <>
               <OrderInfo
                 title={product.title}
+                // 아래 두 줄은 OrderInfo가 표시용일 뿐, 실제 결제 금액은 amount로 확정됨
                 price={product.price}
-                shippingFee={0}
+                shippingFee={shippingFee}
                 image={
                   product.images?.[0]?.imageUrl
                     ? { uri: product.images[0].imageUrl }
                     : undefined
                 }
                 sellerNickname={product.sellerNickname ?? ""}
-                onAmountChange={setAmount} // 총액을 PaymentWidget으로 전달
+                onAmountChange={setAmount}
               />
 
-              {/* tradeId 같이 넘겨서 success 페이지에서 confirm에 전달되게 함 */}
+              {/* Toss에 표시/전달할 확정 금액과 tradeId를 넘김 */}
               <PaymentWidget
-                amount={amount}
-                orderName={product.title}
-                tradeId={tradeId}
+                amount={Number(amount)}                 // 반드시 숫자
+                orderName={product.title}              // 주문명
+                tradeId={Number(tradeId)}              // success URL에도 포함됨
               />
             </>
           )}
@@ -104,6 +144,7 @@ export default function PaymentScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
   container: { flex: 1, width: "100%", maxWidth: 393, alignSelf: "center" },
+  center: { justifyContent: "center", alignItems: "center", padding: 24 },
   scroll: { flex: 1 },
   content: {
     alignItems: "center",

@@ -1,3 +1,4 @@
+// app/(payment)/success.tsx
 import React, { useEffect, useRef } from "react";
 import { View, ActivityIndicator, Alert, Text, StyleSheet, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,33 +14,37 @@ export default function PaymentSuccess() {
   }>();
 
   const { mutateAsync: confirm, isPending } = useConfirmPayment();
-  const ranRef = useRef(false); // prevent duplicate confirm
+  const ranRef = useRef(false);
 
   useEffect(() => {
-    console.log("[SUCCESS url params]", { paymentKey, orderId, amount, tradeId });
     if (ranRef.current) return;
     ranRef.current = true;
 
     (async () => {
       try {
+        console.log("[success query]", { paymentKey, orderId, amount, tradeId });
+
         if (!paymentKey || !orderId || !amount) {
           Alert.alert("결제 승인 불가", "필수 파라미터가 없습니다.");
           router.replace("/fail");
           return;
         }
 
-        const res = await confirm({
+        const payload = {
           paymentKey: String(paymentKey),
           orderId: String(orderId),
           amount: Number(amount),
           ...(tradeId ? { tradeId: Number(tradeId) } : {}),
-        });
+        };
 
+        console.log("[confirm payload]", payload);
+
+        const res = await confirm(payload);
         const chatroomId = getChatroomIdFromConfirm(res);
-        if (chatroomId) {
-          router.replace(`/chat/${chatroomId}`);
-        } else {
-          Alert.alert("처리 완료", "결제 승인되었습니다. 채팅방 정보를 찾지 못했습니다.");
+
+        if (chatroomId) router.replace(`/chat/${chatroomId}`);
+        else {
+          Alert.alert("처리 완료", "결제 승인되었습니다.");
           router.replace("/chat");
         }
       } catch (e: any) {
