@@ -20,3 +20,10 @@ export function useConfirmPayment(opts?: { baseUrl?: string }) {
     },
   });
 }
+
+// 응답에서 chatroomId를 안전하게 뽑아오기 위한 헬퍼
+export function getChatroomIdFromConfirm(res: ConfirmResponse | any): number | undefined {
+  if (!res) return;
+  if (typeof res.chatroomId === "number") return res.chatroomId;
+  if (res.data && typeof res.data.chatroomId === "number") return res.data.chatroomId;
+}
