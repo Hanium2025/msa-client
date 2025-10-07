@@ -11,7 +11,8 @@ import styles from "./ListRow.style";
 type Props = {
   title: string;
   subtitle?: string;
-  iconSource: ImageSourcePropType;
+  iconSource?: ImageSourcePropType; // ✅ 선택적 (벡터와 병행)
+  IconComponent?: React.ReactNode; // ✅ 추가: 벡터 아이콘
   onPress?: () => void;
   right?: React.ReactNode;
   showRightChevron?: boolean;
@@ -23,6 +24,7 @@ export default function ListRow({
   title,
   subtitle,
   iconSource,
+  IconComponent,
   onPress,
   right,
   showRightChevron = true,
@@ -39,7 +41,12 @@ export default function ListRow({
       ]}
     >
       <View style={styles.left}>
-        <Image source={iconSource} style={styles.icon} resizeMode="contain" />
+        {/*벡터 아이콘이 있으면 표시, 없으면 이미지 */}
+        {IconComponent ? (
+          <View style={{ marginRight: 12 }}>{IconComponent}</View>
+        ) : iconSource ? (
+          <Image source={iconSource} style={styles.icon} resizeMode="contain" />
+        ) : null}
 
         <View>
           <Text style={styles.title}>{title}</Text>
@@ -47,6 +54,7 @@ export default function ListRow({
         </View>
       </View>
 
+      {/* 오른쪽 영역 (스위치나 화살표 등) */}
       {right ? (
         <View style={styles.right}>{right}</View>
       ) : showRightChevron ? (

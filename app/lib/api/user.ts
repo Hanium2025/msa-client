@@ -16,11 +16,20 @@ export interface SignUpRequest {
   phoneNumber: string;
   nickname: string;
   agreeMarketing: boolean;
-  agreeThirdParty: boolean;
+  agree3rdParty: boolean;
 }
 
 export const signUp = (data: SignUpRequest) => {
-  return api.post("/user/auth/signup", data);
+  const payload = {
+    email: data.email,
+    password: data.password,
+    confirmPassword: data.confirmPassword,
+    phoneNumber: data.phoneNumber,
+    nickname: data.nickname,
+    agreeMarketing: !!data.agreeMarketing,
+    agree3rdParty: data.agree3rdParty ?? false,
+  };
+  return api.post("/user/auth/signup", payload);
 };
 
 // 로그인
@@ -165,19 +174,36 @@ export const fetchMyProfile = async (): Promise<MyProfile> => {
   return res.data.data;
 };
 
+async function tryFallback<T>(fns: Array<() => Promise<T>>): Promise<T> {
+  let lastErr: any;
+  for (const fn of fns) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      lastErr = e;
+      const status = e?.response?.status;
+      // 405/404는 다음 후보 시도, 다른 에러면 중단
+      if (![404, 405].includes(status)) break;
+    }
+  }
+  throw lastErr;
+}
+
 // 마케팅 동의 변경
-export const updateAgreements = async (
-  payload?: { agreeMarketing?: boolean } // 선택적
-): Promise<ApiMessage> => {
+export const updateAgreements = async (payload?: {
+  agreeMarketing?: boolean;
+}): Promise<ApiMessage> => {
+  const body = payload ?? {};
   try {
-    // 1) 서버가 '토글'만 받는다면 바디 없이 호출
-    const res = await api.patch<ApiEnvelope<null>>(
-      "/profile/toggle/marketing",
-      payload ?? {} // 서버가 바디 필요하면 값 전달
-    );
+    const res = await tryFallback([
+      // 서버 구현에 따라 순서 아무거나 맞으면 통과
+      () => api.post<ApiEnvelope<null>>("/profile/marketing", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/marketing", body),
+      () => api.post<ApiEnvelope<null>>("/profile/toggle/marketing", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/toggle/marketing", body),
+    ]);
     return { code: res.data.code, message: res.data.message };
   } catch (e: any) {
-    // 호출부에서 메시지를 볼 수 있게 던지기
     const msg =
       e?.response?.data?.message ?? e?.message ?? "마케팅 동의 변경 실패";
     throw new Error(msg);
@@ -188,11 +214,14 @@ export const updateAgreements = async (
 export const updateThirdPartyAgreements = async (payload?: {
   agree3rdParty?: boolean;
 }): Promise<ApiMessage> => {
+  const body = payload ?? {};
   try {
-    const res = await api.patch<ApiEnvelope<null>>(
-      "/profile/toggle/third-party",
-      payload ?? {}
-    );
+    const res = await tryFallback([
+      () => api.post<ApiEnvelope<null>>("/profile/third-party", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/third-party", body),
+      () => api.post<ApiEnvelope<null>>("/profile/toggle/third-party", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/toggle/third-party", body),
+    ]);
     return { code: res.data.code, message: res.data.message };
   } catch (e: any) {
     const msg =

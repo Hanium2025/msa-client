@@ -1,10 +1,9 @@
-// hooks/useMyPage.ts
 import { useCallback, useEffect, useState } from "react";
 import {
   fetchMyProfile,
   updateAgreements,
   updateThirdPartyAgreements,
-  //deleteAccount as deleteAccountApi,
+  // deleteAccount as deleteAccountApi,
   type MyProfile,
 } from "../lib/api/user";
 import { tokenStore } from "../auth/tokenStore";
@@ -16,16 +15,12 @@ type UseMyPage = {
   error: string | null;
   refreshing: boolean;
   deleting: boolean;
+  changingMarketing: boolean;
+  changingThird: boolean;
 
-  // 동작
   refresh: () => Promise<void>;
   setMarketingAgree: (v: boolean) => Promise<void>;
   setThirdPartyAgree: (v: boolean) => Promise<void>;
-
-  changingMarketing?: boolean;
-  changingThird?: boolean;
-
-  // 선택: 회원 탈퇴 (라우팅은 화면에서)
   deleteAccount: () => Promise<void>;
 };
 
@@ -38,6 +33,7 @@ export function useMyPage(): UseMyPage {
   const [changingMarketing, setChangingMarketing] = useState(false);
   const [changingThird, setChangingThird] = useState(false);
 
+  /** 프로필 불러오기 */
   const load = useCallback(async () => {
     setError(null);
     try {
@@ -68,66 +64,40 @@ export function useMyPage(): UseMyPage {
     }
   }, [load]);
 
-  // 마케팅 동의 토글
+  /** 마케팅 동의 변경 */
   const setMarketingAgree = useCallback(
     async (v: boolean) => {
-      if (changingMarketing) return;
-      setChangingMarketing(true);
-
       setProfile((prev) => (prev ? { ...prev, agreeMarketing: v } : prev));
-
       try {
-        // 1) 서버가 '토글'만 받는 경우 (바디 없이)
-        await updateAgreements();
-      } catch {
-        try {
-          // 2) 서버가 '값'을 요구하는 경우 (명시 값 전달)
-          await updateAgreements({ agreeMarketing: v });
-        } catch (e) {
-          // 3) 완전 실패 → 롤백
-          setProfile((prev) => (prev ? { ...prev, agreeMarketing: !v } : prev));
-          throw e;
-        }
-      } finally {
-        setChangingMarketing(false);
+        await updateAgreements({ agreeMarketing: v });
+        await refresh(); // 서버 값으로 최종 동기화
+      } catch (e) {
+        setProfile((prev) => (prev ? { ...prev, agreeMarketing: !v } : prev));
+        throw e;
       }
-      // 성공 시 즉시 상태 유지 (refresh로 다시 덮어쓰지 않음)
     },
-    [changingMarketing]
+    [refresh]
   );
 
-  // 제3자 동의 토글
+  /** 제3자 동의 변경 */
   const setThirdPartyAgree = useCallback(
     async (v: boolean) => {
-      if (changingThird) return;
-      setChangingThird(true);
-
       setProfile((prev) => (prev ? { ...prev, agree3rdParty: v } : prev));
-
       try {
-        await updateThirdPartyAgreements();
-      } catch {
-        try {
-          await updateThirdPartyAgreements({ agree3rdParty: v });
-        } catch (e) {
-          setProfile((prev) => (prev ? { ...prev, agree3rdParty: !v } : prev));
-          throw e;
-        }
-      } finally {
-        setChangingThird(false);
+        await updateThirdPartyAgreements({ agree3rdParty: v });
+        await refresh();
+      } catch (e) {
+        setProfile((prev) => (prev ? { ...prev, agree3rdParty: !v } : prev));
+        throw e;
       }
     },
-    [changingThird]
+    [refresh]
   );
 
-  // (선택) 회원 탈퇴
+  /** 회원 탈퇴 */
   const deleteAccount = useCallback(async () => {
     setDeleting(true);
     try {
-      // 백엔드 경로를 열어두셨다면 주석 해제해서 사용하세요.
-      // await deleteAccountApi();
-
-      // 서버에서 쿠키/세션 정리 후, 클라이언트 토큰도 정리
       await tokenStore.clear?.();
       delete api.defaults.headers.common.Authorization;
     } finally {

@@ -111,16 +111,13 @@ export default function MyPageScreen() {
               // 스위치 값/토글
               marketingAgree: !!profile?.agreeMarketing,
               onToggleMarketing: async (v) => {
-                try {
-                  await setMarketingAgree(v);
-                } catch {}
+                await setMarketingAgree(v);
               },
               marketingDisabled: changingMarketing,
+
               thirdPartyAgree: !!profile?.agree3rdParty,
               onToggleThirdParty: async (v) => {
-                try {
-                  await setThirdPartyAgree(v);
-                } catch {}
+                await setThirdPartyAgree(v);
               },
               thirdPartyDisabled: changingThird,
             }}
