@@ -60,8 +60,8 @@ export default function MyPageSections({
         />
         <ListRow
           title="활동 프로필 수정"
-          IconComponent={<MaterialIcons name="edit" size={22} />}
-          onPress={() => router.push("/(profile)/edit")}
+           IconComponent={<MaterialIcons name="edit" size={22} />}
+          onPress={() => router.push("/(mypage)/edit")}
           showDivider={false}
         />
       </SectionBlock>
