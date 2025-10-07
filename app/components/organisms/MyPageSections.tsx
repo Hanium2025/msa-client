@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import React from "react";
+import { View, StyleSheet, Image } from "react-native";
 import { SectionTitle } from "../atoms/MyPageSectionTitle";
 import ListRow from "../molecules/ListRow";
 import SettingsToggleRow from "../molecules/SettingsToggleRow";
 import SectionBlock from "../molecules/SectionBlock";
-import ConfirmModal from "../molecules/Modal";
-import { router, useRouter } from "expo-router";
+import { router } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 type TradeMenuHandlers = {
   onPressSales: () => void;
@@ -23,26 +25,21 @@ type AccountMenuHandlers = {
   onPressChangePassword: () => void;
   onPressEditProfile: () => void;
   onPressLogout: () => void;
-  onPressDeleteAccount: () => void; // 탈퇴 처리
+  onPressDeleteAccount: () => void;
+
+  /** 동의 토글(마이페이지 화면에서 내려줌) */
   marketingAgree: boolean;
-  onToggleMarketing: (v: boolean) => void | Promise<void>;
+  onToggleMarketing: (v: boolean) => void;
   marketingDisabled?: boolean;
+
   thirdPartyAgree: boolean;
-  onToggleThirdParty: (v: boolean) => void | Promise<void>;
+  onToggleThirdParty: (v: boolean) => void;
   thirdPartyDisabled?: boolean;
 };
 
 type Props = {
-  tradeHandlers: {
-    onPressSales: () => void;
-    onPressPurchases: () => void;
-    onPressFavorites: () => void;
-  };
-  communityHandlers: {
-    onPressMyPosts: () => void;
-    onPressMyComments: () => void;
-    onPressMyLikes: () => void;
-  };
+  tradeHandlers: TradeMenuHandlers;
+  communityHandlers: CommunityMenuHandlers;
   accountHandlers: AccountMenuHandlers;
 };
 
@@ -51,8 +48,6 @@ export default function MyPageSections({
   communityHandlers,
   accountHandlers,
 }: Props) {
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-
   return (
     <View style={styles.container}>
       {/* 내 정보 수정 */}
@@ -60,12 +55,12 @@ export default function MyPageSections({
       <SectionBlock>
         <ListRow
           title="비밀번호 변경"
-          iconSource={require("../../../assets/images/lock.png")}
+          IconComponent={<MaterialIcons name="lock" size={22} />}
           onPress={accountHandlers.onPressChangePassword}
         />
         <ListRow
           title="활동 프로필 수정"
-          iconSource={require("../../../assets/images/edit.png")}
+          IconComponent={<MaterialIcons name="edit" size={22} />}
           onPress={() => router.push("/(profile)/edit")}
           showDivider={false}
         />
@@ -76,18 +71,22 @@ export default function MyPageSections({
       <SectionBlock>
         <ListRow
           title="판매 내역"
-          iconSource={require("../../../assets/images/sell.png")}
+          IconComponent={
+            <MaterialCommunityIcons name="arrow-expand-up" size={22} />
+          }
           onPress={tradeHandlers.onPressSales}
         />
         <ListRow
           title="구매 내역"
-          iconSource={require("../../../assets/images/purchase.png")}
+          IconComponent={
+            <MaterialCommunityIcons name="arrow-collapse-down" size={22} />
+          }
           onPress={tradeHandlers.onPressPurchases}
         />
         <ListRow
           title="관심 상품"
-          iconSource={require("../../../assets/images/interest.png")}
-          onPress={() => router.push("/(favorites)")}
+          IconComponent={<MaterialIcons name="star" size={22} />}
+          onPress={tradeHandlers.onPressFavorites}
           showDivider={false}
         />
       </SectionBlock>
@@ -97,17 +96,22 @@ export default function MyPageSections({
       <SectionBlock>
         <ListRow
           title="작성 글"
-          iconSource={require("../../../assets/images/article.png")}
+          IconComponent={
+            <MaterialCommunityIcons
+              name="comment-text-multiple-outline"
+              size={22}
+            />
+          }
           onPress={communityHandlers.onPressMyPosts}
         />
         <ListRow
           title="작성 댓글"
-          iconSource={require("../../../assets/images/comment.png")}
+          IconComponent={<MaterialIcons name="mode-comment" size={22} />}
           onPress={communityHandlers.onPressMyComments}
         />
         <ListRow
           title="좋아요한 글"
-          iconSource={require("../../../assets/images/like.png")}
+          IconComponent={<AntDesign name="heart" size={22} />}
           onPress={communityHandlers.onPressMyLikes}
           showDivider={false}
         />
@@ -115,44 +119,40 @@ export default function MyPageSections({
 
       {/* 계정 관리 */}
       <SectionTitle title="계정 관리" />
+
       <SectionBlock>
+        {/* 마케팅 동의 */}
         <SettingsToggleRow
           title="마케팅 정보 수신 동의"
-          iconSource={require("../../../assets/images/notifications.png")}
+          IconComponent={<MaterialIcons name="notifications-none" size={22} />}
           value={accountHandlers.marketingAgree}
           onValueChange={accountHandlers.onToggleMarketing}
           disabled={accountHandlers.marketingDisabled}
         />
+
+        {/* 제3자 동의 */}
         <SettingsToggleRow
           title="제 3자 정보 제공 동의"
-          iconSource={require("../../../assets/images/outbox.png")}
+          IconComponent={
+            <MaterialCommunityIcons name="inbox-arrow-up-outline" size={22} />
+          }
           value={accountHandlers.thirdPartyAgree}
           onValueChange={accountHandlers.onToggleThirdParty}
           disabled={accountHandlers.thirdPartyDisabled}
         />
+
         <ListRow
           title="로그아웃"
-          iconSource={require("../../../assets/images/logout.png")}
-          onPress={() => router.push("/(login)")}
+          IconComponent={<MaterialIcons name="logout" size={22} />}
+          onPress={accountHandlers.onPressLogout}
         />
         <ListRow
           title="회원 탈퇴"
-          iconSource={require("../../../assets/images/signout.png")}
-          onPress={() => setDeleteModalOpen(true)}
+          IconComponent={<MaterialIcons name="person-remove-alt-1" size={22} />}
+          onPress={accountHandlers.onPressDeleteAccount}
           showDivider={false}
         />
       </SectionBlock>
-      <ConfirmModal
-        visible={deleteModalOpen}
-        title="정말 탈퇴하시겠습니까?"
-        cancelText="취소"
-        confirmText="탈퇴"
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={() => {
-          setDeleteModalOpen(false);
-          accountHandlers.onPressDeleteAccount();
-        }}
-      />
     </View>
   );
 }
