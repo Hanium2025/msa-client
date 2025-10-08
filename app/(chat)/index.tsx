@@ -789,16 +789,30 @@ const handleTradeComplete = useCallback(async () => {
   );
   const router = useRouter();
 //리뷰페이지 이동 핸들러
- const goToReview = useCallback(() => {
-  if (!tradeId) {
+ const goToReview = useCallback(async () => {
+    let tid = tradeId;
+     // 없으면 한번 더 조회해서 확보 (구매자에서도 동작)
+  if (!tid && roomId && wsToken) {
+    try {
+      const { tradeId: t } =  await getTradeStatus(roomId, wsToken);
+      if (t) {
+        setTradeId(t);
+        tid = t;
+      }
+    } catch (e) {
+      // 무시하고 아래에서 얼럿 처리
+    }
+  }
+  if (!tid) {
     Alert.alert("평가", "거래 ID를 찾을 수 없어요. 잠시 후 다시 시도해주세요.");
     return;
   }
+
   router.push({
     pathname: "/(transaction)", // 프로젝트 라우트에 맞게 변경
-    params: { tradeId: String(tradeId) },
+    params: { tradeId: String(tid) },
   });
-}, [tradeId, router]);
+}, [tradeId, roomId, wsToken, router]);
 
 // 결제하러 가기
 const goToPayment = useCallback(() => {
