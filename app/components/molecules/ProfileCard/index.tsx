@@ -14,7 +14,6 @@ type Props = {
   mainCategories: string[]; // 예: ["수면·안전", "놀이·교육"]
   trustScore: number; // 0~100
   onPressProfile?: () => void;
-  // string(URL) | require(...) | { uri: string } 모두 허용
   avatarSource?: string | number | { uri: string };
 };
 
@@ -58,11 +57,22 @@ export default function ProfileCard({
       </View>
 
       <View style={styles.right}>
-        <Text style={styles.name}>{name} 님</Text>
+        <Text style={styles.name}>
+          {name}
+          <Text style={styles.name2}>님</Text>
+        </Text>
 
         <View style={styles.catRow}>
           <Text style={styles.catLabel}>주요 활동 카테고리</Text>
-          <Text style={styles.catValue}>{mainCategories.join(" · ")}</Text>
+          <View style={styles.catChips}>
+            {(mainCategories?.length ? mainCategories.slice(0, 2) : ["-"]).map(
+              (c, i) => (
+                <View key={`${c}-${i}`} style={styles.chip}>
+                  <Text style={styles.chipText}>{c}</Text>
+                </View>
+              )
+            )}
+          </View>
         </View>
 
         <View style={styles.trustRow}>

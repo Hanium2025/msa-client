@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Platform,
-} from "react-native";
+import { Modal, View, Text, Pressable } from "react-native";
 import { styles } from "./Modal.style";
 
 type Props = {

@@ -2,6 +2,12 @@ import { api } from "../api";
 import { setAccessToken } from "../api";
 import { tokenStore } from "../../auth/tokenStore";
 
+type ApiEnvelope<T> = {
+  code: number;
+  message: string;
+  data: T;
+};
+
 // 회원가입
 export interface SignUpRequest {
   email: string;
@@ -10,11 +16,20 @@ export interface SignUpRequest {
   phoneNumber: string;
   nickname: string;
   agreeMarketing: boolean;
-  agreeThirdParty: boolean;
+  agree3rdParty: boolean;
 }
 
 export const signUp = (data: SignUpRequest) => {
-  return api.post("/user/auth/signup", data);
+  const payload = {
+    email: data.email,
+    password: data.password,
+    confirmPassword: data.confirmPassword,
+    phoneNumber: data.phoneNumber,
+    nickname: data.nickname,
+    agreeMarketing: !!data.agreeMarketing,
+    agree3rdParty: data.agree3rdParty ?? false,
+  };
+  return api.post("/user/auth/signup", payload);
 };
 
 // 로그인
@@ -139,6 +154,87 @@ export const naverLogin = async (code: String): Promise<LoginSuccess> => {
     accessToken: res.data.data?.accessToken,
   };
 };
+
+// 마이페이지
+export type MyProfile = {
+  memberId: number;
+  nickname: string;
+  imageUrl?: string;
+  score: number; // 신뢰도 점수
+  mainCategory: string[];
+  agreeMarketing: boolean;
+  agree3rdParty: boolean;
+};
+
+export const fetchMyProfile = async (): Promise<MyProfile> => {
+  const res = await api.get<ApiEnvelope<MyProfile>>("/profile");
+  if (!res.data || res.data.code >= 400 || !res.data.data) {
+    throw new Error(res.data?.message ?? "나의 프로필 조회 실패");
+  }
+  return res.data.data;
+};
+
+async function tryFallback<T>(fns: Array<() => Promise<T>>): Promise<T> {
+  let lastErr: any;
+  for (const fn of fns) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      lastErr = e;
+      const status = e?.response?.status;
+      // 405/404는 다음 후보 시도, 다른 에러면 중단
+      if (![404, 405].includes(status)) break;
+    }
+  }
+  throw lastErr;
+}
+
+// 마케팅 동의 변경
+export const updateAgreements = async (payload?: {
+  agreeMarketing?: boolean;
+}): Promise<ApiMessage> => {
+  const body = payload ?? {};
+  try {
+    const res = await tryFallback([
+      // 서버 구현에 따라 순서 아무거나 맞으면 통과
+      () => api.post<ApiEnvelope<null>>("/profile/marketing", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/marketing", body),
+      () => api.post<ApiEnvelope<null>>("/profile/toggle/marketing", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/toggle/marketing", body),
+    ]);
+    return { code: res.data.code, message: res.data.message };
+  } catch (e: any) {
+    const msg =
+      e?.response?.data?.message ?? e?.message ?? "마케팅 동의 변경 실패";
+    throw new Error(msg);
+  }
+};
+
+// 제3자 동의 변경
+export const updateThirdPartyAgreements = async (payload?: {
+  agree3rdParty?: boolean;
+}): Promise<ApiMessage> => {
+  const body = payload ?? {};
+  try {
+    const res = await tryFallback([
+      () => api.post<ApiEnvelope<null>>("/profile/third-party", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/third-party", body),
+      () => api.post<ApiEnvelope<null>>("/profile/toggle/third-party", body),
+      () => api.patch<ApiEnvelope<null>>("/profile/toggle/third-party", body),
+    ]);
+    return { code: res.data.code, message: res.data.message };
+  } catch (e: any) {
+    const msg =
+      e?.response?.data?.message ?? e?.message ?? "제 3자 동의 변경 실패";
+    throw new Error(msg);
+  }
+};
+
+// 회원 탈퇴
+/*export const deleteAccount = async (): Promise<ApiMessage> => {
+  const res = await api.delete<ApiEnvelope<null>>("/profile");
+  return { code: res.data.code, message: res.data.message };
+}; */
 
 // 토큰 저장
 const saveAccessToken = async (token: string) => {
