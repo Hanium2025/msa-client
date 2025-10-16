@@ -42,19 +42,6 @@ const showAlert = (title: string, message?: string) => {
   else Alert.alert(title, message);
 };
 
-function mapStatusKToUI(k?: string): "ON_SALE" | "IN_PROGRESS" | "SOLD_OUT" {
-  switch (k) {
-    case "판매 중":
-      return "ON_SALE";
-    case "예약 중":
-      return "IN_PROGRESS";
-    case "판매 완료":
-      return "SOLD_OUT";
-    default:
-      return "ON_SALE";
-  }
-}
-
 // "2025.08.26" 또는 ISO 문자열 → 사람이 읽기 쉬운 값
 function formatCreatedAt(s?: string): string {
   if (!s) return "";
@@ -95,9 +82,7 @@ function getUserIdFromToken(token: string): number | null {
 
 export default function UnifiedDetailScreen() {
   const router = useRouter();
-  const { productId } = useLocalSearchParams<{
-    productId?: string | string[];
-  }>();
+  const { productId } = useLocalSearchParams<{ productId?: string | string[] }>();
   const id = Number(Array.isArray(productId) ? productId[0] : productId);
 
   const [token, setToken] = useState<string | null>(null);
@@ -146,6 +131,7 @@ function DetailContent({ id, token }: { id: number; token: string }) {
   const [reportOpen, setReportOpen] = useState(false);
   const REPORT_ICON = require("../../assets/images/report.png");
 
+  // 훅이 이미 상태를 표준 코드/라벨로 정규화해서 내려줌
   const { data, isLoading, error, refetch } = useProductDetail(id, token);
   const toggleLike = useToggleLike(id, token);
   const { mutate: deleteProduct } = useDeleteProduct();
@@ -188,12 +174,8 @@ function DetailContent({ id, token }: { id: number; token: string }) {
     .map((img: any) => ({ imageUrl: img?.imageUrl ?? "" }))
     .filter((i: any) => i.imageUrl);
 
-  const priceNum =
-    typeof data.price === "number"
-      ? data.price
-      : Number(String(data.price ?? "0").replace(/[^\d]/g, ""));
-
-  const uiStatus = mapStatusKToUI(data.status as string);
+  // 훅에서 숫자로 정규화되어 옴
+  const priceNum = data.price as number;
 
   const avatar: ImageSourcePropType = data.sellerImageUrl
     ? ({ uri: data.sellerImageUrl } as ImageURISource)
@@ -211,7 +193,9 @@ function DetailContent({ id, token }: { id: number; token: string }) {
       postedAt: formatCreatedAt(data.createdAt),
       avatar,
     },
-    status: uiStatus,
+    // 표준 코드/라벨을 그대로 사용
+    status: data.status, // "SELLING" | "IN_PROGRESS" | "SOLD_OUT"
+    statusLabel: data.statusLabel, // "판매 중" | "예약 중" | "거래 완료"
     liked: Boolean(data.liked),
     likeCount: Number(data.likeCount ?? 0),
   };
@@ -244,20 +228,6 @@ function DetailContent({ id, token }: { id: number; token: string }) {
       },
     });
   };
-
-  // const handleChat = () => {
-  //   if (!sellerId) {
-  //     showAlert("오류", "판매자 정보가 없어 채팅을 시작할 수 없습니다.");
-  //     return;
-  //   }
-  //   // router.push({
-  //   //   pathname: "/(chatroomList)",
-  //   //   params: {
-  //   //     productId: String(id),
-  //   //     receiverId: String(sellerId),
-  //   //   },
-  //   // });
-  // };
 
   return (
     <View style={styles.webRoot}>

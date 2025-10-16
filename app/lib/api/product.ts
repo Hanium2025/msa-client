@@ -64,6 +64,7 @@ export const registerProduct = async (formData: FormData, token: string) => {
   return response.data;
 };
 
+//상품 조회
 export const fetchProductDetail = async (productId: number, token: string) => {
   const response = await api.get(
     `/product/${productId}`,
