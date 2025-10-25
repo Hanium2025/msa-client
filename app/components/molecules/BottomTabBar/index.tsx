@@ -15,13 +15,13 @@ interface BottomTabBarProps {
 }
 
 const tabImages: Record<
-  "notifications" | "chat" | "home" | "community" | "profile",
+  "notifications" | "chat" | "home" | "profile",
   ImageSourcePropType
 > = {
   notifications: require("../../../../assets/images/tabs/notifications.png"),
   chat: require("../../../../assets/images/tabs/chat.png"),
   home: require("../../../../assets/images/tabs/main.png"),
-  community: require("../../../../assets/images/tabs/community.png"),
+  // community: require("../../../../assets/images/tabs/community.png"),
   profile: require("../../../../assets/images/tabs/profile.png"),
 };
 

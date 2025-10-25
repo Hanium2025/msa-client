@@ -91,7 +91,7 @@ export default function MyPageSections({
         />
       </SectionBlock>
 
-      {/* 내 (커뮤니티서비스의) 활동 */}
+      {/* 내 (커뮤니티서비스의) 활동
       <SectionTitle title="내 (커뮤니티서비스의) 활동" />
       <SectionBlock>
         <ListRow
@@ -115,7 +115,7 @@ export default function MyPageSections({
           onPress={communityHandlers.onPressMyLikes}
           showDivider={false}
         />
-      </SectionBlock>
+      </SectionBlock> */}
 
       {/* 계정 관리 */}
       <SectionTitle title="계정 관리" />
