@@ -82,7 +82,9 @@ function getUserIdFromToken(token: string): number | null {
 
 export default function UnifiedDetailScreen() {
   const router = useRouter();
-  const { productId } = useLocalSearchParams<{ productId?: string | string[] }>();
+  const { productId } = useLocalSearchParams<{
+    productId?: string | string[];
+  }>();
   const id = Number(Array.isArray(productId) ? productId[0] : productId);
 
   const [token, setToken] = useState<string | null>(null);
@@ -269,6 +271,11 @@ function DetailContent({ id, token }: { id: number; token: string }) {
                   : async () => {
                       await toggleLike.mutateAsync();
                     }
+              }
+              onPressAvatar={() =>
+                router.push(
+                  `/(mypage)/otherProfile?userId=${String(data.sellerId ?? "")}`
+                )
               }
             />
 

@@ -1,10 +1,17 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, ImageProps } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ImageProps,
+  Platform,
+} from "react-native";
 
 interface Props {
   nickname: string;
   postedAt: string;
-  avatar?: ImageProps["source"]; 
+  avatar?: ImageProps["source"];
 }
 
 const DEFAULT_AVATAR = require("../../../../assets/images/default_profile.png");
@@ -13,10 +20,7 @@ export default function UserInfo({ nickname, postedAt, avatar }: Props) {
   const source = avatar ?? DEFAULT_AVATAR;
   return (
     <View style={styles.container}>
-      <Image
-        source={source}
-        style={styles.image}
-      />
+      <Image source={source} style={styles.image} />
       <View>
         <Text style={styles.name}>{nickname}</Text>
         <Text style={styles.time}>{postedAt}</Text>
@@ -27,8 +31,8 @@ export default function UserInfo({ nickname, postedAt, avatar }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 10,
   },
   image: {
@@ -36,15 +40,15 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
   },
   name: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 14,
-    color: '#084C63',
+    color: "#084C63",
   },
   time: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
 });

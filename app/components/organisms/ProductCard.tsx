@@ -1,10 +1,16 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Image,
+  ImageProps,
+} from "react-native";
 import UserInfo from "../molecules/UserInfo";
 import ImageCarousel from "../molecules/ImageCarousel";
 import PriceText from "../atoms/PriceText";
 import Tag from "../atoms/Tag";
-import { Image, ImageProps } from "react-native";
 
 interface Product {
   title: string;
@@ -25,20 +31,27 @@ interface Product {
 interface Props {
   product: Product;
   // 서버에 좋아요 반영하고 최신 상태를 반환(또는 성공 여부)하는 옵셔널 콜백
-  onToggleLike?: (nextLiked: boolean) => Promise<{ likeCount?: number } | void> | void;
+  onToggleLike?: (
+    nextLiked: boolean
+  ) => Promise<{ likeCount?: number } | void> | void;
+  onPressAvatar?: () => void;
 }
 
 const DEFAULT_AVATAR = require("../../../assets/images/default_profile.png");
 
-export default function ProductCard({ product, onToggleLike }: Props) {
+export default function ProductCard({
+  product,
+  onToggleLike,
+  onPressAvatar,
+}: Props) {
   const [liked, setLiked] = useState<boolean>(!!product.liked);
   const [likeCount, setLikeCount] = useState<number>(product.likeCount ?? 0);
   const [pending, setPending] = useState(false);
   const avatarSource = product.user.avatar ?? DEFAULT_AVATAR;
   const isInteractive = !!onToggleLike;
-  
+
   const handleToggleLike = useCallback(async () => {
-    if (pending || !isInteractive) return;        
+    if (pending || !isInteractive) return;
     setPending(true);
 
     const prevLiked = liked;
@@ -63,12 +76,11 @@ export default function ProductCard({ product, onToggleLike }: Props) {
     }
   }, [liked, onToggleLike, pending, isInteractive]);
 
-  const starSource =
-   !isInteractive
-     ? require("../../../assets/images/star_black.png")  // 작성자 화면: 항상 검은 별
-     : liked
-       ? require("../../../assets/images/star_black.png")
-       : require("../../../assets/images/star_gray.png");
+  const starSource = !isInteractive
+    ? require("../../../assets/images/star_black.png") // 작성자 화면: 항상 검은 별
+    : liked
+      ? require("../../../assets/images/star_black.png")
+      : require("../../../assets/images/star_gray.png");
 
   return (
     <View style={styles.card}>
@@ -80,11 +92,26 @@ export default function ProductCard({ product, onToggleLike }: Props) {
 
       {/* 작성자 + 카테고리 */}
       <View style={styles.userRow}>
-        <UserInfo
-          avatar={avatarSource}
-          nickname={product.user?.nickname}
-          postedAt={product.user?.postedAt}
-        />
+        <Pressable
+          onPress={onPressAvatar}
+          disabled={!onPressAvatar}
+          hitSlop={10}
+          style={({ pressed }) => [
+            styles.userLeft,
+            onPressAvatar && pressed ? { opacity: 0.7 } : null,
+          ]}
+          accessibilityRole={onPressAvatar ? "button" : "image"}
+          accessibilityLabel={
+            onPressAvatar ? "판매자 프로필로 이동" : "판매자 정보"
+          }
+        >
+          <UserInfo
+            avatar={avatarSource}
+            nickname={product.user?.nickname}
+            postedAt={product.user?.postedAt}
+          />
+        </Pressable>
+
         <Tag label={product.category} />
       </View>
 
@@ -97,14 +124,16 @@ export default function ProductCard({ product, onToggleLike }: Props) {
       {/* 좋아요(터치 가능) */}
       <Pressable
         onPress={handleToggleLike}
-        disabled={pending || !isInteractive} 
+        disabled={pending || !isInteractive}
         style={({ pressed }) => [
           styles.likesRow,
-          (pressed && isInteractive) ? { opacity: 0.7 } : null,
+          pressed && isInteractive ? { opacity: 0.7 } : null,
         ]}
         hitSlop={10}
         accessibilityRole={isInteractive ? "button" : "text"}
-        accessibilityLabel={isInteractive ? (liked ? "좋아요 취소" : "좋아요") : "좋아요 개수"}
+        accessibilityLabel={
+          isInteractive ? (liked ? "좋아요 취소" : "좋아요") : "좋아요 개수"
+        }
       >
         <Image source={starSource} style={styles.starIcon} />
         <Text style={styles.likesText}>{likeCount}</Text>
@@ -145,6 +174,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
+  },
+  userLeft: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   body: {
     marginTop: 8,
