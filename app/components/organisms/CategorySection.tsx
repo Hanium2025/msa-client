@@ -86,7 +86,7 @@ const CategorySection = ({ categories, loading, onPressCategory, onPressHeaderRi
 };
 
 const styles = StyleSheet.create({
-  innerRow: { flexDirection: 'row', alignItems: 'center' },
+  innerRow: { flexDirection: 'row', alignItems: 'flex-start' },
   categoryItem: { width: ITEM, alignItems: 'center' },
   placeholderCircle: {
     width: 64, height: 64, borderRadius: 32, backgroundColor: '#E5E7EB', marginBottom: 6,

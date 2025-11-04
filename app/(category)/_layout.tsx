@@ -3,8 +3,7 @@ import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from "react-nativ
 import { Slot } from "expo-router";
 import BottomTabBar from "../components/molecules/BottomTabBar";
 
-const IP14_PRO_WIDTH = 393; 
-const IP14_PRO_HEIGHT = 852;  
+const PHONE_WIDTH = 390; // home.tsx 기준
 const TABBAR_SPACE = 90;
 
 export default function CategoryLayout() {
@@ -28,7 +27,6 @@ export default function CategoryLayout() {
   );
 }
 
-
 const styles = StyleSheet.create({
   webRoot: {
     flex: 1,
@@ -39,9 +37,9 @@ const styles = StyleSheet.create({
   phoneFrame: {
     flex: 1,
     backgroundColor: "#fff",
-    maxWidth: Platform.OS === "web" ? IP14_PRO_WIDTH : undefined,
-    width: Platform.OS === "web" ? IP14_PRO_WIDTH : undefined,
-    alignSelf: "center",
+    width: Platform.OS === "web" ? PHONE_WIDTH : "100%", // 모바일은 화면 꽉 채움
+    maxWidth: Platform.OS === "web" ? PHONE_WIDTH : undefined,
+    alignSelf: Platform.OS === "web" ? "center" : "stretch", // 모바일에서는 stretch
     borderRadius: Platform.OS === "web" ? 24 : 0,
     shadowColor: "#000",
     shadowOpacity: 0.08,
