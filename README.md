@@ -36,7 +36,7 @@ gRPC 최적화: Protocol Buffers를 활용해 통신 페이로드를 줄이고, 
 
 내용: Expo Router를 활용한 선언적 라우팅 시스템 구축 및 타입 안정성을 확보한 컴포넌트 설계 가이드 작성
 
-스터디 문서 바로가기 🔗
+[스터디 문서 바로가기 🔗]([url](https://www.notion.so/2-21bafe091f23801ca0fbdb73f931d75b))
 
 🏗️ Client-Server Infrastructure
 <img width="1229" height="718" alt="Client Architecture" src="https://github.com/user-attachments/assets/dbf2b96e-d6cc-4010-916a-7a40c5e4e4bd" />
