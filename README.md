@@ -1,49 +1,43 @@
-📱 PIKIE : MSA 기반 유아용품 중고거래 플랫폼 (Client)
-과학기술정보통신부 ICT 멘토링(한이음) 산학 협력 프로젝트 React Native를 활용한 크로스 플랫폼 앱 개발 및 MSA 통신 최적화
+# 📱 PIKIE : MSA 기반 유아용품 중고거래 서비스 (Client)
 
-📌 프로젝트 개요
-PIKIE는 마이크로서비스 아키텍처(MSA)를 기반으로 설계된 유아용품 특화 중고거래 플랫폼입니다. 프론트엔드 팀은 복잡한 마이크로서비스 환경에서 gRPC 통신 효율을 극대화하고, 아토믹 디자인 패턴을 통해 유지보수가 용이한 모바일 인터페이스를 구축하는 데 집중하고 있습니다.
+> **과학기술정보통신부 ICT 멘토링(한이음) 산학 협력 프로젝트**
+> **React Native를 활용한 크로스 플랫폼 앱 개발 및 MSA 통신 최적화**
 
-🛠 Client Tech Stack
-Framework: React Native (Expo Router)
+## 📌 프로젝트 개요
+MSA(Microservice Architecture) 환경에서 최적화된 사용자 경험을 제공하기 위해 설계된 유아용품 특화 중고거래 플랫폼입니다. 
+백엔드의 gRPC 기반 고성능 통신 구조를 이해하고, 클라이언트 단에서 **Zustand**와 **아토믹 디자인 패턴**을 활용해 확장성 있는 모바일 인터페이스를 구축하는 데 집중하고 있습니다.
 
-Language: TypeScript
+## ⚙️ Tech Stack (Frontend)
+- **Framework:** React Native (Expo Router 기반의 선언적 라우팅)
+- **Language:** TypeScript
+- **State Management:** Zustand
+- **Styling:** Styled-Components
+- **Communication:** gRPC + Protocol Buffers
 
-State Management: Zustand
+## 🧩 클라이언트 설계 핵심 역량
 
-Styling: Styled-Components
+### 1. 🏗️ 디자인 시스템 및 컴포넌트 구조화
+- **Atomic Design Pattern**: UI 요소를 원자(Atom) 단위로 모듈화하여 30개 이상의 공통 컴포넌트를 구축, 개발 생산성과 UI 일관성을 극대화했습니다.
+- **컴포넌트 기반 아키텍처**: 재사용 가능한 비즈니스 로직과 UI 레이어를 분리하여 확장성 있는 코드 구조를 설계했습니다.
 
-Communication: gRPC + Protocol Buffers (BFF 패턴 적용 고려)
+### 2. 🔌 MSA 환경의 통신 및 상태 관리
+- **gRPC 데이터 연동**: 다수의 마이크로서비스로부터 오는 데이터를 gRPC 인터페이스를 통해 효율적으로 수신하고 처리합니다.
+- **비동기 흐름 최적화**: Zustand를 활용하여 파편화된 서비스 간의 상태를 통합 관리하고, 불필요한 API 요청을 줄여 데이터 정합성을 확보했습니다.
 
-🧩 기술적 지향점 및 협업 (Front-end)
-1. 🏗️ 아키텍처 및 시스템 설계 참여
-이벤트 스토밍: 도메인 전문가 및 백엔드 개발자와 함께 서비스 단위를 분리하고, 프론트엔드에서 필요한 데이터 요구사항을 정의했습니다.
+### 3. 🗣️ 지식 공유 및 리딩 (선지오 담당 세션)
+- **React Native 환경 구성**: 팀 내 Expo 및 TypeScript 초기 환경 셋업을 주도했습니다.
+- **홈 화면 아키텍처 설계**: Expo Router를 활용한 화면 전환 로직 및 카드형 UI 인터페이스 설계를 담당하여 스터디 세션을 진행했습니다.
+  - **[담당 스터디 문서 🔗](https://www.notion.so/2-21bafe091f23801ca0fbdb73f931d75b)**
 
-MSA 대응 설계: API Gateway를 통한 서비스 접근 및 gRPC 기반의 고성능 데이터 통신 구조를 이해하고 클라이언트 측 인터페이스를 설계했습니다.
+## 🏗️ Architecture (System Understanding)
+사용자 요청은 **API Gateway**를 통해 각 백엔드 서비스(ECS)로 전달되며, 모든 정적 리소스는 **S3와 CloudFront**를 통해 최적화된 속도로 클라이언트에 제공됩니다. 클라이언트는 이 복잡한 백엔드 구조 사이에서 데이터 일관성을 유지하며 매끄러운 UX를 구현합니다.
 
-2. 🎨 디자인 시스템 및 컴포넌트 설계
-Atomic Design Pattern: 원자(Atom) 단위의 컴포넌트 설계를 통해 UI 재사용성을 극대화하고 디자인 일관성을 유지합니다.
+## 🛠️ Trouble Shooting
 
-Expo Router 기반 홈 화면 구축: 효율적인 네비게이션 구조를 설계하고 실시간 상품 노출을 위한 최적의 카드형 UI를 구현했습니다.
+| 문제 상황 | 원인 및 분석 | 해결 방법 |
+| :--- | :--- | :--- |
+| **gRPC 호출 시 인증 누락** | Gateway 통신 과정에서 JWT 메타데이터가 정상 전달되지 않아 NullPointerException 발생 | 클라이언트 요청 헤더에 `Metadata` 전달 로직을 보완하여 인증 프로세스 정상화 |
+| **비동기 데이터 렌더링 부하** | 마이크로서비스별 다량의 데이터 요청 시 UI 응답성 저하 발생 | Zustand 캐싱 전략 및 데이터 필터링 로직 최적화로 렌더링 성능 개선 |
 
-3. ⚡ 성능 및 최적화 전략
-Zustand 전역 상태 관리: 파편화된 마이크로서비스의 상태를 효율적으로 통합 관리하여 불필요한 리렌더링과 API 호출을 방지합니다.
-
-gRPC 최적화: Protocol Buffers를 활용해 통신 페이로드를 줄이고, 모바일 환경에서의 데이터 로딩 속도를 개선하는 트러블슈팅을 진행 중입니다.
-
-🗣️ 스터디 및 지식 공유
-주제: React Native + TypeScript를 활용한 홈 화면 구성 (with Expo Router)
-
-내용: Expo Router를 활용한 선언적 라우팅 시스템 구축 및 타입 안정성을 확보한 컴포넌트 설계 가이드 작성
-
-[스터디 문서 바로가기 🔗]([url](https://www.notion.so/2-21bafe091f23801ca0fbdb73f931d75b))
-
-🏗️ Client-Server Infrastructure
-<img width="1229" height="718" alt="Client Architecture" src="https://github.com/user-attachments/assets/dbf2b96e-d6cc-4010-916a-7a40c5e4e4bd" />
-
-API Gateway: 모든 클라이언트 요청은 API Gateway를 통해 각 마이크로서비스로 라우팅됩니다.
-
-S3 & CloudFront: 이미지 등 정적 리소스는 CDN을 통해 글로벌 엣지에서 빠르게 서빙되어 앱 UX를 향상시킵니다.
-
-🛠️ Trouble Shooting (Client Perspective)
-gRPC Metadata 누락 대응: API Gateway를 거쳐 서비스 호출 시 JWT 인증 메타데이터가 누락되는 문제를 발견하고, 클라이언트 통신 코드 보완을 통해 인증 프로세스를 정상화했습니다.
+---
+© 2025 PIKIE Team - Front-end
